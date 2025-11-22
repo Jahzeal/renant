@@ -12,7 +12,6 @@ export default function Header() {
   const [showRentDropdown, setShowRentDropdown] = useState(false)
 
   const navItems = [
-    { label: "Buy", href: "#" },
     { label: "Rent", href: "#" },
     { label: "Sell", href: "#" },
     { label: "Get a mortgage", href: "#" },
