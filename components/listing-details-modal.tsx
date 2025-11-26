@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { X, Heart, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, Heart, ChevronLeft, ChevronRight } from "lucide-react"
+import { RequestTourModal } from "./request-tour-modal"
+import { RequestToApplyModal } from "./request-to-apply-modal"
 
 interface ListingDetailsModalProps {
   listing: {
@@ -14,6 +16,11 @@ interface ListingDetailsModalProps {
     images: string[]
     description?: string
     amenities?: string[]
+    agent?: {
+      name: string
+      company: string
+      phone: string
+    }
   }
   isOpen: boolean
   onClose: () => void
@@ -29,6 +36,8 @@ export default function ListingDetailsModal({
   onFavoriteToggle,
 }: ListingDetailsModalProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [showTourModal, setShowTourModal] = useState(false)
+  const [showApplyModal, setShowApplyModal] = useState(false)
 
   if (!isOpen) return null
 
@@ -41,75 +50,99 @@ export default function ListingDetailsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 flex items-center justify-between p-4 border-b bg-white">
-          <h2 className="text-xl font-semibold">{listing.title}</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        <div className="p-4 space-y-4">
-          <div className="relative w-full h-80 rounded-lg overflow-hidden bg-gray-200 group">
-            <img
-              src={listing.images[currentImageIndex] || "/placeholder.svg"}
-              alt={listing.title}
-              className="w-full h-full object-cover"
-            />
-
-            <button
-              onClick={handlePrevImage}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2"
-            >
-              <ChevronLeft size={20} />
-            </button>
-
-            <button
-              onClick={handleNextImage}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2"
-            >
-              <ChevronRight size={20} />
-            </button>
-
-            <button
-              onClick={onFavoriteToggle}
-              className="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-muted"
-            >
-              <Heart size={20} className={isFavorited ? "fill-red-500 text-red-500" : ""} />
+    <>
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="sticky top-0 flex items-center justify-between p-4 border-b bg-white">
+            <h2 className="text-xl font-semibold">{listing.title}</h2>
+            <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
+              <X size={24} />
             </button>
           </div>
 
-          <div>
-            <h3 className="text-2xl font-bold">{listing.price}</h3>
-            <p className="text-muted-foreground">{listing.beds} beds • {listing.baths} baths</p>
-            <p className="text-muted-foreground">{listing.location}</p>
-          </div>
+          <div className="p-4 space-y-4">
+            <div className="relative w-full h-80 rounded-lg overflow-hidden bg-gray-200 group">
+              <img
+                src={listing.images[currentImageIndex] || "/placeholder.svg"}
+                alt={listing.title}
+                className="w-full h-full object-cover"
+              />
 
-          {listing.description && (
-            <div>
-              <h4 className="font-semibold mb-2">About</h4>
-              <p className="text-sm text-muted-foreground">{listing.description}</p>
+              <button
+                onClick={handlePrevImage}
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2"
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              <button
+                onClick={handleNextImage}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2"
+              >
+                <ChevronRight size={20} />
+              </button>
+
+              <button
+                onClick={onFavoriteToggle}
+                className="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-muted"
+              >
+                <Heart size={20} className={isFavorited ? "fill-red-500 text-red-500" : ""} />
+              </button>
             </div>
-          )}
 
-          {listing.amenities && listing.amenities.length > 0 && (
             <div>
-              <h4 className="font-semibold mb-2">Amenities</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {listing.amenities.map((amenity) => (
-                  <div key={amenity} className="text-sm text-muted-foreground">
-                    • {amenity}
-                  </div>
-                ))}
+              <h3 className="text-2xl font-bold">{listing.price}</h3>
+              <p className="text-muted-foreground">
+                {listing.beds} beds • {listing.baths} baths
+              </p>
+              <p className="text-muted-foreground">{listing.location}</p>
+            </div>
+
+            {listing.description && (
+              <div>
+                <h4 className="font-semibold mb-2">About</h4>
+                <p className="text-sm text-muted-foreground">{listing.description}</p>
               </div>
+            )}
+
+            {listing.amenities && listing.amenities.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2">Amenities</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {listing.amenities.map((amenity) => (
+                    <div key={amenity} className="text-sm text-muted-foreground">
+                      • {amenity}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <button
+                onClick={() => setShowTourModal(true)}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                Send tour request
+              </button>
+              <button
+                onClick={() => setShowApplyModal(true)}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                Request to apply
+              </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
-    </div>
+
+      <RequestTourModal isOpen={showTourModal} onClose={() => setShowTourModal(false)} listingTitle={listing.title} />
+      <RequestToApplyModal
+        isOpen={showApplyModal}
+        onClose={() => setShowApplyModal(false)}
+        listingTitle={listing.title}
+        agent={listing.agent}
+      />
+    </>
   )
 }

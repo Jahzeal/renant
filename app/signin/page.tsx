@@ -3,6 +3,8 @@
 import Link from "next/link"
 import type React from "react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/use-auth"
 
 interface SocialButtonProps {
   icon: React.ReactNode
@@ -21,17 +23,26 @@ export default function SigninPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState("")
+  const router = useRouter()
+  const { signIn, isLoading } = useAuth()
 
   const handleEmailContinue = (e: React.FormEvent) => {
     e.preventDefault()
     if (email.trim()) {
       setEmailSubmitted(true)
+      setError("")
     }
   }
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Signing in with:", email, password)
+    try {
+      await signIn(email, password)
+      router.push("/rentals")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign in failed")
+    }
   }
 
   const googleIcon = (
@@ -70,10 +81,14 @@ export default function SigninPage() {
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-6 sm:px-8 bg-white">
         <div className="w-full max-w-sm">
           <div className="mb-4">
-            <span className="text-3xl font-bold text-blue-600">Zillow</span>
+            {/* <span className="text-3xl font-bold text-blue-600">Zillow</span> */}
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-6">Sign in</h2>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>
+          )}
 
           <form className="space-y-4" onSubmit={emailSubmitted ? handleSignIn : handleEmailContinue}>
             <div>
@@ -124,9 +139,10 @@ export default function SigninPage() {
 
             <button
               type="submit"
-              className="w-full mt-4 bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors text-sm"
+              disabled={isLoading}
+              className="w-full mt-4 bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 disabled:opacity-50 transition-colors text-sm"
             >
-              {emailSubmitted ? "Sign in" : "Continue"}
+              {isLoading ? "Loading..." : emailSubmitted ? "Sign in" : "Continue"}
             </button>
 
             {emailSubmitted && (
@@ -135,6 +151,7 @@ export default function SigninPage() {
                 onClick={() => {
                   setEmailSubmitted(false)
                   setPassword("")
+                  setError("")
                 }}
                 className="w-full text-blue-600 font-semibold hover:text-blue-700 py-2 text-sm"
               >
@@ -151,8 +168,6 @@ export default function SigninPage() {
                   Create account
                 </Link>
               </p>
-
-             
 
               <div className="flex items-center space-x-3 my-4">
                 <div className="flex-1 border-t border-gray-300"></div>

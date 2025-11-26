@@ -1,22 +1,25 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import type React from "react"
 
 import Link from "next/link"
-import { Menu, X, Search } from "lucide-react"
+import { Menu, X, Search, LogOut } from "lucide-react"
+import { useAuth } from "@/lib/use-auth"
+import { useRouter } from "next/navigation"
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [searchInput, setSearchInput] = useState("")
   const [showRentDropdown, setShowRentDropdown] = useState(false)
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false)
+  const [showManageRentalsDropdown, setShowManageRentalsDropdown] = useState(false)
+  const profileDropdownRef = useRef<HTMLDivElement>(null)
+  const manageRentalsDropdownRef = useRef<HTMLDivElement>(null)
+  const { user, signOut } = useAuth()
+  const router = useRouter()
 
-  const navItems = [
-    { label: "Rent", href: "#" },
-    // { label: "Sell", href: "#" },
-    // { label: "Get a mortgage", href: "#" },
-    // { label: "Find an agent", href: "#" },
-  ]
+  const navItems = [{ label: "Rent", href: "#" }]
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,11 +30,30 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target as Node)) {
+        setShowProfileDropdown(false)
+      }
+      if (manageRentalsDropdownRef.current && !manageRentalsDropdownRef.current.contains(e.target as Node)) {
+        setShowManageRentalsDropdown(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchInput.trim()) {
       window.location.href = `/rentals?location=${encodeURIComponent(searchInput)}`
     }
+  }
+
+  const handleSignOut = () => {
+    signOut()
+    router.push("/")
   }
 
   let dropdownTimer: NodeJS.Timeout | null = null
@@ -56,13 +78,24 @@ export default function Header() {
     setShowRentDropdown(false)
   }
 
+  const handleLogoClick = (e: React.MouseEvent) => {
+    if (!user) {
+      e.preventDefault()
+      router.push("/")
+    }
+  }
+
   return (
     <>
       <header className="border-b border-border bg-white relative z-30">
         <div className="max-w-full px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Link href="/rentals" className="text-primary font-bold text-2xl hover:opacity-80 transition-opacity">
+              <Link
+                href={user ? "/rentals" : "/"}
+                onClick={handleLogoClick}
+                className="text-primary font-bold text-2xl hover:opacity-80 transition-opacity"
+              >
                 Z
               </Link>
               <span className="font-semibold hidden sm:inline text-lg"></span>
@@ -94,7 +127,6 @@ export default function Header() {
               >
                 <div className="max-w-7xl mx-auto px-8 py-12">
                   <div className="grid grid-cols-4 gap-16">
-                    {/* Lyons rentals column */}
                     <div>
                       <h3 className="font-semibold text-base mb-6 text-foreground">Lyons rentals</h3>
                       <div className="space-y-4">
@@ -113,7 +145,6 @@ export default function Header() {
                       </div>
                     </div>
 
-                    {/* Your search column */}
                     <div>
                       <h3 className="font-semibold text-base mb-6 text-foreground">Your search</h3>
                       <div className="space-y-4">
@@ -132,7 +163,6 @@ export default function Header() {
                       </div>
                     </div>
 
-                    {/* Your rental column */}
                     <div>
                       <h3 className="font-semibold text-base mb-6 text-foreground">Your rental</h3>
                       <div className="space-y-4">
@@ -147,46 +177,135 @@ export default function Header() {
                         </a>
                       </div>
                     </div>
-
-                    {/* Resources column */}
-                    {/* <div>
-                      <h3 className="font-semibold text-base mb-6 text-foreground">Resources</h3>
-                      <div className="space-y-4">
-                        <a href="#" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Rent with Zillow
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Build your credit
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Renters insurance
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Affordability calculator
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Rent Guide
-                        </a>
-                      </div>
-                    </div> */}
                   </div>
                 </div>
               </div>
             )}
 
             <div className="hidden sm:flex items-center gap-4 md:gap-6">
-              {/* <button className="text-foreground hover:text-primary font-medium text-sm transition-colors">
-                Manage rentals
-              </button>
-              <button className="text-foreground hover:text-primary font-medium text-sm transition-colors">
-                Advertise
-              </button>
+              <div className="relative" ref={manageRentalsDropdownRef}>
+                <button
+                  onClick={() => setShowManageRentalsDropdown(!showManageRentalsDropdown)}
+                  className="text-foreground hover:text-primary font-medium text-sm transition-colors"
+                >
+                  Manage rentals
+                </button>
+
+                {showManageRentalsDropdown && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white border border-border rounded-lg shadow-lg p-6 z-50">
+                    <div>
+                      <h3 className="font-semibold text-base mb-4 text-foreground">Rental Management Tools</h3>
+                      <div className="space-y-3 mb-6">
+                        <a href="#" className="block text-sm text-primary hover:underline">
+                          List a rental
+                        </a>
+                        <a href="#" className="block text-sm text-primary hover:underline">
+                          My Listings
+                        </a>
+                        <a href="#" className="block text-sm text-primary hover:underline">
+                          Inbox
+                        </a>
+                        <a href="#" className="block text-sm text-primary hover:underline">
+                          Applications
+                        </a>
+                        <a href="#" className="block text-sm text-primary hover:underline">
+                          Leases
+                        </a>
+                        <a href="#" className="block text-sm text-primary hover:underline">
+                          Payments
+                        </a>
+                      </div>
+
+                      <hr className="border-border my-4" />
+
+                      <h4 className="font-semibold text-sm mb-3 text-foreground">Learn More</h4>
+                      <div className="space-y-3">
+                        <a href="#" className="block text-sm text-primary hover:underline">
+                          Follow Rental Manager
+                        </a>
+                        <a href="#" className="block text-sm text-primary hover:underline">
+                          Price My Rental
+                        </a>
+                        <a href="#" className="block text-sm text-primary hover:underline">
+                          Resource Center
+                        </a>
+                        <a href="#" className="block text-sm text-primary hover:underline">
+                          Help Center
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button className="text-foreground hover:text-primary font-medium text-sm transition-colors">
                 Get help
-              </button> */}
-              <Link href="/signin" className="text-black font-semibold text-sm hover:opacity-80 transition-opacity">
-                Sign in
-              </Link>
+              </button>
+
+              {user ? (
+                <div className="flex items-center gap-4">
+                  <div className="relative" ref={profileDropdownRef}>
+                    <img
+                      src={user.profileImage || "/placeholder.svg"}
+                      alt={user.firstName}
+                      className="w-8 h-8 rounded-full border-2 border-primary hover:border-primary/80 transition-colors cursor-pointer"
+                      title={user.firstName}
+                      onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                    />
+
+                    {showProfileDropdown && (
+                      <div className="absolute right-0 mt-2 w-64 bg-white border border-border rounded-lg shadow-lg p-6 z-50">
+                        <div className="space-y-4">
+                          <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
+                            Saved homes
+                          </a>
+                          <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
+                            Saved searches
+                          </a>
+                          <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
+                            Inbox
+                          </a>
+                          <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
+                            Manage tours
+                          </a>
+                          <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
+                            Recently Viewed
+                          </a>
+                          <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
+                            Your team
+                          </a>
+                          <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
+                            Your home
+                          </a>
+                          <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
+                            Renter Hub
+                          </a>
+
+                          <hr className="border-border my-2" />
+
+                          <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
+                            Account settings
+                          </a>
+
+                          <hr className="border-border my-2" />
+
+                          <button
+                            onClick={handleSignOut}
+                            className="w-full text-left text-sm text-foreground hover:text-primary font-medium flex items-center gap-2"
+                          >
+                            <LogOut size={16} />
+                            Sign out
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <Link href="/signin" className="text-black font-semibold text-sm hover:opacity-80 transition-opacity">
+                  Sign in
+                </Link>
+              )}
             </div>
 
             <button
@@ -223,14 +342,24 @@ export default function Header() {
                 Manage rentals
               </button>
               <button className="w-full text-left text-foreground hover:text-primary font-medium text-sm py-2 transition-colors">
-                Advertise
-              </button>
-              <button className="w-full text-left text-foreground hover:text-primary font-medium text-sm py-2 transition-colors">
                 Get help
               </button>
-              <Link href="/signin" className="text-black font-semibold text-sm hover:opacity-80 transition-opacity">
-                Sign in
-              </Link>
+              {user ? (
+                <button
+                  onClick={handleSignOut}
+                  className="w-full text-left text-foreground hover:text-primary font-medium text-sm py-2 transition-colors flex items-center gap-2"
+                >
+                  <LogOut size={16} />
+                  Sign out
+                </button>
+              ) : (
+                <Link
+                  href="/signin"
+                  className="text-black font-semibold text-sm hover:opacity-80 transition-opacity block py-2"
+                >
+                  Sign in
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -243,7 +372,10 @@ export default function Header() {
       >
         <div className="max-w-full px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center gap-4">
-            <Link href="/rentals" className="text-primary font-bold text-xl hover:opacity-80 transition-opacity">
+            <Link
+              href={user ? "/rentals" : "/"}
+              className="text-primary font-bold text-xl hover:opacity-80 transition-opacity"
+            >
               Z
             </Link>
 
@@ -268,3 +400,4 @@ export default function Header() {
     </>
   )
 }
+``

@@ -57,7 +57,6 @@ export default function ListingCard({
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
 
-          {/* Tags */}
           <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
             <span className="px-2 py-1 bg-white text-xs font-semibold rounded shadow">
               {listing.style}
@@ -113,7 +112,6 @@ export default function ListingCard({
             {listing.address}
           </p>
 
-          {/* PRICE OPTIONS */}
           <div className="flex flex-wrap gap-2">
             {listing.prices.map((p) => (
               <div key={p.beds} className="px-3 py-2 border border-border rounded text-center">

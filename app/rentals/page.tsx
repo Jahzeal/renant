@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useState, useEffect, useCallback } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { useAuth } from "@/lib/use-auth"
 import Header from "@/components/header"
 import SearchBar from "@/components/search-bar"
 import MainContent from "@/components/main-content"
@@ -39,26 +40,92 @@ const parseUrlParams = (
 }
 
 export default function Rentals() {
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
   const searchParams = useSearchParams()
 
-  const initialData = parseUrlParams(searchParams)
-
-  const [location, setLocation] = useState(initialData.coords)
-  const [locationName, setLocationName] = useState(initialData.name)
-  const [filters, setFilters] = useState<AppliedFilters>(initialData.filters)
+  const [location, setLocation] = useState<{ lng: number; lat: number } | null>(null)
+  const [locationName, setLocationName] = useState("")
+  const [filters, setFilters] = useState<AppliedFilters>({
+    price: null,
+    beds: "Any",
+    propertyType: "All types",
+    moreOptions: null,
+  })
+  const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
-    console.log("Current Location/Filters state:", { locationName, location, filters })
-  }, [locationName, location, filters])
+    if (isLoading) {
+      return
+    }
 
-  const handleSearch = (name: string, coords?: { lng: number; lat: number }) => {
-    console.log("Search triggered with coords:", coords)
-    setLocationName(name || "")
-    setLocation(coords || null)
-  }
+    if (!user) {
+      router.push("/signin")
+      return
+    }
 
-  const handleFiltersChange = (newFilters: AppliedFilters) => {
-    setFilters(newFilters)
+    const initialData = parseUrlParams(searchParams)
+    setLocation(initialData.coords)
+    setLocationName(initialData.name)
+    setFilters(initialData.filters)
+    setIsInitialized(true)
+  }, [user, isLoading, router])
+
+  const handleSearch = useCallback(
+    (name: string, coords?: { lng: number; lat: number }) => {
+      console.log("Search triggered with coords:", coords)
+      setLocationName(name || "")
+      setLocation(coords || null)
+
+      const params = new URLSearchParams()
+      if (name) params.set("location", name)
+      if (coords) {
+        params.set("lat", coords.lat.toString())
+        params.set("lng", coords.lng.toString())
+      }
+      // Preserve existing filters
+      if (filters.price) {
+        params.set("priceMin", filters.price.min.toString())
+        params.set("priceMax", filters.price.max.toString())
+      }
+      if (filters.beds !== "Any") params.set("beds", filters.beds)
+      if (filters.propertyType !== "All types") params.set("propertyType", filters.propertyType)
+
+      router.push(`?${params.toString()}`)
+    },
+    [filters, router],
+  )
+
+  const handleFiltersChange = useCallback(
+    (newFilters: AppliedFilters) => {
+      setFilters(newFilters)
+
+      const params = new URLSearchParams()
+      if (locationName) params.set("location", locationName)
+      if (location) {
+        params.set("lat", location.lat.toString())
+        params.set("lng", location.lng.toString())
+      }
+      if (newFilters.price) {
+        params.set("priceMin", newFilters.price.min.toString())
+        params.set("priceMax", newFilters.price.max.toString())
+      }
+      if (newFilters.beds !== "Any") params.set("beds", newFilters.beds)
+      if (newFilters.propertyType !== "All types") params.set("propertyType", newFilters.propertyType)
+
+      router.push(`?${params.toString()}`)
+    },
+    [locationName, location, router],
+  )
+
+  useEffect(() => {
+    if (isInitialized) {
+      console.log("Current Location/Filters state:", { locationName, location, filters })
+    }
+  }, [locationName, location, filters, isInitialized])
+
+  if (isLoading || !user) {
+    return null
   }
 
   return (

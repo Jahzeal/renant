@@ -1,40 +1,33 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { X } from 'lucide-react';
+import { useState } from "react"
+import { X } from "lucide-react"
 
 interface PropertyTypeModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onApply: (propertyType: string) => void;
+  isOpen: boolean
+  onClose: () => void
+  onApply: (propertyType: string) => void
 }
 
-export default function PropertyTypeModal({
-  isOpen,
-  onClose,
-  onApply,
-}: PropertyTypeModalProps) {
-  const [selectedType, setSelectedType] = useState("All types");
+export default function PropertyTypeModal({ isOpen, onClose, onApply }: PropertyTypeModalProps) {
+  const [selectedType, setSelectedType] = useState("All types")
 
-  const propertyTypes = ["All types", "Apartment", "House", "Condo", "Townhouse", "Studio"];
+  const propertyTypes = ["All types", "Home", "Shortlet", "Hostel"]
 
   const handleApply = () => {
-    onApply(selectedType);
-    onClose();
-  };
+    onApply(selectedType)
+    onClose()
+  }
 
   const handleReset = () => {
-    setSelectedType("All types");
-  };
+    setSelectedType("All types")
+  }
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <>
-      <div
-        className="fixed inset-0 bg-black/50 z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 w-full">
         <div className="w-full md:max-w-md bg-white rounded-t-2xl md:rounded-lg shadow-xl p-0 mx-auto">
           {/* Header */}
@@ -84,5 +77,5 @@ export default function PropertyTypeModal({
         </div>
       </div>
     </>
-  );
+  )
 }

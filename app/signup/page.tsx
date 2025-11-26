@@ -3,6 +3,8 @@
 import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/use-auth"
 
 interface SocialButtonProps {
   icon: React.ReactNode
@@ -18,20 +20,39 @@ const SocialButton: React.FC<SocialButtonProps> = ({ icon, text }) => (
 
 export default function SignupPage() {
   const [emailSubmitted, setEmailSubmitted] = useState(false)
+  const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     email: "",
     firstName: "",
-    lastName: "",
     password: "",
-    confirmPassword: "",
   })
   const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const router = useRouter()
+  const { signUp, isLoading } = useAuth()
 
   const handleEmailContinue = (e: React.FormEvent) => {
     e.preventDefault()
     if (formData.email.trim()) {
       setEmailSubmitted(true)
+      setError("")
+    }
+  }
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      if (!formData.firstName.trim()) {
+        setError("Full name is required")
+        return
+      }
+      if (formData.password.length < 8) {
+        setError("Password must be at least 8 characters")
+        return
+      }
+      await signUp(formData.email, formData.firstName, formData.password)
+      router.push("/rentals")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign up failed")
     }
   }
 
@@ -41,15 +62,6 @@ export default function SignupPage() {
       ...prev,
       [name]: value,
     }))
-  }
-
-  const handleSignUp = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match")
-      return
-    }
-    console.log("Signing up with:", formData)
   }
 
   const googleIcon = (
@@ -90,12 +102,16 @@ export default function SignupPage() {
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-6 sm:px-8 bg-white">
         <div className="w-full max-w-sm">
           <div className="mb-4">
-            <span className="text-3xl font-bold text-blue-600">Zillow</span>
+            {/* <span className="text-3xl font-bold text-blue-600">Zillow</span> */}
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-6">
             {emailSubmitted ? "Tell us about yourself" : "Create account"}
           </h2>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>
+          )}
 
           <form className="space-y-4" onSubmit={emailSubmitted ? handleSignUp : handleEmailContinue}>
             <div>
@@ -126,7 +142,7 @@ export default function SignupPage() {
                     id="firstName"
                     name="firstName"
                     type="text"
-                    placeholder="FirstName"
+                    placeholder="Enter your full name"
                     value={formData.firstName}
                     onChange={handleChange}
                     required
@@ -134,22 +150,6 @@ export default function SignupPage() {
                     autoFocus
                   />
                 </div>
-
-                {/* <div>
-                  <label htmlFor="lastName" className="text-sm font-medium text-gray-700">
-                    Last Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    placeholder="Doe"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    required
-                    className="w-full mt-1 p-3 border-2 border-blue-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
-                </div> */}
 
                 <div>
                   <label htmlFor="password" className="text-sm font-medium text-gray-700">
@@ -176,45 +176,24 @@ export default function SignupPage() {
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
                 </div>
-
-                {/* <div>
-                  <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
-                    Confirm Password <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative mt-1">
-                    <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm password"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      required
-                      className="w-full p-3 border-2 border-blue-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 text-xs font-medium"
-                    >
-                      {showConfirmPassword ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                </div> */}
               </>
             )}
 
             <button
               type="submit"
-              className="w-full mt-4 bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors text-sm"
+              disabled={isLoading}
+              className="w-full mt-4 bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 disabled:opacity-50 transition-colors text-sm"
             >
-              {emailSubmitted ? "Create account" : "Continue"}
+              {isLoading ? "Loading..." : emailSubmitted ? "Create account" : "Continue"}
             </button>
 
             {emailSubmitted && (
               <button
                 type="button"
-                onClick={() => setEmailSubmitted(false)}
+                onClick={() => {
+                  setEmailSubmitted(false)
+                  setError("")
+                }}
                 className="w-full text-blue-600 font-semibold hover:text-blue-700 py-2 text-sm"
               >
                 Back
@@ -231,7 +210,6 @@ export default function SignupPage() {
                 </Link>
               </p>
 
-             
               <div className="flex items-center space-x-3 my-4">
                 <div className="flex-1 border-t border-gray-300"></div>
                 <span className="text-xs font-medium text-gray-500">OR</span>
