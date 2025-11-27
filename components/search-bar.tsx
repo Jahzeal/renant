@@ -2,9 +2,9 @@
 import { useEffect, useState } from "react"
 import { Search, ChevronDown, X, Dog, Cat, CircleSlash } from "lucide-react"
 import { Button } from "./ui/button"
-import PriceRangeModal from "./price-range-modal"
+import PriceRangeModal from "./modal/price-range-modal"
 import BedsBathsModal from "./baths-bed-modal"
-import PropertyTypeModal from "./property-type-modal"
+import PropertyTypeModal from "./modal/property-type-modal"
 
 interface FilterProps {
   label: string

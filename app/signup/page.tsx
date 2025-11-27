@@ -1,11 +1,31 @@
 "use client";
 
+<<<<<<< HEAD
+import type React from "react"
+import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/hooks/use-auth"
+
+interface SocialButtonProps {
+  icon: React.ReactNode
+  text: string
+}
+
+const SocialButton: React.FC<SocialButtonProps> = ({ icon, text }) => (
+  <button className="flex items-center justify-center w-full py-3 px-4 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
+    {icon}
+    <span className="ml-2">{text}</span>
+  </button>
+)
+=======
 import type React from "react";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth"; // Assuming the path is correct
 import SocialButton from "@/components/SocialButton";
+>>>>>>> 7784dad62b91dc5074810cfda07357e1fcd440df
 
 export default function SignupPage() {
   const [emailSubmitted, setEmailSubmitted] = useState(false);
@@ -38,12 +58,30 @@ export default function SignupPage() {
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
+<<<<<<< HEAD
+    e.preventDefault()
+    try {
+      if (!formData.firstName.trim()) {
+        setError("Full name is required")
+        return
+      }
+      if (formData.password.length < 8) {
+        setError("Password must be at least 8 characters")
+        return
+      }
+      const screenName = formData.email.split("@")[0]
+      await signUp(formData.email, formData.firstName, screenName, formData.password)
+      router.push("/rentals")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign up failed")
+=======
     e.preventDefault();
     
     // 1. Client-side validation
     if (!formData.firstName.trim()) {
       setError("Full name is required");
       return;
+>>>>>>> 7784dad62b91dc5074810cfda07357e1fcd440df
     }
     if (formData.password.length < 8) {
       setError("Password must be at least 8 characters");
@@ -111,9 +149,7 @@ export default function SignupPage() {
     <div className="flex h-screen w-screen overflow-hidden bg-white">
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-6 sm:px-8 bg-white">
         <div className="w-full max-w-sm">
-          <div className="mb-4">
-            {/* <span className="text-3xl font-bold text-blue-600">Zillow</span> */}
-          </div>
+          <div className="mb-4">{/* <span className="text-3xl font-bold text-blue-600">Zillow</span> */}</div>
 
           <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-6">
             {emailSubmitted ? "Tell us about yourself" : "Create account"}
@@ -303,5 +339,10 @@ export default function SignupPage() {
         />
       </div>
     </div>
+<<<<<<< HEAD
+  )
+}
+=======
   );
 }
+>>>>>>> 7784dad62b91dc5074810cfda07357e1fcd440df

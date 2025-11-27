@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react"
 import { useFavorites } from "@/lib/favorites-context"
 import ListingCard from "./listing-card"
-import ListingDetailsModal from "./listing-details-modal"
+import ListingDetailsModal from "./modal/listing-details-modal"
 import { SAMPLE_LISTINGS } from "@/lib/sample-listing"
 
 interface MoreOptionsFilters {
