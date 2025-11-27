@@ -1,5 +1,6 @@
 "use client"
 import { useState, useMemo } from "react"
+import { useFavorites } from "@/lib/favorites-context"
 import ListingCard from "./listing-card"
 import ListingDetailsModal from "./listing-details-modal"
 import { SAMPLE_LISTINGS } from "@/lib/sample-listing"
@@ -10,13 +11,14 @@ interface MoreOptionsFilters {
   shortTermLease?: boolean
   commuteTime?: string
   keywords?: string
-  baths?: string   // ✅ ADDED
+  baths?: string // ✅ ADDED
 }
 
 interface AppliedFilters {
   price: { min: number; max: number } | null
   beds: string
   propertyType: string
+  category: string
   moreOptions: MoreOptionsFilters | null
 }
 
@@ -43,22 +45,31 @@ interface Listing {
 }
 
 export default function ListingsPanel({ searchLocation = "", filters }: ListingsPanelProps) {
-  const [favorites, setFavorites] = useState<string[]>([])
+  const { favorites, toggleFavorite } = useFavorites()
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
-  const [sortBy, setSortBy] = useState<
-    "recommended" | "price-low" | "price-high" | "newest" | "lot-size"
-  >("recommended")
+  const [sortBy, setSortBy] = useState<"recommended" | "price-low" | "price-high" | "newest" | "lot-size">(
+    "recommended",
+  )
 
   const filteredListings = useMemo(() => {
     let results = [...SAMPLE_LISTINGS]
 
+    if (filters?.category && filters.category !== "all") {
+      const categoryMap: { [key: string]: string } = {
+        houses: "Home",
+        shortlets: "Shortlet",
+      }
+      const typeToFilter = categoryMap[filters.category]
+      if (typeToFilter) {
+        results = results.filter((listing) => listing.type === typeToFilter)
+      }
+    }
+
     // FILTER — Property Type
     if (filters?.propertyType && filters.propertyType !== "All types") {
-      results = results.filter(
-        (listing) => listing.type.toLowerCase() === filters.propertyType.toLowerCase(),
-      )
+      results = results.filter((listing) => listing.type.toLowerCase() === filters.propertyType.toLowerCase())
     }
 
     // FILTER — Location Search
@@ -141,9 +152,7 @@ export default function ListingsPanel({ searchLocation = "", filters }: Listings
 
       // Short-term lease
       if (more.shortTermLease) {
-        results = results.filter(
-          (listing) => listing.type.toLowerCase() === "shortlet",
-        )
+        results = results.filter((listing) => listing.type.toLowerCase() === "shortlet")
       }
     }
 
@@ -164,13 +173,6 @@ export default function ListingsPanel({ searchLocation = "", filters }: Listings
 
     return results
   }, [searchLocation, filters, sortBy])
-
-  // FAVORITE HANDLER
-  const handleFavoriteToggle = (id: string) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    )
-  }
 
   const handleViewDetails = (listing: Listing) => {
     setSelectedListing(listing)
@@ -198,9 +200,7 @@ export default function ListingsPanel({ searchLocation = "", filters }: Listings
             <select
               value={sortBy}
               onChange={(e) =>
-                setSortBy(
-                  e.target.value as "recommended" | "price-low" | "price-high" | "newest" | "lot-size",
-                )
+                setSortBy(e.target.value as "recommended" | "price-low" | "price-high" | "newest" | "lot-size")
               }
               className="
                 w-full sm:w-48 text-primary font-semibold text-sm cursor-pointer px-3 py-2
@@ -225,7 +225,7 @@ export default function ListingsPanel({ searchLocation = "", filters }: Listings
               key={listing.id}
               listing={listing}
               isFavorited={favorites.includes(listing.id)}
-              onFavoriteToggle={() => handleFavoriteToggle(listing.id)}
+              onFavoriteToggle={() => toggleFavorite(listing.id)}
               onViewDetails={() => handleViewDetails(listing)}
             />
           ))
@@ -254,7 +254,7 @@ export default function ListingsPanel({ searchLocation = "", filters }: Listings
           isOpen={isDetailsOpen}
           onClose={() => setIsDetailsOpen(false)}
           isFavorited={favorites.includes(selectedListing.id)}
-          onFavoriteToggle={() => handleFavoriteToggle(selectedListing.id)}
+          onFavoriteToggle={() => toggleFavorite(selectedListing.id)}
         />
       )}
     </div>

@@ -29,6 +29,7 @@ export const SAMPLE_LISTINGS: Listing[] = [
     offer: "12 available units",
     location: "Chapel Hill",
     type: "Home",
+
     prices: [
       { beds: 1, price: 1575 },
       { beds: 2, price: 1950 },
