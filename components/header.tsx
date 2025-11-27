@@ -4,7 +4,7 @@ import type React from "react";
 
 import Link from "next/link";
 import { Menu, X, Search, LogOut } from "lucide-react";
-import { useAuth } from "@/lib/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 
 export default function Header() {
