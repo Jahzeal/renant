@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useAuth } from "@/lib/use-auth";
 import Header from "@/components/header";
 import SearchBar from "@/components/search-bar";
 import MainContent from "@/components/main-content";
@@ -50,7 +49,6 @@ const parseUrlParams = (
 };
 
 export default function Rentals() {
-  const { user, isLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -66,26 +64,17 @@ export default function Rentals() {
   });
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize URL params
   useEffect(() => {
-    if (isLoading) {
-      return;
-    }
-
-    if (!user) {
-      router.push("/signin");
-      return;
-    }
-
     const initialData = parseUrlParams(searchParams);
     setLocation(initialData.coords);
     setLocationName(initialData.name);
     setFilters(initialData.filters);
     setIsInitialized(true);
-  }, [user, isLoading, router]);
+  }, [searchParams]);
 
   const handleSearch = useCallback(
     (name: string, coords?: { lng: number; lat: number }) => {
-      console.log("Search triggered with coords:", coords);
       setLocationName(name || "");
       setLocation(coords || null);
 
@@ -95,7 +84,8 @@ export default function Rentals() {
         params.set("lat", coords.lat.toString());
         params.set("lng", coords.lng.toString());
       }
-      // Preserve existing filters
+
+      // Preserve filters
       if (filters.price) {
         params.set("priceMin", filters.price.min.toString());
         params.set("priceMax", filters.price.max.toString());
@@ -132,6 +122,7 @@ export default function Rentals() {
     [locationName, location, router]
   );
 
+  // Log state when ready
   useEffect(() => {
     if (isInitialized) {
       console.log("Current Location/Filters state:", {
@@ -141,10 +132,6 @@ export default function Rentals() {
       });
     }
   }, [locationName, location, filters, isInitialized]);
-
-  if (isLoading) {
-    return null;
-  }
 
   return (
     <main className="h-screen bg-background flex flex-col overflow-hidden">
