@@ -6,6 +6,7 @@ import { Search, Clock, MapPin, ChevronLeft, ChevronRight } from "lucide-react"
 import Header from "@/components/header"
 import Link from "next/link"
 import { SAMPLE_LISTINGS } from "@/lib/sample-listing"
+import { useAuth } from "@/hooks/use-auth"
 
 interface SearchHistory {
   id: string
@@ -39,6 +40,8 @@ export default function LandingPage() {
   const [continueSearchProperties, setContinueSearchProperties] = useState<Property[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [isGettingLocation, setIsGettingLocation] = useState(false)
+
+  const { user } = useAuth()
 
   useEffect(() => {
     setMounted(true)
@@ -95,7 +98,7 @@ export default function LandingPage() {
     let noMatches = false
 
     if (filteredListings.length === 0) {
-      console.log("[v0] No matches found → fallback to other locations")
+      console.log(" No matches found → fallback to other locations")
       noMatches = true
       filteredListings = SAMPLE_LISTINGS
     }
@@ -343,32 +346,34 @@ export default function LandingPage() {
       </section>
 
       {/* Get Recommendations Section */}
-      <div className="bg-white px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-b">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-6 sm:gap-8">
-          <div className="flex-1 text-center md:text-left">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2 sm:mb-3">
-              Get home recommendations
-            </h2>
-            <p className="text-gray-600 text-sm sm:text-base mb-4 sm:mb-6">
-              Sign in for a more personalized experience.
-            </p>
-            <Link
-              href="/signin"
-              className="px-5 sm:px-6 py-2 sm:py-2.5 border-2 border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors text-sm sm:text-base inline-block"
-            >
-              Sign in
-            </Link>
-          </div>
-          <div className="flex-1 w-full">
-            <div
-              className="h-48 sm:h-56 md:h-64 rounded-lg bg-cover bg-center"
-              style={{
-                backgroundImage: "url(/houses.jpg)",
-              }}
-            ></div>
+      {!user && (
+        <div className="bg-white px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-b">
+          <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-6 sm:gap-8">
+            <div className="flex-1 text-center md:text-left">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2 sm:mb-3">
+                Get home recommendations
+              </h2>
+              <p className="text-gray-600 text-sm sm:text-base mb-4 sm:mb-6">
+                Sign in for a more personalized experience.
+              </p>
+              <Link
+                href="/signin"
+                className="px-5 sm:px-6 py-2 sm:py-2.5 border-2 border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors text-sm sm:text-base inline-block"
+              >
+                Sign in
+              </Link>
+            </div>
+            <div className="flex-1 w-full">
+              <div
+                className="h-48 sm:h-56 md:h-64 rounded-lg bg-cover bg-center"
+                style={{
+                  backgroundImage: "url(/houses.jpg)",
+                }}
+              ></div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {continueSearchProperties.length > 0 && (
         <div className="bg-white px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-b">

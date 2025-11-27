@@ -1,117 +1,101 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Link from "next/link";
-import { ChevronRight, User, Mail, FileText } from "lucide-react";
-import Header from "@/components/header";
+import Link from "next/link"
+import { ChevronRight, User, Mail, FileText } from "lucide-react"
+import Header from "@/components/header"
+import PageHeader from "@/components/page-header"
 
 export default function AccountSettingsPage() {
-  const [activeTab, setActiveTab] = useState("account-settings");
-
   const settingsItems = [
     {
       id: "profile",
       icon: User,
       title: "Profile",
-      description:
-        "Personalize your account and update your sign in preferences.",
+      description: "Personalize your account and update your sign in preferences.",
+      href: "/account-settings/profile",
     },
     {
       id: "notifications",
       icon: Mail,
       title: "Notifications",
       description: "Manage the content and frequency of your Zillow emails.",
+      href: "/account-settings/notifications",
     },
     {
       id: "documents",
       icon: FileText,
       title: "Document Preferences",
-      description:
-        "View your legal documents, and manage your preferences for receiving and signing documents.",
+      description: "View your legal documents, and manage your preferences for receiving and signing documents.",
+      href: "/account-settings/document-preferences",
     },
-  ];
+  ]
 
   return (
     <>
-      <Header />
-      <div className="min-h-screen bg-white">
+      <PageHeader />
+      <div className="flex flex-col bg-white min-h-[calc(100vh-64px)]">
         {/* Navigation Tabs */}
-        <nav className="border-b border-border bg-white sticky top-0 z-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-6 overflow-x-auto">
+        <nav className="border-b border-border bg-white sticky top-0 z-20 flex-shrink-0">
+          <div className="w-full px-2 sm:px-4 md:px-6">
+            <div className="flex items-center gap-2 sm:gap-4 md:gap-6 overflow-x-auto">
               <Link
                 href="/saved-homes"
-                className="px-0 py-4 text-sm font-medium text-foreground/70 hover:text-foreground border-b-2 border-transparent transition-colors whitespace-nowrap"
+                className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium text-foreground/70 hover:text-foreground border-b-2 border-transparent transition-colors whitespace-nowrap"
               >
                 Saved homes
               </Link>
-
-              <button
-                onClick={() => setActiveTab("account-settings")}
-                className={`px-0 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === "account-settings"
-                    ? "text-primary border-primary"
-                    : "text-foreground/70 hover:text-foreground border-transparent"
-                }`}
+              {/* <Link
+                href="#"
+                className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium text-foreground/70 hover:text-foreground border-b-2 border-transparent transition-colors whitespace-nowrap"
               >
+                Saved searches
+              </Link> */}
+              <button className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 border-primary text-primary transition-colors whitespace-nowrap">
                 Account settings
               </button>
-              <Link
-                href="#"
-                className="px-0 py-4 text-sm font-medium text-foreground/70 hover:text-foreground border-b-2 border-transparent transition-colors whitespace-nowrap"
-              >
-                Recently Viewed
-              </Link>
-              <Link
-                href="#"
-                className="px-0 py-4 text-sm font-medium text-foreground/70 hover:text-foreground border-b-2 border-transparent transition-colors whitespace-nowrap"
-              >
-                Manage tours
-              </Link>
             </div>
           </div>
         </nav>
 
-        {/* Main Content */}
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-4xl font-bold text-foreground mb-8">
-            Account settings
-          </h1>
+        <main className="flex-1 overflow-y-auto">
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-6 sm:mb-8">
+              Account settings
+            </h1>
 
-          {/* Settings Items */}
-          <div className="space-y-0">
-            {settingsItems.map((item, index) => {
-              const IconComponent = item.icon;
-              return (
-                <div key={item.id}>
-                  <button className="w-full flex items-center justify-between py-6 px-6 hover:bg-muted/50 transition-colors group">
-                    <div className="flex items-center gap-6 text-left flex-1">
-                      <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-muted">
-                        <IconComponent size={24} className="text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground text-lg">
-                          {item.title}
-                        </h3>
-                        <p className="text-sm text-foreground/60 mt-1">
-                          {item.description}
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronRight
-                      size={24}
-                      className="text-primary flex-shrink-0 group-hover:translate-x-1 transition-transform"
-                    />
-                  </button>
-                  {index < settingsItems.length - 1 && (
-                    <div className="border-t border-border" />
-                  )}
-                </div>
-              );
-            })}
+            {/* Settings Items */}
+            <div className="space-y-0">
+              {settingsItems.map((item, index) => {
+                const IconComponent = item.icon
+                return (
+                  <div key={item.id}>
+                    <Link href={item.href}>
+                      <button className="w-full flex items-center justify-between py-4 sm:py-6 px-3 sm:px-6 hover:bg-muted/50 transition-colors group">
+                        <div className="flex items-center gap-3 sm:gap-6 text-left flex-1 min-w-0">
+                          <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-muted">
+                            <IconComponent size={20} className="sm:w-6 sm:h-6 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-semibold text-foreground text-base sm:text-lg">{item.title}</h3>
+                            <p className="text-xs sm:text-sm text-foreground/60 mt-1 line-clamp-2">
+                              {item.description}
+                            </p>
+                          </div>
+                        </div>
+                        <ChevronRight
+                          size={20}
+                          className="sm:w-6 sm:h-6 text-primary flex-shrink-0 group-hover:translate-x-1 transition-transform ml-2"
+                        />
+                      </button>
+                    </Link>
+                    {index < settingsItems.length - 1 && <div className="border-t border-border" />}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </main>
       </div>
     </>
-  );
+  )
 }

@@ -4,7 +4,7 @@ import Link from "next/link"
 import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/use-auth"
+import { useAuth } from "@/hooks/use-auth"
 
 interface SocialButtonProps {
   icon: React.ReactNode

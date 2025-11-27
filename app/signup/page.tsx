@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/use-auth"
+import { useAuth } from "@/hooks/use-auth"
 
 interface SocialButtonProps {
   icon: React.ReactNode
@@ -49,7 +49,8 @@ export default function SignupPage() {
         setError("Password must be at least 8 characters")
         return
       }
-      await signUp(formData.email, formData.firstName, formData.password)
+      const screenName = formData.email.split("@")[0]
+      await signUp(formData.email, formData.firstName, screenName, formData.password)
       router.push("/rentals")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign up failed")
@@ -101,9 +102,7 @@ export default function SignupPage() {
     <div className="flex h-screen w-screen overflow-hidden bg-white">
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-6 sm:px-8 bg-white">
         <div className="w-full max-w-sm">
-          <div className="mb-4">
-            {/* <span className="text-3xl font-bold text-blue-600">Zillow</span> */}
-          </div>
+          <div className="mb-4">{/* <span className="text-3xl font-bold text-blue-600">Zillow</span> */}</div>
 
           <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-6">
             {emailSubmitted ? "Tell us about yourself" : "Create account"}

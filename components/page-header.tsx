@@ -7,9 +7,9 @@ import { Menu, X, Search, LogOut } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
 
-export default function Header() {
+export default function PageHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
+//   const [isScrolled, setIsScrolled] = useState(false)
   const [searchInput, setSearchInput] = useState("")
   const [showRentDropdown, setShowRentDropdown] = useState(false)
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
@@ -21,14 +21,14 @@ export default function Header() {
 
   const navItems = [{ label: "Rent", href: "#" }]
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 200)
-    }
+//   useEffect(() => {
+//     const handleScroll = () => {
+//       setIsScrolled(window.scrollY > 200)
+//     }
 
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+//     window.addEventListener("scroll", handleScroll)
+//     return () => window.removeEventListener("scroll", handleScroll)
+//   }, [])
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -44,12 +44,12 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchInput.trim()) {
-      window.location.href = `/rentals?location=${encodeURIComponent(searchInput)}`
-    }
-  }
+//   const handleSearch = (e: React.FormEvent) => {
+//     e.preventDefault()
+//     if (searchInput.trim()) {
+//       window.location.href = `/rentals?location=${encodeURIComponent(searchInput)}`
+//     }
+//   }
 
   const handleSignOut = () => {
     signOut()
@@ -342,36 +342,8 @@ export default function Header() {
         </div>
       </header>
 
-      <div
-        className={`fixed top-0 left-0 right-0 bg-white border-b border-border shadow-md z-50 transition-transform duration-300 ${
-          isScrolled ? "translate-y-0" : "-translate-y-full"
-        }`}
-      >
-        <div className="max-w-full px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center gap-4">
-            <Link href="/rentals" className="text-primary font-bold text-xl hover:opacity-80 transition-opacity">
-              Z
-            </Link>
-
-            <form onSubmit={handleSearch} className="flex-1 max-w-3xl">
-              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
-                <input
-                  type="text"
-                  placeholder="Enter an address, neighborhood, city, or ZIP code"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  suppressHydrationWarning
-                  className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
-                />
-                <button type="submit" className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                  <Search size={18} className="text-gray-400" />
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
+          
     </>
   )
 }
-;``
+;
