@@ -1,131 +1,149 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { useAuth } from "@/lib/use-auth"
-import Header from "@/components/header"
-import SearchBar from "@/components/search-bar"
-import MainContent from "@/components/main-content"
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useAuth } from "@/lib/use-auth";
+import Header from "@/components/header";
+import SearchBar from "@/components/search-bar";
+import MainContent from "@/components/main-content";
 
 interface AppliedFilters {
-  price: { min: number; max: number } | null
-  beds: string
-  propertyType: string
-  moreOptions: any
+  price: { min: number; max: number } | null;
+  beds: string;
+  propertyType: string;
+  moreOptions: any;
 }
 
 const parseUrlParams = (
-  params: URLSearchParams,
-): { name: string; coords: { lng: number; lat: number } | null; filters: AppliedFilters } => {
-  const name = params.get("location") || ""
-  const lat = params.get("lat")
-  const lng = params.get("lng")
-  const priceMin = params.get("priceMin")
-  const priceMax = params.get("priceMax")
-  const beds = params.get("beds") || "Any"
-  const propertyType = params.get("propertyType") || "All types"
+  params: URLSearchParams
+): {
+  name: string;
+  coords: { lng: number; lat: number } | null;
+  filters: AppliedFilters;
+} => {
+  const name = params.get("location") || "";
+  const lat = params.get("lat");
+  const lng = params.get("lng");
+  const priceMin = params.get("priceMin");
+  const priceMax = params.get("priceMax");
+  const beds = params.get("beds") || "Any";
+  const propertyType = params.get("propertyType") || "All types";
 
-  const coords = lat && lng ? { lng: Number.parseFloat(lng), lat: Number.parseFloat(lat) } : null
+  const coords =
+    lat && lng
+      ? { lng: Number.parseFloat(lng), lat: Number.parseFloat(lat) }
+      : null;
 
-  const price = priceMin && priceMax ? { min: Number.parseFloat(priceMin), max: Number.parseFloat(priceMax) } : null
+  const price =
+    priceMin && priceMax
+      ? { min: Number.parseFloat(priceMin), max: Number.parseFloat(priceMax) }
+      : null;
 
   const filters: AppliedFilters = {
     price,
     beds,
     propertyType,
     moreOptions: null,
-  }
+  };
 
-  return { name, coords, filters }
-}
+  return { name, coords, filters };
+};
 
 export default function Rentals() {
-  const { user, isLoading } = useAuth()
-  const router = useRouter()
-  const searchParams = useSearchParams()
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [location, setLocation] = useState<{ lng: number; lat: number } | null>(null)
-  const [locationName, setLocationName] = useState("")
+  const [location, setLocation] = useState<{ lng: number; lat: number } | null>(
+    null
+  );
+  const [locationName, setLocationName] = useState("");
   const [filters, setFilters] = useState<AppliedFilters>({
     price: null,
     beds: "Any",
     propertyType: "All types",
     moreOptions: null,
-  })
-  const [isInitialized, setIsInitialized] = useState(false)
+  });
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     if (isLoading) {
-      return
+      return;
     }
 
     if (!user) {
-      router.push("/signin")
-      return
+      router.push("/signin");
+      return;
     }
 
-    const initialData = parseUrlParams(searchParams)
-    setLocation(initialData.coords)
-    setLocationName(initialData.name)
-    setFilters(initialData.filters)
-    setIsInitialized(true)
-  }, [user, isLoading, router])
+    const initialData = parseUrlParams(searchParams);
+    setLocation(initialData.coords);
+    setLocationName(initialData.name);
+    setFilters(initialData.filters);
+    setIsInitialized(true);
+  }, [user, isLoading, router]);
 
   const handleSearch = useCallback(
     (name: string, coords?: { lng: number; lat: number }) => {
-      console.log("Search triggered with coords:", coords)
-      setLocationName(name || "")
-      setLocation(coords || null)
+      console.log("Search triggered with coords:", coords);
+      setLocationName(name || "");
+      setLocation(coords || null);
 
-      const params = new URLSearchParams()
-      if (name) params.set("location", name)
+      const params = new URLSearchParams();
+      if (name) params.set("location", name);
       if (coords) {
-        params.set("lat", coords.lat.toString())
-        params.set("lng", coords.lng.toString())
+        params.set("lat", coords.lat.toString());
+        params.set("lng", coords.lng.toString());
       }
       // Preserve existing filters
       if (filters.price) {
-        params.set("priceMin", filters.price.min.toString())
-        params.set("priceMax", filters.price.max.toString())
+        params.set("priceMin", filters.price.min.toString());
+        params.set("priceMax", filters.price.max.toString());
       }
-      if (filters.beds !== "Any") params.set("beds", filters.beds)
-      if (filters.propertyType !== "All types") params.set("propertyType", filters.propertyType)
+      if (filters.beds !== "Any") params.set("beds", filters.beds);
+      if (filters.propertyType !== "All types")
+        params.set("propertyType", filters.propertyType);
 
-      router.push(`?${params.toString()}`)
+      router.push(`?${params.toString()}`);
     },
-    [filters, router],
-  )
+    [filters, router]
+  );
 
   const handleFiltersChange = useCallback(
     (newFilters: AppliedFilters) => {
-      setFilters(newFilters)
+      setFilters(newFilters);
 
-      const params = new URLSearchParams()
-      if (locationName) params.set("location", locationName)
+      const params = new URLSearchParams();
+      if (locationName) params.set("location", locationName);
       if (location) {
-        params.set("lat", location.lat.toString())
-        params.set("lng", location.lng.toString())
+        params.set("lat", location.lat.toString());
+        params.set("lng", location.lng.toString());
       }
       if (newFilters.price) {
-        params.set("priceMin", newFilters.price.min.toString())
-        params.set("priceMax", newFilters.price.max.toString())
+        params.set("priceMin", newFilters.price.min.toString());
+        params.set("priceMax", newFilters.price.max.toString());
       }
-      if (newFilters.beds !== "Any") params.set("beds", newFilters.beds)
-      if (newFilters.propertyType !== "All types") params.set("propertyType", newFilters.propertyType)
+      if (newFilters.beds !== "Any") params.set("beds", newFilters.beds);
+      if (newFilters.propertyType !== "All types")
+        params.set("propertyType", newFilters.propertyType);
 
-      router.push(`?${params.toString()}`)
+      router.push(`?${params.toString()}`);
     },
-    [locationName, location, router],
-  )
+    [locationName, location, router]
+  );
 
   useEffect(() => {
     if (isInitialized) {
-      console.log("Current Location/Filters state:", { locationName, location, filters })
+      console.log("Current Location/Filters state:", {
+        locationName,
+        location,
+        filters,
+      });
     }
-  }, [locationName, location, filters, isInitialized])
+  }, [locationName, location, filters, isInitialized]);
 
-  if (isLoading || !user) {
-    return null
+  if (isLoading) {
+    return null;
   }
 
   return (
@@ -133,12 +151,19 @@ export default function Rentals() {
       <Header />
 
       {/* Search Bar and Filters */}
-      <SearchBar onSearch={handleSearch} onFiltersChange={handleFiltersChange} />
+      <SearchBar
+        onSearch={handleSearch}
+        onFiltersChange={handleFiltersChange}
+      />
 
       {/* Map + Listings */}
       <div className="h-full overflow-hidden">
-        <MainContent location={location} locationName={locationName} filters={filters} />
+        <MainContent
+          location={location}
+          locationName={locationName}
+          filters={filters}
+        />
       </div>
     </main>
-  )
+  );
 }
