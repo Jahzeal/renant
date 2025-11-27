@@ -32,7 +32,7 @@ export default function AccountSettingsPage() {
 
   return (
     <>
-      
+      <PageHeader/>
       <div className="flex flex-col bg-white min-h-[calc(100vh-64px)]">
         {/* Navigation Tabs */}
         <nav className="border-b border-border bg-white sticky top-0 z-20 flex-shrink-0">
