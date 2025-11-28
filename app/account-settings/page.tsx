@@ -46,16 +46,16 @@ export default function AccountSettingsPage() {
               </Link>
              
               <Link
-                href="#"
+                href="/manage-tours"
                 className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium text-foreground/70 hover:text-foreground border-b-2 border-transparent transition-colors whitespace-nowrap"
               >
                 Manage tours
               </Link>
                <Link
-                href="#"
+                href="/renter-hub"
                 className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium text-foreground/70 hover:text-foreground border-b-2 border-transparent transition-colors whitespace-nowrap"
               >
-                Rentals Hub
+                Renter Hub
               </Link>
                <button className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 border-primary text-primary transition-colors whitespace-nowrap">
                 Account settings

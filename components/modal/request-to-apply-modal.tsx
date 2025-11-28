@@ -4,11 +4,15 @@ import type React from "react"
 
 import { useState } from "react"
 import { X, CheckCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useRenterRequests } from "@/lib/renter-requests-context"
 
 interface RequestToApplyModalProps {
   isOpen: boolean
   onClose: () => void
   listingTitle: string
+  listingId: string
+  listingPrice?: number
   agent?: {
     name: string
     company: string
@@ -16,7 +20,15 @@ interface RequestToApplyModalProps {
   }
 }
 
-export function RequestToApplyModal({ isOpen, onClose, listingTitle, agent }: RequestToApplyModalProps) {
+export function RequestToApplyModal({
+  isOpen,
+  onClose,
+  listingTitle,
+  listingId,
+  listingPrice,
+  agent,
+}: RequestToApplyModalProps) {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -24,6 +36,7 @@ export function RequestToApplyModal({ isOpen, onClose, listingTitle, agent }: Re
     message:
       "I'm interested in your property and would like to move forward. Can you send me an application for this property?",
   })
+  const { addApplyRequest } = useRenterRequests()
 
   if (!isOpen) return null
 
@@ -34,8 +47,18 @@ export function RequestToApplyModal({ isOpen, onClose, listingTitle, agent }: Re
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Apply request submitted:", formData)
+    addApplyRequest({
+      listingId,
+      listingTitle,
+      listingPrice,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      message: formData.message,
+      status: "pending",
+    })
     onClose()
+    router.push("/renter-hub")
     // Reset form
     setFormData({
       name: "",

@@ -250,11 +250,11 @@ export default function Header() {
                             Saved homes
                           </a>
                           
-                          <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
+                          <a href="/manage-tours" className="block text-sm text-foreground hover:text-primary font-medium">
                             Manage tours
                           </a>
                           
-                          <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
+                          <a href="/renter-hub" className="block text-sm text-foreground hover:text-primary font-medium">
                             Renter Hub
                           </a>
 

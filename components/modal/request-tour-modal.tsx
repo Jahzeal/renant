@@ -4,21 +4,26 @@ import type React from "react"
 
 import { useState } from "react"
 import { X } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useRenterRequests } from "@/lib/renter-requests-context"
 
 interface RequestTourModalProps {
   isOpen: boolean
   onClose: () => void
   listingTitle: string
+  listingId: string
+  listingPrice?: number
 }
 
-export function RequestTourModal({ isOpen, onClose, listingTitle }: RequestTourModalProps) {
+export function RequestTourModal({ isOpen, onClose, listingTitle, listingId, listingPrice }: RequestTourModalProps) {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    message:
-      "I'm interested in your property and would like to move forward. Can you show me around ?",
+    message: "I'm interested in your property and would like to move forward. Can you show me around ?",
   })
+  const { addTourRequest } = useRenterRequests()
 
   if (!isOpen) return null
 
@@ -29,15 +34,24 @@ export function RequestTourModal({ isOpen, onClose, listingTitle }: RequestTourM
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Tour request submitted:", formData)
+    addTourRequest({
+      listingId,
+      listingTitle,
+      listingPrice,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      message: formData.message,
+      status: "pending",
+    })
     onClose()
+    router.push("/manage-tours")
     // Reset form
     setFormData({
       name: "",
       email: "",
       phone: "",
-      message:
-        "I'm interested in your property and would like to move forward. Can you send me an application for this property?",
+      message: "I'm interested in your property and would like to move forward. Can you show me around ?",
     })
   }
 
