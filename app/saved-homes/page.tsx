@@ -119,7 +119,7 @@ export default function SavedHomesPage() {
                 </p>
 
                 <Link
-                  href="/"
+                  href="/rentals"
                   className="px-4 sm:px-6 py-2 sm:py-3 bg-primary text-white text-sm sm:text-base font-semibold rounded-lg hover:bg-primary/90 transition"
                 >
                   Search for homes

@@ -10,6 +10,7 @@ import EditScreenNameModal from "@/components/modal/edit-screen-name-modal";
 import ChangeEmailModal from "@/components/modal/change-email-modal";
 import ChangePasswordModal from "@/components/modal/change-password-modal";
 import EditPhotoModal from "@/components/modal/edit-photo-modal";
+import PageHeader from "@/components/page-header";
 
 export default function ProfilePage() {
 const { user, updateProfile, updateProfileImage } = useAuth();
@@ -66,7 +67,7 @@ const { user, updateProfile, updateProfileImage } = useAuth();
 
   return (
     <>
-      <Header />
+      <PageHeader/>
       <div className="flex flex-col bg-white min-h-[calc(100vh-64px)]">
         {/* Back Navigation */}
         <div className="border-b border-border bg-white sticky top-0 z-20">

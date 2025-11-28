@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { ChevronRight, User, Mail, FileText } from "lucide-react"
-import Header from "@/components/header"
+// import Header from "@/components/header"
 import PageHeader from "@/components/page-header"
 
 export default function AccountSettingsPage() {
@@ -32,7 +32,7 @@ export default function AccountSettingsPage() {
 
   return (
     <>
-      <PageHeader />
+      <PageHeader/>
       <div className="flex flex-col bg-white min-h-[calc(100vh-64px)]">
         {/* Navigation Tabs */}
         <nav className="border-b border-border bg-white sticky top-0 z-20 flex-shrink-0">
