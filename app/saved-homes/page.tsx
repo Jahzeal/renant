@@ -1,16 +1,18 @@
-"use client"
-import Link from "next/link"
-import { useFavorites } from "@/lib/favorites-context"
-import { SAMPLE_LISTINGS } from "@/lib/sample-listing"
-import ListingCard from "@/components/listing-card"
-import Header from "@/components/header"
-import PageHeader from "@/components/page-header"
+"use client";
+import Link from "next/link";
+import { useFavorites } from "@/lib/favorites-context";
+import { SAMPLE_LISTINGS } from "@/lib/sample-listing";
+import ListingCard from "@/components/listing-card";
+import Header from "@/components/header";
+import PageHeader from "@/components/page-header";
 
 export default function SavedHomesPage() {
-  const { favorites, toggleFavorite } = useFavorites()
+  const { favorites, toggleFavorite } = useFavorites();
 
   // Get the saved listings
-  const savedListings = SAMPLE_LISTINGS.filter((listing) => favorites.includes(listing.id))
+  const savedListings = SAMPLE_LISTINGS.filter((listing) =>
+    favorites.includes(listing.id)
+  );
 
   return (
     <>
@@ -34,21 +36,31 @@ export default function SavedHomesPage() {
                 >
                   Saved search
                 </Link> */}
+             
                 <Link
+                  href="#"
+                  className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+                >
+                  Manage tours
+                </Link>
+                <Link
+                  href="#"
+                  className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+                >
+                  Rentals Hub
+                </Link>
+                   <Link
                   href="/account-settings"
                   className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
                 >
                   Account settings
                 </Link>
-                {/* <Link
-                  href="#"
-                  className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
-                >
-                    Manage tours
-                </Link> */}
               </nav>
               <div className="flex-shrink-0">
-                <Link href="#" className="text-primary text-xs sm:text-sm font-medium hover:underline">
+                <Link
+                  href="#"
+                  className="text-primary text-xs sm:text-sm font-medium hover:underline"
+                >
                   Hidden homes
                 </Link>
               </div>
@@ -58,7 +70,9 @@ export default function SavedHomesPage() {
 
         <div className="flex-1 overflow-y-auto">
           <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8">Saved homes</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8">
+              Saved homes
+            </h1>
 
             {savedListings.length > 0 ? (
               <div className="space-y-3 sm:space-y-4">
@@ -83,29 +97,164 @@ export default function SavedHomesPage() {
                     {/* House illustration */}
                     <g opacity="0.8">
                       {/* Left house */}
-                      <rect x="20" y="90" width="50" height="60" fill="#E3F2FD" stroke="#1E88E5" strokeWidth="2" />
-                      <polygon points="20,90 45,50 70,90" fill="#1E88E5" stroke="#1E88E5" strokeWidth="2" />
-                      <rect x="28" y="100" width="14" height="16" fill="#FFC107" stroke="#1E88E5" strokeWidth="1" />
-                      <rect x="48" y="100" width="14" height="16" fill="#FFC107" stroke="#1E88E5" strokeWidth="1" />
-                      <rect x="35" y="125" width="20" height="25" fill="#90CAF9" stroke="#1E88E5" strokeWidth="1" />
+                      <rect
+                        x="20"
+                        y="90"
+                        width="50"
+                        height="60"
+                        fill="#E3F2FD"
+                        stroke="#1E88E5"
+                        strokeWidth="2"
+                      />
+                      <polygon
+                        points="20,90 45,50 70,90"
+                        fill="#1E88E5"
+                        stroke="#1E88E5"
+                        strokeWidth="2"
+                      />
+                      <rect
+                        x="28"
+                        y="100"
+                        width="14"
+                        height="16"
+                        fill="#FFC107"
+                        stroke="#1E88E5"
+                        strokeWidth="1"
+                      />
+                      <rect
+                        x="48"
+                        y="100"
+                        width="14"
+                        height="16"
+                        fill="#FFC107"
+                        stroke="#1E88E5"
+                        strokeWidth="1"
+                      />
+                      <rect
+                        x="35"
+                        y="125"
+                        width="20"
+                        height="25"
+                        fill="#90CAF9"
+                        stroke="#1E88E5"
+                        strokeWidth="1"
+                      />
 
                       {/* Middle building */}
-                      <rect x="100" y="70" width="50" height="80" fill="#E3F2FD" stroke="#1E88E5" strokeWidth="2" />
-                      <polygon points="100,70 125,30 150,70" fill="#1E88E5" stroke="#1E88E5" strokeWidth="2" />
+                      <rect
+                        x="100"
+                        y="70"
+                        width="50"
+                        height="80"
+                        fill="#E3F2FD"
+                        stroke="#1E88E5"
+                        strokeWidth="2"
+                      />
+                      <polygon
+                        points="100,70 125,30 150,70"
+                        fill="#1E88E5"
+                        stroke="#1E88E5"
+                        strokeWidth="2"
+                      />
                       {/* Windows */}
-                      <rect x="108" y="80" width="12" height="12" fill="#FFC107" stroke="#1E88E5" strokeWidth="1" />
-                      <rect x="128" y="80" width="12" height="12" fill="#FFC107" stroke="#1E88E5" strokeWidth="1" />
-                      <rect x="108" y="100" width="12" height="12" fill="#FFC107" stroke="#1E88E5" strokeWidth="1" />
-                      <rect x="128" y="100" width="12" height="12" fill="#FFC107" stroke="#1E88E5" strokeWidth="1" />
-                      <rect x="108" y="120" width="12" height="12" fill="#FFC107" stroke="#1E88E5" strokeWidth="1" />
-                      <rect x="128" y="120" width="12" height="12" fill="#FFC107" stroke="#1E88E5" strokeWidth="1" />
+                      <rect
+                        x="108"
+                        y="80"
+                        width="12"
+                        height="12"
+                        fill="#FFC107"
+                        stroke="#1E88E5"
+                        strokeWidth="1"
+                      />
+                      <rect
+                        x="128"
+                        y="80"
+                        width="12"
+                        height="12"
+                        fill="#FFC107"
+                        stroke="#1E88E5"
+                        strokeWidth="1"
+                      />
+                      <rect
+                        x="108"
+                        y="100"
+                        width="12"
+                        height="12"
+                        fill="#FFC107"
+                        stroke="#1E88E5"
+                        strokeWidth="1"
+                      />
+                      <rect
+                        x="128"
+                        y="100"
+                        width="12"
+                        height="12"
+                        fill="#FFC107"
+                        stroke="#1E88E5"
+                        strokeWidth="1"
+                      />
+                      <rect
+                        x="108"
+                        y="120"
+                        width="12"
+                        height="12"
+                        fill="#FFC107"
+                        stroke="#1E88E5"
+                        strokeWidth="1"
+                      />
+                      <rect
+                        x="128"
+                        y="120"
+                        width="12"
+                        height="12"
+                        fill="#FFC107"
+                        stroke="#1E88E5"
+                        strokeWidth="1"
+                      />
 
                       {/* Right house */}
-                      <rect x="180" y="95" width="50" height="55" fill="#E3F2FD" stroke="#1E88E5" strokeWidth="2" />
-                      <polygon points="180,95 205,55 230,95" fill="#1E88E5" stroke="#1E88E5" strokeWidth="2" />
-                      <rect x="188" y="105" width="12" height="14" fill="#FFC107" stroke="#1E88E5" strokeWidth="1" />
-                      <rect x="208" y="105" width="12" height="14" fill="#FFC107" stroke="#1E88E5" strokeWidth="1" />
-                      <rect x="196" y="130" width="16" height="20" fill="#90CAF9" stroke="#1E88E5" strokeWidth="1" />
+                      <rect
+                        x="180"
+                        y="95"
+                        width="50"
+                        height="55"
+                        fill="#E3F2FD"
+                        stroke="#1E88E5"
+                        strokeWidth="2"
+                      />
+                      <polygon
+                        points="180,95 205,55 230,95"
+                        fill="#1E88E5"
+                        stroke="#1E88E5"
+                        strokeWidth="2"
+                      />
+                      <rect
+                        x="188"
+                        y="105"
+                        width="12"
+                        height="14"
+                        fill="#FFC107"
+                        stroke="#1E88E5"
+                        strokeWidth="1"
+                      />
+                      <rect
+                        x="208"
+                        y="105"
+                        width="12"
+                        height="14"
+                        fill="#FFC107"
+                        stroke="#1E88E5"
+                        strokeWidth="1"
+                      />
+                      <rect
+                        x="196"
+                        y="130"
+                        width="16"
+                        height="20"
+                        fill="#90CAF9"
+                        stroke="#1E88E5"
+                        strokeWidth="1"
+                      />
                     </g>
                   </svg>
                 </div>
@@ -114,8 +263,8 @@ export default function SavedHomesPage() {
                   Save homes for safe keeping.
                 </h2>
                 <p className="text-center text-muted-foreground mb-6 sm:mb-8 max-w-sm text-sm sm:text-base">
-                  Whenever you find homes you like, select the <span className="text-red-500">♥</span> to save them
-                  here.
+                  Whenever you find homes you like, select the{" "}
+                  <span className="text-red-500">♥</span> to save them here.
                 </p>
 
                 <Link
@@ -130,5 +279,5 @@ export default function SavedHomesPage() {
         </div>
       </div>
     </>
-  )
+  );
 }

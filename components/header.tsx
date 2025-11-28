@@ -186,39 +186,39 @@ export default function Header() {
                     <div>
                       <h3 className="font-semibold text-base mb-4 text-foreground">Rental Management Tools</h3>
                       <div className="space-y-3 mb-6">
-                        <a href="#" className="block text-sm text-primary hover:underline">
+                        {/* <a href="#" className="block text-sm text-primary hover:underline">
                           List a rental
                         </a>
                         <a href="#" className="block text-sm text-primary hover:underline">
                           My Listings
-                        </a>
+                        </a> */}
                         <a href="#" className="block text-sm text-primary hover:underline">
                           Inbox
                         </a>
-                        <a href="#" className="block text-sm text-primary hover:underline">
+                        <a href="/rentals-hub" className="block text-sm text-primary hover:underline">
                           Applications
                         </a>
-                        <a href="#" className="block text-sm text-primary hover:underline">
+                        {/* <a href="#" className="block text-sm text-primary hover:underline">
                           Leases
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline">
+                        </a> */}
+                        {/* <a href="#" className="block text-sm text-primary hover:underline">
                           Payments
-                        </a>
+                        </a> */}
                       </div>
 
                       <hr className="border-border my-4" />
 
                       <h4 className="font-semibold text-sm mb-3 text-foreground">Learn More</h4>
                       <div className="space-y-3">
-                        <a href="#" className="block text-sm text-primary hover:underline">
+                        {/* <a href="#" className="block text-sm text-primary hover:underline">
                           Follow Rental Manager
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline">
+                        </a> */}
+                        {/* <a href="#" className="block text-sm text-primary hover:underline">
                           Price My Rental
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline">
+                        </a> */}
+                        {/* <a href="#" className="block text-sm text-primary hover:underline">
                           Resource Center
-                        </a>
+                        </a> */}
                         <a href="#" className="block text-sm text-primary hover:underline">
                           Help Center
                         </a>
@@ -250,13 +250,13 @@ export default function Header() {
                             Saved homes
                           </a>
                           
-                          {/* <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
-                            Recently Viewed
+                          <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
+                            Manage tours
                           </a>
                           
                           <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
                             Renter Hub
-                          </a> */}
+                          </a>
 
                           <hr className="border-border my-2" />
 
