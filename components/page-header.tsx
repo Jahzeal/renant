@@ -254,7 +254,7 @@ export default function PageHeader() {
                            Manage Tours
                           </a>
                           
-                          <a href="renter-hub" className="block text-sm text-foreground hover:text-primary font-medium">
+                          <a href="/renter-hub" className="block text-sm text-foreground hover:text-primary font-medium">
                             Renter Hub
                           </a> 
 
