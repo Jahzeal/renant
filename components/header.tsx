@@ -195,7 +195,7 @@ export default function Header() {
                         <a href="#" className="block text-sm text-primary hover:underline">
                           Inbox
                         </a>
-                        <a href="/rentals-hub" className="block text-sm text-primary hover:underline">
+                        <a href="/renter-hub" className="block text-sm text-primary hover:underline">
                           Applications
                         </a>
                         {/* <a href="#" className="block text-sm text-primary hover:underline">
