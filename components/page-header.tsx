@@ -250,13 +250,13 @@ export default function PageHeader() {
                             Saved homes
                           </a>
                           
-                          {/* <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
-                            Recently Viewed
+                           <a href="/manage-tours" className="block text-sm text-foreground hover:text-primary font-medium">
+                           Manage Tours
                           </a>
                           
-                          <a href="#" className="block text-sm text-foreground hover:text-primary font-medium">
+                          <a href="renter-hub" className="block text-sm text-foreground hover:text-primary font-medium">
                             Renter Hub
-                          </a> */}
+                          </a> 
 
                           <hr className="border-border my-2" />
 
