@@ -1,70 +1,50 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { Search, Clock, MapPin, ChevronLeft, ChevronRight } from "lucide-react"
-import Header from "@/components/header"
-import Link from "next/link"
-import { SAMPLE_LISTINGS } from "@/lib/sample-listing"
-import { useAuth } from "@/hooks/use-auth"
-
-interface SearchHistory {
-  id: string
-  location: string
-  coords?: { lng: number; lat: number }
-  timestamp: number
-}
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Search, Clock, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import Header from "@/components/header";
+import Link from "next/link";
+import { SAMPLE_LISTINGS } from "@/lib/sample-listing";
+import { useAuth } from "@/hooks/use-auth";
+import { useSearchHistory, type SearchHistory } from "@/lib/search-history-contsxt";
 
 interface Property {
-  id: string
-  image: string
-  price: number
-  beds: number
-  baths: number
-  sqft: number
-  status: string
-  address: string
-  badge?: string
-  location: string
-  type: string
+  id: string;
+  image: string;
+  price: number;
+  beds: number;
+  baths: number;
+  sqft: number;
+  status: string;
+  address: string;
+  badge?: string;
+  location: string;
+  type: string;
 }
 
 export default function LandingPage() {
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [searchInput, setSearchInput] = useState("")
-  const [noMatchFound, setNoMatchFound] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [noMatchFound, setNoMatchFound] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [continueSearchProperties, setContinueSearchProperties] = useState<Property[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
 
-  const [showSearchDropdown, setShowSearchDropdown] = useState(false)
-  const [searchHistory, setSearchHistory] = useState<SearchHistory[]>([])
-  const [mounted, setMounted] = useState(false)
-  const [continueSearchProperties, setContinueSearchProperties] = useState<Property[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const [isGettingLocation, setIsGettingLocation] = useState(false)
-
-  const { user } = useAuth()
+  const { user } = useAuth();
+  const { searchHistory, addSearch } = useSearchHistory();
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    const handleScroll = () => setIsScrolled(window.scrollY > 100);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("searchHistory")
-    if (saved) {
-      setSearchHistory(JSON.parse(saved))
-    }
-
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 100)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
+  // Update properties when search history changes
   useEffect(() => {
     if (searchHistory.length > 0) {
-      const lastSearch = searchHistory[0]
-      fetchPropertiesForLocation(lastSearch)
+      fetchPropertiesForLocation(searchHistory[0]);
     } else {
       const allProperties = SAMPLE_LISTINGS.slice(0, 6).map((listing) => ({
         id: listing.id,
@@ -78,29 +58,27 @@ export default function LandingPage() {
         badge: listing.offer || undefined,
         location: listing.location,
         type: listing.type,
-      }))
-      setContinueSearchProperties(allProperties)
+      }));
+      setContinueSearchProperties(allProperties);
     }
-  }, [searchHistory])
+  }, [searchHistory]);
 
   const fetchPropertiesForLocation = async (search: SearchHistory) => {
-    const searchTerm = search.location.toLowerCase().trim()
-    const searchCity = searchTerm.split(",")[0].trim()
+    const searchTerm = search.location.toLowerCase().trim();
+    const searchCity = searchTerm.split(",")[0].trim();
 
     let filteredListings = SAMPLE_LISTINGS.filter(
       (listing) =>
         listing.location.toLowerCase().includes(searchCity) ||
         listing.location.toLowerCase().includes(searchTerm) ||
         listing.address.toLowerCase().includes(searchCity) ||
-        listing.address.toLowerCase().includes(searchTerm),
-    )
+        listing.address.toLowerCase().includes(searchTerm)
+    );
 
-    let noMatches = false
-
+    let noMatches = false;
     if (filteredListings.length === 0) {
-      console.log(" No matches found → fallback to other locations")
-      noMatches = true
-      filteredListings = SAMPLE_LISTINGS
+      noMatches = true;
+      filteredListings = SAMPLE_LISTINGS;
     }
 
     const properties: Property[] = filteredListings.slice(0, 6).map((listing) => ({
@@ -115,154 +93,123 @@ export default function LandingPage() {
       badge: listing.offer || undefined,
       location: listing.location,
       type: listing.type,
-    }))
+    }));
 
-    setContinueSearchProperties(properties)
-    setNoMatchFound(noMatches)
-  }
+    setContinueSearchProperties(properties);
+    setNoMatchFound(noMatches);
+  };
 
   const geocodeLocation = async (location: string) => {
-    if (!location.trim()) return null
-
+    if (!location.trim()) return null;
+    setIsSearching(true);
     try {
-      setIsSearching(true)
-      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(location)}.json?access_token=${token}`,
-      )
-      const data = await response.json()
-
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+          location
+        )}.json?access_token=${token}`
+      );
+      const data = await response.json();
       if (data.features && data.features.length > 0) {
-        const [lng, lat] = data.features[0].geometry.coordinates
-        const placeName = data.features[0].place_name
-        return { location: placeName, coords: { lng, lat } }
+        const [lng, lat] = data.features[0].geometry.coordinates;
+        const placeName = data.features[0].place_name;
+        return { location: placeName, coords: { lng, lat } };
       }
-      return { location, coords: undefined }
+      return { location, coords: undefined };
     } catch (error) {
-      return { location, coords: undefined }
+      return { location, coords: undefined };
     } finally {
-      setIsSearching(false)
+      setIsSearching(false);
     }
-  }
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!searchInput.trim()) return
+    e.preventDefault();
+    if (!searchInput.trim()) return;
 
-    const result = await geocodeLocation(searchInput)
+    const result = await geocodeLocation(searchInput);
     if (result) {
       const newEntry: SearchHistory = {
         id: Date.now().toString(),
         location: result.location,
         coords: result.coords,
         timestamp: Date.now(),
-      }
+      };
+      addSearch(newEntry);
 
-      const updated = [newEntry, ...searchHistory.slice(0, 4)]
-      setSearchHistory(updated)
-      localStorage.setItem("searchHistory", JSON.stringify(updated))
-
-      const params = new URLSearchParams()
-      params.set("location", result.location)
+      const params = new URLSearchParams();
+      params.set("location", result.location);
       if (result.coords) {
-        params.set("lat", result.coords.lat.toString())
-        params.set("lng", result.coords.lng.toString())
+        params.set("lat", result.coords.lat.toString());
+        params.set("lng", result.coords.lng.toString());
       }
-
-      window.location.href = `/rentals?${params.toString()}`
+      window.location.href = `/rentals?${params.toString()}`;
     }
-  }
+  };
 
   const handleContinueSearch = (search: SearchHistory) => {
-    const params = new URLSearchParams()
-    params.set("location", search.location)
+    const params = new URLSearchParams();
+    params.set("location", search.location);
     if (search.coords) {
-      params.set("lat", search.coords.lat.toString())
-      params.set("lng", search.coords.lng.toString())
+      params.set("lat", search.coords.lat.toString());
+      params.set("lng", search.coords.lng.toString());
     }
-    window.location.href = `/rentals?${params.toString()}`
-  }
+    window.location.href = `/rentals?${params.toString()}`;
+  };
 
   const handleCurrentLocation = async () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser")
-      return
-    }
-
-    setIsGettingLocation(true)
-    setShowSearchDropdown(false)
+    if (!navigator.geolocation) return alert("Geolocation not supported");
+    setIsGettingLocation(true);
+    setShowSearchDropdown(false);
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const { latitude, longitude } = position.coords
-
+        const { latitude, longitude } = position.coords;
         try {
-          const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+          const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
           const response = await fetch(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${token}`,
-          )
-          const data = await response.json()
-
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${token}`
+          );
+          const data = await response.json();
           if (data.features && data.features.length > 0) {
-            const placeName = data.features[0].place_name
-
+            const placeName = data.features[0].place_name;
             const newEntry: SearchHistory = {
               id: Date.now().toString(),
               location: placeName,
               coords: { lng: longitude, lat: latitude },
               timestamp: Date.now(),
-            }
+            };
+            addSearch(newEntry);
 
-            const updated = [newEntry, ...searchHistory.slice(0, 4)]
-            setSearchHistory(updated)
-            localStorage.setItem("searchHistory", JSON.stringify(updated))
-
-            const params = new URLSearchParams()
-            params.set("location", placeName)
-            params.set("lat", latitude.toString())
-            params.set("lng", longitude.toString())
-
-            window.location.href = `/rentals?${params.toString()}`
+            const params = new URLSearchParams();
+            params.set("location", placeName);
+            params.set("lat", latitude.toString());
+            params.set("lng", longitude.toString());
+            window.location.href = `/rentals?${params.toString()}`;
           }
         } catch (error) {
-          console.error(" Error reverse geocoding location:", error)
-          alert("Unable to get location address. Please try again.")
+          console.error(error);
+          alert("Unable to get location address");
         } finally {
-          setIsGettingLocation(false)
+          setIsGettingLocation(false);
         }
       },
       (error) => {
-        console.error(" Error getting location:", error)
-        setIsGettingLocation(false)
-
-        let errorMessage = "Unable to get your location. "
-        if (error.code === error.PERMISSION_DENIED) {
-          errorMessage += "Please enable location permissions in your browser."
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errorMessage += "Location information is unavailable."
-        } else if (error.code === error.TIMEOUT) {
-          errorMessage += "Location request timed out."
-        }
-        alert(errorMessage)
+        console.error(error);
+        setIsGettingLocation(false);
+        alert("Unable to get your location. Please enable permissions.");
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      },
-    )
-  }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
 
   const scrollCarousel = (direction: "left" | "right") => {
-    const carousel = document.getElementById("property-carousel")
+    const carousel = document.getElementById("property-carousel");
     if (carousel) {
-      const scrollAmount = 320
-      carousel.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      })
+      const scrollAmount = 320;
+      carousel.scrollBy({ left: direction === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -273,7 +220,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative min-h-[400px] sm:min-h-[500px] md:min-h-[600px] bg-gradient-to-br from-blue-50 to-blue-100">
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat "
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: "url(/buying.jpg)" }}
         />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
@@ -282,12 +229,7 @@ export default function LandingPage() {
               Rentals. Agents. Loans. Homes.
             </h1>
 
-            <form
-              onSubmit={handleSearch}
-              className={`relative mb-8 transition-opacity duration-300 ${
-                isScrolled ? "opacity-0 pointer-events-none" : "opacity-100"
-              }`}
-            >
+            <form onSubmit={handleSearch} className={`relative mb-8 transition-opacity duration-300 ${isScrolled ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
               <div className="flex flex-col sm:flex-row gap-2">
                 <div className="flex-1 flex items-center gap-2 bg-white rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 shadow-lg">
                   <input
@@ -309,10 +251,7 @@ export default function LandingPage() {
               {/* Search Dropdown */}
               {showSearchDropdown && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl z-40 overflow-hidden max-w-full">
-                  <div
-                    onClick={handleCurrentLocation}
-                    className="flex items-center gap-3 p-3 sm:p-4 border-b hover:bg-gray-50 cursor-pointer"
-                  >
+                  <div onClick={handleCurrentLocation} className="flex items-center gap-3 p-3 sm:p-4 border-b hover:bg-gray-50 cursor-pointer">
                     <MapPin size={18} className="text-gray-600 flex-shrink-0" />
                     <span className="text-sm sm:text-base text-foreground truncate">
                       {isGettingLocation ? "Getting location..." : "Current Location"}
@@ -322,9 +261,7 @@ export default function LandingPage() {
                   {searchHistory.length > 0 && (
                     <>
                       <div className="px-3 sm:px-4 pt-3 pb-2">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                          Search History
-                        </p>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Search History</p>
                       </div>
                       {searchHistory.slice(0, 2).map((search) => (
                         <div
@@ -344,8 +281,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Get Recommendations Section */}
+              {/* Get Recommendations Section */}
       {!user && (
         <div className="bg-white px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-b">
           <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-6 sm:gap-8">
@@ -385,11 +321,19 @@ export default function LandingPage() {
                   {searchHistory.length > 0 && noMatchFound
                     ? `No homes available in ${searchHistory[0].location}. But these are the Homes available in other locations....`
                     : searchHistory.length > 0
-                      ? `Continue Searching with ${searchHistory[0].location} and ${continueSearchProperties.length} ${continueSearchProperties.length === 1 ? "house" : "houses"} in that location`
-                      : "Available Rentals: Houses, Townhomes, Apartments, Condos"}
+                    ? `Continue Searching with ${
+                        searchHistory[0].location
+                      } and ${continueSearchProperties.length} ${
+                        continueSearchProperties.length === 1
+                          ? "house"
+                          : "houses"
+                      } in that location`
+                    : "Available Rentals: Houses, Townhomes, Apartments, Condos"}
                 </h2>
 
-                <p className="text-xs sm:text-sm text-gray-600">{continueSearchProperties.length}+ new listings</p>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  {continueSearchProperties.length}+ new listings
+                </p>
               </div>
               <div className="hidden sm:flex gap-2 flex-shrink-0">
                 <button
@@ -421,11 +365,11 @@ export default function LandingPage() {
                   className="flex-shrink-0 w-64 sm:w-72 md:w-80 cursor-pointer group"
                   onClick={() => {
                     if (searchHistory.length > 0) {
-                      handleContinueSearch(searchHistory[0])
+                      handleContinueSearch(searchHistory[0]);
                     } else {
-                      const params = new URLSearchParams()
-                      params.set("location", property.location)
-                      window.location.href = `/rentals?${params.toString()}`
+                      const params = new URLSearchParams();
+                      params.set("location", property.location);
+                      window.location.href = `/rentals?${params.toString()}`;
                     }
                   }}
                 >
@@ -462,12 +406,18 @@ export default function LandingPage() {
                       <span>|</span>
                       <span className="font-semibold">{property.baths} ba</span>
                       <span>|</span>
-                      <span className="font-semibold">{property.sqft.toLocaleString()} sqft</span>
+                      <span className="font-semibold">
+                        {property.sqft.toLocaleString()} sqft
+                      </span>
                       <span className="hidden sm:inline">|</span>
-                      <span className="hidden sm:inline">{property.status}</span>
+                      <span className="hidden sm:inline">
+                        {property.status}
+                      </span>
                     </div>
                     {property.address && (
-                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-1">{property.address}</p>
+                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-1">
+                        {property.address}
+                      </p>
                     )}
                     <p className="text-xs text-gray-500 mt-1">
                       {property.type} • {property.location}
@@ -517,7 +467,9 @@ export default function LandingPage() {
                     {action.title}
                   </h3>
 
-                  <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8 leading-relaxed">{action.desc}</p>
+                  <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8 leading-relaxed">
+                    {action.desc}
+                  </p>
 
                   <button className="px-6 sm:px-8 py-2.5 sm:py-3 border-2 border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors text-sm sm:text-base">
                     {action.btn}
@@ -533,15 +485,18 @@ export default function LandingPage() {
       <div className="bg-white px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-gray-200">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">About Zillow's Recommendations</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+              About Zillow's Recommendations
+            </h2>
             <p className="text-sm sm:text-base text-gray-600 max-w-4xl mx-auto leading-relaxed">
-              Recommendations are based on your location and search activity, such as the homes you've viewed and saved
-              and the filters you've used. We use this information to bring similar homes to your attention, so you
-              don't miss out.
+              Recommendations are based on your location and search activity,
+              such as the homes you've viewed and saved and the filters you've
+              used. We use this information to bring similar homes to your
+              attention, so you don't miss out.
             </p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

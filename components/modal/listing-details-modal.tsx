@@ -10,12 +10,12 @@ import { RequestToApplyModal } from "./request-to-apply-modal"
 // Define the type for the listing details (used in props)
 interface ListingDetailsModalProps {
   listing: {
-    id: number
+    id: string | number
     title: string
     location: string
-    price: string
+    price: string | number
     beds: number
-    baths: number
+    baths?: number
     images: string[]
     description?: string
     amenities?: string[]
@@ -139,9 +139,9 @@ export default function ListingDetailsModal({
 
             {/* Price and Basic Info Section */}
             <div>
-              <h3 className="text-2xl font-bold">{listing.price}</h3>
+              <h3 className="text-2xl font-bold">${listing.price}</h3>
               <p className="text-muted-foreground">
-                {listing.beds} beds • {listing.baths} baths
+                {listing.beds} beds {listing.baths ? `• ${listing.baths} baths` : ""}
               </p>
               <p className="text-muted-foreground">{listing.location}</p>
             </div>
@@ -193,6 +193,8 @@ export default function ListingDetailsModal({
         isOpen={showApplyModal}
         onClose={() => setShowApplyModal(false)}
         listingTitle={listing.title}
+        listingId={String(listing.id)}
+        listingPrice={Number(listing.price)}
         agent={listing.agent}
       />
     </>

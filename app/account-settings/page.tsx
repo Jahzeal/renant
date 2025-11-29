@@ -44,15 +44,23 @@ export default function AccountSettingsPage() {
               >
                 Saved homes
               </Link>
-              {/* <Link
-                href="#"
+             
+              <Link
+                href="/manage-tours"
                 className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium text-foreground/70 hover:text-foreground border-b-2 border-transparent transition-colors whitespace-nowrap"
               >
-                Saved searches
-              </Link> */}
-              <button className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 border-primary text-primary transition-colors whitespace-nowrap">
+                Manage tours
+              </Link>
+               <Link
+                href="/renter-hub"
+                className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium text-foreground/70 hover:text-foreground border-b-2 border-transparent transition-colors whitespace-nowrap"
+              >
+                Renter Hub
+              </Link>
+               <button className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 border-primary text-primary transition-colors whitespace-nowrap">
                 Account settings
               </button>
+              
             </div>
           </div>
         </nav>
