@@ -1,34 +1,43 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-// --- Interfaces from your Zustand store ---
+// --- INTERFACES ---
+
 export interface User {
   id: string;
   email: string;
   firstName: string;
-  lastName: string; // Added lastName since your API hook included it
+  lastName: string;
   profileImage?: string;
+}
+
+// 💡 DTO Interface for sending data to NestJS (MUST match backend PascalCase names)
+export interface ProfileUpdateDto {
+  email?: string;
+  Firstname?: string; // Matches NestJS DTO and Prisma schema
+  Lastname?: string;  // Matches NestJS DTO and Prisma schema
+  password?: string;
 }
 
 interface AuthStore {
   user: User | null;
   isLoading: boolean;
-  error: string | null; // Added error handling to the store
+  error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (data: Omit<User, 'id' | 'profileImage'> & { password: string }) => Promise<void>;
   signOut: () => void;
+  // 💡 NEW: Update action signature
+  updateProfileData: (data: ProfileUpdateDto) => Promise<void>;
 }
-
-// --- Utility to handle redirects (since Zustand store is not a React component) ---
-// Note: In Next.js App Router, router must be used inside a client component, 
-// but we'll include the logic here to store the token and let a wrapper handle the redirect.
 
 // Helper function to create a base User object from API data
 const createUserObject = (data: any, email: string): User => ({
-  id: data.id || data.userId || 'unknown-id', // Use ID from API or fallback
+  id: data.id || data.userId || 'unknown-id',
   email: email,
-  firstName: data.firstName,
-  lastName: data.lastName,
+  // NOTE: Your API response needs to return Firstname/Lastname to populate this accurately
+  // Here we assume data.firstName/data.lastName might come from a normalized API response
+  firstName: data.firstName || data.Firstname || 'User', 
+  lastName: data.lastName || data.Lastname || '',
   profileImage: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
 });
 
@@ -58,7 +67,6 @@ export const useAuth = create<AuthStore>()(
 
           const data = await res.json();
           
-          // Store token in localStorage (Persistence layer is handled by you separately)
           localStorage.setItem("access_token", data.access_token);
           
           // Set user state in Zustand store
@@ -66,14 +74,14 @@ export const useAuth = create<AuthStore>()(
           
         } catch (err: any) {
           set({ error: err.message || "An error occurred during sign in." });
-          throw err; // Re-throw for component handling
+          throw err;
         } finally {
           set({ isLoading: false });
         }
       },
 
       // --- SIGN UP (Register) ---
-      signUp: async (data: any) => { // Using 'any' here to simplify until exact API response is known
+      signUp: async (data: any) => { 
         set({ isLoading: true, error: null });
 
         try {
@@ -90,10 +98,8 @@ export const useAuth = create<AuthStore>()(
 
           const result = await res.json();
           
-          // Store token in localStorage
           localStorage.setItem("access_token", result.access_token);
           
-          // Set user state in Zustand store
           set({ user: createUserObject(result, data.email) });
           
           return result;
@@ -105,17 +111,58 @@ export const useAuth = create<AuthStore>()(
         }
       },
 
+
+      // --- UPDATE PROFILE DATA ---
+      updateProfileData: async (data: ProfileUpdateDto) => {
+        set({ isLoading: true, error: null });
+        
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          set({ error: "Authentication required to update profile." });
+          throw new Error("Missing access token");
+        }
+
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/update-me`, {
+            method: "PATCH",
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`, 
+            },
+            body: JSON.stringify(data), 
+          });
+
+          if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || "Profile update failed");
+          }
+
+          const updatedUser = await res.json();
+          
+          // 💡 CRUCIAL: Merge the updated fields into the existing user state
+          set((state) => ({ 
+              user: {
+                ...state.user!, 
+                ...updatedUser, 
+              },
+          }));
+          
+        } catch (err: any) {
+          set({ error: err.message || "Failed to update profile." });
+          throw err;
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
       // --- SIGN OUT ---
       signOut: () => {
-        // Clear state and token
         set({ user: null, error: null });
         localStorage.removeItem("access_token");
-        // You would typically call router.push('/signin') from the component that uses signOut
       },
     }),
     {
       name: "auth-storage",
-      // Only persist the user object and error state, not loading status
       partialize: (state) => ({ user: state.user, error: state.error }),
     },
   ),

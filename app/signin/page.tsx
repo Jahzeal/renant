@@ -1,19 +1,11 @@
 "use client";
 
-<<<<<<< HEAD
-import Link from "next/link"
-import type React from "react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/use-auth"
-=======
 import Link from "next/link";
 import React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth"; // Your Zustand store hook
 import SocialButton from "@/components/SocialButton"; 
->>>>>>> 7784dad62b91dc5074810cfda07357e1fcd440df
 
 // ... SocialButton Component (assumed structure) ...
 
