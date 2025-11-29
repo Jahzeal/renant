@@ -2,10 +2,10 @@
 import { useState, useEffect, useRef } from "react"
 import type React from "react"
 
-import Link from "next/link"
-import { Menu, X, Search, LogOut } from "lucide-react"
-import { useAuth } from "@/hooks/use-auth"
-import { useRouter } from "next/navigation"
+import Link from "next/link";
+import { Menu, X, Search, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
