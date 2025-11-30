@@ -49,11 +49,7 @@ export default function SavedHomesPage() {
                   Account settings
                 </Link>
               </nav>
-              <div className="flex-shrink-0">
-                <Link href="#" className="text-primary text-xs sm:text-sm font-medium hover:underline">
-                  Hidden homes
-                </Link>
-              </div>
+             
             </div>
           </div>
         </div>
