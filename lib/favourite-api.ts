@@ -1,7 +1,7 @@
 // src/lib/favorites-api.ts (New file)
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
+import {apiRequest} from "@/lib/authenticate"
 /**
  * Helper to get the token for Authorization header.
  */
@@ -20,7 +20,7 @@ export async function fetchUserFavorites(): Promise<string[]> {
         return [];
     }
 
-    const res = await fetch(`${API_BASE_URL}/users/favourite`, {
+    const res = await apiRequest(`${API_BASE_URL}/users/favourite`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -28,9 +28,9 @@ export async function fetchUserFavorites(): Promise<string[]> {
         },
     });
 
-    if (!res.ok) {
+    if (!res?.ok) {
         // Handle unauthorized or other errors gracefully
-        console.error('API Error fetching favorites:', res.statusText);
+        console.error('API Error fetching favorites:', res?.statusText);
         // You might want to throw an error or return an empty array based on desired behavior
         return []; 
     }
@@ -43,24 +43,24 @@ export async function fetchUserFavorites(): Promise<string[]> {
 /**
  * 2. Saves the new list of favorite IDs to the backend database.
  */
-export async function saveUserFavorites(newFavorites: string[]): Promise<void> {
+export async function saveUserFavorites(propertyId: string): Promise<void> {
     const token = getAuthToken();
     if (!token) {
         throw new Error("Authentication required to save favorites.");
     }
 
-    const res = await fetch(`${API_BASE_URL}/users/favourite/update`, { // Use a dedicated update endpoint
+    const res = await apiRequest(`${API_BASE_URL}/users/favourite/update`, { // Use a dedicated update endpoint
         method: 'POST', 
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
         },
         // Send the full array of IDs to be saved/overwritten on the backend
-        body: JSON.stringify({ ids: newFavorites }), 
+        body: JSON.stringify({ propertyId }), 
     });
 
-    if (!res.ok) {
-        const errorData = await res.json();
+    if (!res?.ok) {
+        const errorData = await res?.json();
         throw new Error(errorData.message || "Failed to save favorites to database.");
   }
 }
@@ -70,15 +70,15 @@ export async function saveUserFavorites(newFavorites: string[]): Promise<void> {
     if (!token) {
       throw new Error("Authentication required to delete favorite.");
     }
-    const res = await fetch(`${API_BASE_URL}/users/favourite/${id}`, {
+    const res = await apiRequest(`${API_BASE_URL}/users/favourite/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
     });
-    if (!res.ok) {
-      const errorData = await res.json();
+    if (!res?.ok) {
+      const errorData = await res?.json();
       throw new Error(errorData.message || "Failed to delete favorite from database.");
     }
   }

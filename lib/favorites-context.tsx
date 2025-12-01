@@ -36,17 +36,21 @@ load()
 }, [])
 
 
-  useEffect(() => {
-    if (!isLoadedFromBackend) return // Wait until loaded from backend
-    async function syncToBackend() {
-      try {
-        await saveUserFavorites(favorites)
-      } catch (error){
-      console.error('Could not save Favourite', error)
+ useEffect(() => {
+  if (!isLoadedFromBackend) return; // Wait until loaded from backend
+
+  async function syncToBackend() {
+    try {
+      if (favorites.length === 0) return; // nothing to save
+      const latestFavorite = favorites[favorites.length - 1]; // pick last added
+      await saveUserFavorites(latestFavorite);
+    } catch (error) {
+      console.error('Could not save Favourite', error);
     }
   }
-    syncToBackend()
-  }, [favorites, setIsLoadedFromBackend])
+
+  syncToBackend();
+}, [favorites, isLoadedFromBackend]);
 
   // local actions
 
