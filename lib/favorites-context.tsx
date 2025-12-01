@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { fetchUserFavorites, saveUserFavorites, deleteFavorite } from "@/lib/favourite-api"
-import { error } from "console"
 
 
 interface FavoritesContextType {

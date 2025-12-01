@@ -1,6 +1,7 @@
 // src/lib/favorites-api.ts (New file)
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+// Ensure API_BASE_URL does not end with a slash to avoid double slashes in URLs
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
 
 /**
  * Helper to get the token for Authorization header.
@@ -30,7 +31,7 @@ export async function fetchUserFavorites(): Promise<string[]> {
 
     if (!res.ok) {
         // Handle unauthorized or other errors gracefully
-        console.error('API Error fetching favorites:', res.statusText);
+        console.error('API Error fetching favorites:', res.status, res.statusText);
         // You might want to throw an error or return an empty array based on desired behavior
         return []; 
     }
@@ -49,7 +50,8 @@ export async function saveUserFavorites(newFavorites: string[]): Promise<void> {
         throw new Error("Authentication required to save favorites.");
     }
 
-    const res = await fetch(`${API_BASE_URL}/users/favourite/update`, { // Use a dedicated update endpoint
+    const url = `${API_BASE_URL}/users/favourite/update`;
+    const res = await fetch(url, { // Use a dedicated update endpoint
         method: 'POST', 
         headers: {
             'Content-Type': 'application/json',
@@ -60,8 +62,19 @@ export async function saveUserFavorites(newFavorites: string[]): Promise<void> {
     });
 
     if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to save favorites to database.");
+        let errorMessage = "Failed to save favorites to database.";
+        try {
+            const errorData = await res.json();
+            errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+            // response might not be json
+        }
+
+        if (res.status === 404) {
+             console.error(`Backend endpoint not found: ${url}. Please ensure the backend is running and the route is registered correctly.`);
+        }
+
+        throw new Error(errorMessage);
   }
 }
   
