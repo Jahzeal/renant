@@ -1,6 +1,9 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { fetchUserFavorites, saveUserFavorites, deleteFavorite } from "@/lib/favourite-api"
+import { error } from "console"
+
 
 interface FavoritesContextType {
   favorites: string[]
@@ -14,29 +17,38 @@ const FavoritesContext = createContext<FavoritesContextType | undefined>(undefin
 
 export function FavoritesProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<string[]>([])
-  const [isHydrated, setIsHydrated] = useState(false)
+  const [isLoadedFromBackend, setIsLoadedFromBackend] = useState(false)
+
+  //load from backend 
 
   useEffect(() => {
+    async function load() {
     try {
-      const savedFavorites = localStorage.getItem("favorites")
-      if (savedFavorites) {
-        setFavorites(JSON.parse(savedFavorites))
-      }
+      const remoteFavs = await fetchUserFavorites()
+      setFavorites(remoteFavs)
+    
     } catch (error) {
-      console.error("Failed to load favorites:", error)
-    }
-    setIsHydrated(true)
-  }, [])
+      console.error("Could not fetch user favourite", error)
+  }
+  setIsLoadedFromBackend(true)
+}
+load()
+}, [])
+
 
   useEffect(() => {
-    if (isHydrated) {
+    if (!isLoadedFromBackend) return // Wait until loaded from backend
+    async function syncToBackend() {
       try {
-        localStorage.setItem("favorites", JSON.stringify(favorites))
-      } catch (error) {
-        console.error("Failed to save favorites:", error)
-      }
+        await saveUserFavorites(favorites)
+      } catch (error){
+      console.error('Could not save Favourite', error)
     }
-  }, [favorites, isHydrated])
+  }
+    syncToBackend()
+  }, [favorites, setIsLoadedFromBackend])
+
+  // local actions
 
   const toggleFavorite = (id: string) => {
     setFavorites((prev) => (prev.includes(id) ? prev.filter((fav) => fav !== id) : [...prev, id]))

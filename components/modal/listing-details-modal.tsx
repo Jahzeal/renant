@@ -7,6 +7,7 @@ import { X, Heart, ChevronLeft, ChevronRight } from "lucide-react"
 import { RequestTourModal } from "./request-tour-modal"
 import { RequestToApplyModal } from "./request-to-apply-modal"
 
+
 // Define the type for the listing details (used in props)
 interface ListingDetailsModalProps {
   listing: {
@@ -188,7 +189,7 @@ export default function ListingDetailsModal({
       </div>
 
       {/* Modals */}
-      <RequestTourModal isOpen={showTourModal} onClose={() => setShowTourModal(false)} listingTitle={listing.title} />
+      <RequestTourModal isOpen={showTourModal} onClose={() => setShowTourModal(false)} listingTitle={listing.title}listingId={String(listing.id)} />
       <RequestToApplyModal
         isOpen={showApplyModal}
         onClose={() => setShowApplyModal(false)}
