@@ -11,7 +11,7 @@ interface MoreOptionsFilters {
   shortTermLease?: boolean
   commuteTime?: string
   keywords?: string
-  baths?: string // ✅ ADDED
+  baths?: string
 }
 
 interface AppliedFilters {
@@ -25,6 +25,7 @@ interface AppliedFilters {
 interface ListingsPanelProps {
   searchLocation?: string
   filters?: AppliedFilters
+  onLocationClick?: (coords: { lng: number; lat: number }, address: string) => void
 }
 
 interface Listing {
@@ -42,9 +43,10 @@ interface Listing {
   type: string
   description?: string
   amenities?: string[]
+  coords?: { lng: number; lat: number }
 }
 
-export default function ListingsPanel({ searchLocation = "", filters }: ListingsPanelProps) {
+export default function ListingsPanel({ searchLocation = "", filters, onLocationClick }: ListingsPanelProps) {
   const { favorites, toggleFavorite } = useFavorites()
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
@@ -104,7 +106,7 @@ export default function ListingsPanel({ searchLocation = "", filters }: Listings
       })
     }
 
-    // FILTER — Bathrooms (added)
+    // FILTER — Bathrooms
     if (filters?.moreOptions?.baths && filters.moreOptions.baths !== "Any") {
       const val = filters.moreOptions.baths
 
@@ -227,6 +229,11 @@ export default function ListingsPanel({ searchLocation = "", filters }: Listings
               isFavorited={favorites.includes(listing.id)}
               onFavoriteToggle={() => toggleFavorite(listing.id)}
               onViewDetails={() => handleViewDetails(listing)}
+              onLocationClick={() => {
+                if (listing.coords) {
+                  onLocationClick?.(listing.coords, listing.address)
+                }
+              }}
             />
           ))
         ) : (

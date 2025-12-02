@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X } from 'lucide-react';
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 
 interface PriceRangeModalProps {
   isOpen: boolean;

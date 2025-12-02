@@ -13,6 +13,7 @@ interface ListingDetailsModalProps {
     price: string | number
     beds: number
     baths?: number
+    roomType?: string
     images: string[]
     description?: string
     amenities?: string[]
@@ -91,9 +92,10 @@ export default function ListingDetailsModal({
             </div>
 
             <div>
-              <h3 className="text-2xl font-bold">${listing.price}</h3>
+              <h3 className="text-2xl font-bold">{listing.price}</h3>
               <p className="text-muted-foreground">
                 {listing.beds} beds {listing.baths ? `• ${listing.baths} baths` : ""}
+                {listing.roomType ? ` • ${listing.roomType}` : ""}
               </p>
               <p className="text-muted-foreground">{listing.location}</p>
             </div>
