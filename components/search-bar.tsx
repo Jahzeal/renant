@@ -116,9 +116,9 @@ interface MoreOptionsModalProps {
 interface MoreOptionsFilters {
   moveInDate: string
   selectedPets: string[]
-  shortTermLease: boolean
-  commuteTime: string
-  showCommuteFilters: boolean
+  // shortTermLease: boolean
+  // commuteTime: string
+  // showCommuteFilters: boolean
   keywords: string
   threeDTour: boolean
 }
@@ -134,9 +134,9 @@ const MoreOptionsModal = ({
 }) => {
   const [moveInDate, setMoveInDate] = useState("")
   const [selectedPets, setSelectedPets] = useState<string[]>([])
-  const [shortTermLease, setShortTermLease] = useState(false)
-  const [commuteTime, setCommuteTime] = useState("")
-  const [showCommuteFilters, setShowCommuteFilters] = useState(false)
+  // const [shortTermLease, setShortTermLease] = useState(false)
+  // const [commuteTime, setCommuteTime] = useState("")
+  // const [showCommuteFilters, setShowCommuteFilters] = useState(false)
   const [keywords, setKeywords] = useState("")
 
   const petOptions = [
@@ -154,9 +154,9 @@ const MoreOptionsModal = ({
     onApply({
       moveInDate,
       selectedPets,
-      shortTermLease,
-      commuteTime,
-      showCommuteFilters,
+      // shortTermLease,
+      // commuteTime,
+      // showCommuteFilters,
       keywords,
       threeDTour: false,
     })
@@ -166,9 +166,9 @@ const MoreOptionsModal = ({
   const handleReset = () => {
     setMoveInDate("")
     setSelectedPets([])
-    setShortTermLease(false)
-    setCommuteTime("")
-    setShowCommuteFilters(false)
+    // setShortTermLease(false)
+    // setCommuteTime("")
+    // setShowCommuteFilters(false)
     setKeywords("")
   }
 
@@ -201,7 +201,7 @@ const MoreOptionsModal = ({
               />
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
               <input
                 type="checkbox"
                 id="short-term-lease"
@@ -212,9 +212,9 @@ const MoreOptionsModal = ({
               <label htmlFor="short-term-lease" className="text-sm font-medium text-foreground cursor-pointer">
                 Short term lease available
               </label>
-            </div>
+            </div> */}
 
-            <div>
+            {/* <div>
               <label className="text-sm font-semibold text-foreground block mb-2">Commute time</label>
               <div className="flex items-center gap-2 mb-2">
                 <input
@@ -237,7 +237,7 @@ const MoreOptionsModal = ({
               >
                 {showCommuteFilters ? "Hide" : "Show"} commute filters
               </button>
-            </div>
+            </div> */}
 
             <div>
               <label className="text-sm font-semibold text-foreground block mb-2">Keywords</label>
@@ -548,10 +548,10 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
                   {appliedFilters.moreOptions.selectedPets?.length > 0 && (
                     <div>Pets: {appliedFilters.moreOptions.selectedPets.join(", ")}</div>
                   )}
-                  {appliedFilters.moreOptions.shortTermLease && <div>Short term lease available</div>}
-                  {appliedFilters.moreOptions.commuteTime && (
+                  {/* {appliedFilters.moreOptions.shortTermLease && <div>Short term lease available</div>} */}
+                  {/* {appliedFilters.moreOptions.commuteTime && (
                     <div>Commute time: {appliedFilters.moreOptions.commuteTime}</div>
-                  )}
+                  )} */}
                   {appliedFilters.moreOptions.keywords && <div>Keywords: {appliedFilters.moreOptions.keywords}</div>}
                 </div>
               )}

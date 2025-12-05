@@ -31,13 +31,13 @@ export default function SavedHomesPage() {
                   Saved homes
                 </Link>
                 <Link
-                  href="/manage-tours"
+                  href="/renter-hub"
                   className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
                 >
                   Manage tours
                 </Link>
                 <Link
-                  href="/renter-hub"
+                  href="/manage-tours"
                   className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
                 >
                   Rentals Hub
