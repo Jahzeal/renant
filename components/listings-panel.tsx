@@ -4,19 +4,11 @@ import { useFavorites } from "@/lib/favorites-context"
 import ListingCard from "./listing-card"
 import ListingDetailsModal from "./modal/listing-details-modal"
 import { SAMPLE_LISTINGS } from "@/lib/sample-listing"
-
-interface MoreOptionsFilters {
-  moveInDate?: string
-  selectedPets?: string[]
-  shortTermLease?: boolean
-  commuteTime?: string
-  keywords?: string
-  baths?: string // ✅ ADDED
-}
+import type { MoreOptionsFilters } from "./modal/more-options-modal"
 
 interface AppliedFilters {
   price: { min: number; max: number } | null
-  beds: string
+  roomType: string
   propertyType: string
   category: string
   moreOptions: MoreOptionsFilters | null
@@ -25,6 +17,7 @@ interface AppliedFilters {
 interface ListingsPanelProps {
   searchLocation?: string
   filters?: AppliedFilters
+  onLocationClick?: (coords: { lng: number; lat: number }, address: string) => void
 }
 
 interface Listing {
@@ -35,6 +28,7 @@ interface Listing {
   price: number
   bedrooms: number
   bathrooms: number
+  room_type: "room_self_contain" | "2_bedrooms" | "room_parlor" | "3_plus_bedrooms"
   style: string
   offer: string | null
   prices: { beds: number; price: number }[]
@@ -42,9 +36,10 @@ interface Listing {
   type: string
   description?: string
   amenities?: string[]
+  coords?: { lng: number; lat: number }
 }
 
-export default function ListingsPanel({ searchLocation = "", filters }: ListingsPanelProps) {
+export default function ListingsPanel({ searchLocation = "", filters, onLocationClick }: ListingsPanelProps) {
   const { favorites, toggleFavorite } = useFavorites()
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
@@ -60,6 +55,7 @@ export default function ListingsPanel({ searchLocation = "", filters }: Listings
       const categoryMap: { [key: string]: string } = {
         houses: "Home",
         shortlets: "Shortlet",
+        hostels: "Hostel",
       }
       const typeToFilter = categoryMap[filters.category]
       if (typeToFilter) {
@@ -67,9 +63,16 @@ export default function ListingsPanel({ searchLocation = "", filters }: Listings
       }
     }
 
-    // FILTER — Property Type
     if (filters?.propertyType && filters.propertyType !== "All types") {
-      results = results.filter((listing) => listing.type.toLowerCase() === filters.propertyType.toLowerCase())
+      const propertyTypeMap: { [key: string]: string } = {
+        Home: "Home",
+        Shortlet: "Shortlet",
+        Hostel: "Hostel",
+      }
+      const typeToFilter = propertyTypeMap[filters.propertyType]
+      if (typeToFilter) {
+        results = results.filter((listing) => listing.type === typeToFilter)
+      }
     }
 
     // FILTER — Location Search
@@ -86,44 +89,29 @@ export default function ListingsPanel({ searchLocation = "", filters }: Listings
       )
     }
 
-    // FILTER — Price
-    if (filters?.price) {
+    if (filters?.price && (filters.price.min !== 0 || filters.price.max !== Number.POSITIVE_INFINITY)) {
       const { min, max } = filters.price
       results = results.filter((listing) => listing.price >= min && listing.price <= max)
     }
 
-    // FILTER — Bedrooms
-    if (filters?.beds && filters.beds !== "Any") {
-      results = results.filter((listing) => {
-        if (filters.beds === "1+") return listing.bedrooms >= 1
-        if (filters.beds === "2+") return listing.bedrooms >= 2
-        if (filters.beds === "3+") return listing.bedrooms >= 3
-        if (filters.beds === "4+") return listing.bedrooms >= 4
-        if (filters.beds === "5+") return listing.bedrooms >= 5
-        return true
-      })
+    if (filters?.roomType && filters.roomType !== "Any") {
+      const roomTypeMap: { [key: string]: string } = {
+        "Room self-contain": "room_self_contain",
+        "2 bedrooms": "2_bedrooms",
+        "Room & parlor": "room_parlor",
+        "3+ bedrooms": "3_plus_bedrooms",
+      }
+      const roomTypeToFilter = roomTypeMap[filters.roomType]
+      if (roomTypeToFilter) {
+        results = results.filter((listing) => listing.room_type === roomTypeToFilter)
+      }
     }
 
-    // FILTER — Bathrooms (added)
-    if (filters?.moreOptions?.baths && filters.moreOptions.baths !== "Any") {
-      const val = filters.moreOptions.baths
-
-      results = results.filter((listing) => {
-        if (val === "1+") return listing.bathrooms >= 1
-        if (val === "1.5+") return listing.bathrooms >= 1.5
-        if (val === "2+") return listing.bathrooms >= 2
-        if (val === "3+") return listing.bathrooms >= 3
-        if (val === "4+") return listing.bathrooms >= 4
-        return true
-      })
-    }
-
-    // ========= MORE OPTIONS ==========
     if (filters?.moreOptions) {
       const more = filters.moreOptions
 
       // Keywords
-      if (more.keywords) {
+      if (more.keywords && more.keywords.trim() !== "") {
         const keyword = more.keywords.toLowerCase()
         results = results.filter(
           (listing) =>
@@ -140,19 +128,19 @@ export default function ListingsPanel({ searchLocation = "", filters }: Listings
             " ",
           )}`.toLowerCase()
 
-          return more.selectedPets!.some((pet) => {
+          // If "no-pets" is selected, only show listings that mention no pets
+          if (more.selectedPets.includes("no-pets")) {
+            return text.includes("no pet")
+          }
+
+          // Otherwise, check for pet-friendly listings
+          return more.selectedPets.some((pet) => {
             if (pet === "small-dogs") return text.includes("small") && text.includes("dog")
             if (pet === "large-dogs") return text.includes("large") && text.includes("dog")
             if (pet === "cats") return text.includes("cat")
-            if (pet === "no-pets") return text.includes("no pet")
             return false
           })
         })
-      }
-
-      // Short-term lease
-      if (more.shortTermLease) {
-        results = results.filter((listing) => listing.type.toLowerCase() === "shortlet")
       }
     }
 
@@ -227,6 +215,11 @@ export default function ListingsPanel({ searchLocation = "", filters }: Listings
               isFavorited={favorites.includes(listing.id)}
               onFavoriteToggle={() => toggleFavorite(listing.id)}
               onViewDetails={() => handleViewDetails(listing)}
+              onLocationClick={() => {
+                if (listing.coords) {
+                  onLocationClick?.(listing.coords, listing.address)
+                }
+              }}
             />
           ))
         ) : (
@@ -244,12 +237,13 @@ export default function ListingsPanel({ searchLocation = "", filters }: Listings
             id: Number(selectedListing.id),
             title: selectedListing.title,
             location: selectedListing.location,
-            price: `$${selectedListing.price}`,
+            price: `₦${selectedListing.price}`,
             beds: selectedListing.bedrooms,
             baths: selectedListing.bathrooms,
             images: selectedListing.images,
             description: selectedListing.description,
             amenities: selectedListing.amenities,
+            type: selectedListing.type,
           }}
           isOpen={isDetailsOpen}
           onClose={() => setIsDetailsOpen(false)}

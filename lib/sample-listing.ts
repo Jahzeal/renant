@@ -6,6 +6,7 @@ export interface Listing {
   price: number
   bedrooms: number
   bathrooms: number
+  room_type: "room_self_contain" | "2_bedrooms" | "room_parlor" | "3_plus_bedrooms"
   style: string
   offer: string | null
   prices: { beds: number; price: number }[]
@@ -13,6 +14,8 @@ export interface Listing {
   type: string
   description?: string
   amenities?: string[]
+  coords?: { lng: number; lat: number }
+  cautionFee?: number // Added caution fee for shortlets
 }
 
 export const SAMPLE_LISTINGS: Listing[] = [
@@ -25,11 +28,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 1575,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_self_contain",
     style: "Wood-style flooring",
     offer: "12 available units",
     location: "Chapel Hill",
     type: "Home",
-
+    coords: { lng: -79.056, lat: 35.913 },
     prices: [
       { beds: 1, price: 1575 },
       { beds: 2, price: 1950 },
@@ -46,10 +50,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 1584,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_self_contain",
     style: "Sleek urban design",
     offer: "Special Offer",
     location: "Raleigh",
     type: "Home",
+    coords: { lng: -78.638, lat: 35.779 },
     prices: [
       { beds: 1, price: 1584 },
       { beds: 2, price: 1925 },
@@ -66,10 +72,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 1650,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_self_contain",
     style: "Modern amenities",
     offer: "Special Offer",
     location: "Durham",
     type: "Home",
+    coords: { lng: -78.906, lat: 36.004 },
     prices: [
       { beds: 1, price: 1650 },
       { beds: 2, price: 2000 },
@@ -90,10 +98,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 1495,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_self_contain",
     style: "Student-friendly",
     offer: null,
     location: "Chapel Hill",
     type: "Home",
+    coords: { lng: -79.052, lat: 35.906 },
     prices: [
       { beds: 1, price: 1495 },
       { beds: 2, price: 1795 },
@@ -110,10 +120,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 1725,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_parlor",
     style: "Industrial chic",
     offer: "Special Offer",
     location: "Raleigh",
     type: "Home",
+    coords: { lng: -78.639, lat: 35.776 },
     prices: [
       { beds: 1, price: 1725 },
       { beds: 2, price: 2150 },
@@ -130,10 +142,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 2100,
     bedrooms: 3,
     bathrooms: 2,
+    room_type: "3_plus_bedrooms",
     style: "Traditional home",
     offer: "New listing",
     location: "Chapel Hill",
     type: "Home",
+    coords: { lng: -79.048, lat: 35.918 },
     prices: [
       { beds: 2, price: 1950 },
       { beds: 3, price: 2100 },
@@ -150,10 +164,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 1850,
     bedrooms: 2,
     bathrooms: 2,
+    room_type: "2_bedrooms",
     style: "Contemporary design",
     offer: null,
     location: "Durham",
     type: "Home",
+    coords: { lng: -78.895, lat: 36.015 },
     prices: [
       { beds: 1, price: 1650 },
       { beds: 2, price: 1850 },
@@ -174,10 +190,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 1425,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_self_contain",
     style: "Cozy spaces",
     offer: null,
     location: "Raleigh",
     type: "Home",
+    coords: { lng: -78.641, lat: 35.781 },
     prices: [
       { beds: 1, price: 1425 },
       { beds: 2, price: 1750 },
@@ -194,10 +212,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 2450,
     bedrooms: 4,
     bathrooms: 3,
+    room_type: "3_plus_bedrooms",
     style: "Luxury estate",
     offer: "Premium property",
     location: "Chapel Hill",
     type: "Home",
+    coords: { lng: -79.074, lat: 35.897 },
     prices: [
       { beds: 3, price: 2250 },
       { beds: 4, price: 2450 },
@@ -214,10 +234,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 1920,
     bedrooms: 2,
     bathrooms: 2,
+    room_type: "2_bedrooms",
     style: "Park-facing view",
     offer: "Special Offer",
     location: "Durham",
     type: "Home",
+    coords: { lng: -78.892, lat: 36.008 },
     prices: [
       { beds: 1, price: 1750 },
       { beds: 2, price: 1920 },
@@ -234,10 +256,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 1550,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_parlor",
     style: "Downtown living",
     offer: "Move-in Special",
     location: "Raleigh",
     type: "Home",
+    coords: { lng: -78.636, lat: 35.774 },
     prices: [
       { beds: 1, price: 1550 },
       { beds: 2, price: 1900 },
@@ -258,10 +282,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 2200,
     bedrooms: 3,
     bathrooms: 2.5,
+    room_type: "3_plus_bedrooms",
     style: "Rural charm",
     offer: null,
     location: "Chapel Hill",
     type: "Home",
+    coords: { lng: -79.065, lat: 35.925 },
     prices: [
       { beds: 2, price: 2000 },
       { beds: 3, price: 2200 },
@@ -270,8 +296,7 @@ export const SAMPLE_LISTINGS: Listing[] = [
     description: "Charming countryside home with character and space.",
     amenities: ["Acreage", "Barn", "Well", "Pond"],
   },
-
-  // Shortlets
+  // Shortlets with caution fees
   {
     id: "13",
     images: ["/modern-apartment-living-room.png", "/modern-apartment-kitchen.png", "/cozy-apartment-bedroom.png"],
@@ -280,16 +305,19 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 120,
     bedrooms: 2,
     bathrooms: 2,
+    room_type: "2_bedrooms",
     style: "Modern luxury",
     offer: "Nightly rates",
     location: "Chapel Hill",
     type: "Shortlet",
+    coords: { lng: -79.055, lat: 35.915 },
     prices: [
       { beds: 1, price: 85 },
       { beds: 2, price: 120 },
     ],
     description: "Luxurious short-term rental with full amenities.",
     amenities: ["WiFi", "Kitchen", "AC", "Smart TV", "Washer/Dryer"],
+    cautionFee: 120, // 20% of nightly rate
   },
   {
     id: "14",
@@ -299,13 +327,16 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 110,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_self_contain",
     style: "Urban chic",
     offer: "Weekly discount",
     location: "Raleigh",
     type: "Shortlet",
+    coords: { lng: -78.637, lat: 35.775 },
     prices: [{ beds: 1, price: 110 }],
     description: "Urban chic shortlet in the heart of Raleigh.",
     amenities: ["WiFi", "Kitchenette", "Parking", "Gym Access"],
+    cautionFee: 110, // 20% of nightly rate
   },
   {
     id: "15",
@@ -315,13 +346,16 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 95,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_self_contain",
     style: "Cozy comfort",
     offer: null,
     location: "Durham",
     type: "Shortlet",
+    coords: { lng: -78.905, lat: 36.006 },
     prices: [{ beds: 1, price: 95 }],
     description: "Cozy and comfortable short-term rental perfect for travelers.",
     amenities: ["WiFi", "Full Kitchen", "Linens Included", "Coffee Maker"],
+    cautionFee: 95, // 20% of nightly rate
   },
   {
     id: "16",
@@ -335,16 +369,19 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 150,
     bedrooms: 3,
     bathrooms: 2,
+    room_type: "3_plus_bedrooms",
     style: "Premium experience",
     offer: "Monthly rates available",
     location: "Chapel Hill",
     type: "Shortlet",
+    coords: { lng: -79.058, lat: 35.911 },
     prices: [
       { beds: 2, price: 130 },
       { beds: 3, price: 150 },
     ],
     description: "Premium shortlet with high-end furnishings and services.",
     amenities: ["WiFi", "Full Kitchen", "Concierge", "Pool Access", "Parking"],
+    cautionFee: 150, // 20% of nightly rate
   },
   {
     id: "17",
@@ -354,16 +391,17 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 75,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_self_contain",
     style: "Budget friendly",
     offer: "Best rates",
     location: "Raleigh",
     type: "Shortlet",
+    coords: { lng: -78.642, lat: 35.778 },
     prices: [{ beds: 1, price: 75 }],
     description: "Budget-friendly shortlet without compromising on comfort.",
     amenities: ["WiFi", "Basic Kitchen", "Fan", "Shared Lounge"],
+    cautionFee: 75, // 20% of nightly rate
   },
-
-  // Hostels
   {
     id: "18",
     images: ["/cozy-living-room.png", "/cozy-backyard.png", "/modern-apartment-living-room.png"],
@@ -372,10 +410,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 35,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_self_contain",
     style: "Social atmosphere",
     offer: "Dorm beds available",
     location: "Chapel Hill",
     type: "Hostel",
+    coords: { lng: -79.051, lat: 35.914 },
     prices: [{ beds: 1, price: 35 }],
     description: "Social hostel with communal areas and local travelers.",
     amenities: ["Free WiFi", "Common Kitchen", "Social Events", "Lockers", "Sheets Included"],
@@ -388,10 +428,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 40,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_self_contain",
     style: "Prime location",
     offer: "Weekly passes",
     location: "Raleigh",
     type: "Hostel",
+    coords: { lng: -78.64, lat: 35.773 },
     prices: [{ beds: 1, price: 40 }],
     description: "Prime location hostel near all downtown attractions.",
     amenities: ["WiFi", "Breakfast Included", "Bike Rental", "Tour Desk", "Laundry"],
@@ -404,10 +446,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 30,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_self_contain",
     style: "Affordable comfort",
     offer: "Lowest rates",
     location: "Durham",
     type: "Hostel",
+    coords: { lng: -78.904, lat: 36.005 },
     prices: [{ beds: 1, price: 30 }],
     description: "Most affordable hostel with clean rooms and friendly staff.",
     amenities: ["WiFi", "Shared Kitchen", "Common Area", "Lockers", "Basic Breakfast"],
@@ -420,10 +464,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 55,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_self_contain",
     style: "Upscale hostel",
     offer: "Private rooms available",
     location: "Chapel Hill",
     type: "Hostel",
+    coords: { lng: -79.053, lat: 35.92 },
     prices: [{ beds: 1, price: 55 }],
     description: "Upscale hostel with premium amenities and private room options.",
     amenities: ["WiFi", "Full Kitchen", "Bar", "Lounge", "Free Breakfast", "Laundry"],
@@ -440,10 +486,12 @@ export const SAMPLE_LISTINGS: Listing[] = [
     price: 45,
     bedrooms: 1,
     bathrooms: 1,
+    room_type: "room_parlor",
     style: "Travel hub",
     offer: "Group discounts",
     location: "Raleigh",
     type: "Hostel",
+    coords: { lng: -78.638, lat: 35.777 },
     prices: [{ beds: 1, price: 45 }],
     description: "Popular travel hub with activities and day trips organized.",
     amenities: ["WiFi", "Kitchen", "Lounge", "Event Calendar", "Tour Booking"],

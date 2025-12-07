@@ -27,6 +27,7 @@ interface ListingCardProps {
   isFavorited?: boolean
   onFavoriteToggle?: () => void
   onViewDetails?: () => void
+  onLocationClick?: () => void
 }
 
 export default function ListingCard({
@@ -34,6 +35,7 @@ export default function ListingCard({
   isFavorited = false,
   onFavoriteToggle,
   onViewDetails,
+  onLocationClick,
 }: ListingCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const images = listing.images || (listing.image ? [listing.image] : ["/cozy-cabin-interior.png"])
@@ -50,13 +52,23 @@ export default function ListingCard({
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    console.log("[v0] Heart clicked, isFavorited before:", isFavorited)
     onFavoriteToggle?.()
-    console.log("[v0] toggleFavorite called for listing:", listing.id)
+  }
+
+  const handleCardClick = () => {
+    onViewDetails?.()
+  }
+
+  const handleLocationClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onLocationClick?.()
   }
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 hover:bg-muted/30 transition-colors rounded-lg cursor-pointer border-b">
+    <div
+      className="p-3 sm:p-4 md:p-6 hover:bg-muted/30 transition-colors rounded-lg cursor-pointer border-b"
+      onClick={handleCardClick}
+    >
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative w-full sm:w-64 h-56 sm:h-48 rounded-lg overflow-hidden bg-gray-200 group flex-shrink-0">
           <img
@@ -101,23 +113,23 @@ export default function ListingCard({
         </div>
         <div className="flex-1">
           <h3 className="font-semibold text-base md:text-lg text-foreground mb-1">
-            ${listing.price}+ • {listing.bedrooms} bd
+            ₦{listing.price}+ • {listing.bedrooms} bd
           </h3>
           <p className="text-foreground font-medium text-sm md:text-base mb-1">{listing.title}</p>
-          <p className="text-muted-foreground text-xs md:text-sm mb-3">{listing.address}</p>
+          <p
+            onClick={handleLocationClick}
+            className="text-muted-foreground text-xs md:text-sm mb-3 hover:text-primary hover:underline transition-colors cursor-pointer font-semibold"
+          >
+            {listing.address}
+          </p>
           <div className="flex flex-wrap gap-2">
             {listing.prices.map((p) => (
               <div key={p.beds} className="px-3 py-2 border border-border rounded text-center">
-                <div className="text-primary font-semibold text-sm">${p.price}+</div>
+                <div className="text-primary font-semibold text-sm">₦{p.price}+</div>
                 <div className="text-muted-foreground text-xs">{p.beds} bd</div>
               </div>
             ))}
           </div>
-          {onViewDetails && (
-            <button onClick={onViewDetails} className="mt-3 text-primary font-semibold text-sm hover:underline">
-              View Details →
-            </button>
-          )}
         </div>
       </div>
     </div>
