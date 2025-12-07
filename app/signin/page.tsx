@@ -154,7 +154,7 @@ export default function SigninPage() {
                     {showPassword ? "Hide" : "Show"}
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-right">
+                <p className="mt-2 text-xs text-right hover:underline">
                   <a href="">Forget Password</a>
                 </p>
               </div>

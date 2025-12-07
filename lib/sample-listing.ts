@@ -15,6 +15,7 @@ export interface Listing {
   description?: string
   amenities?: string[]
   coords?: { lng: number; lat: number }
+  cautionFee?: number // Added caution fee for shortlets
 }
 
 export const SAMPLE_LISTINGS: Listing[] = [
@@ -295,6 +296,7 @@ export const SAMPLE_LISTINGS: Listing[] = [
     description: "Charming countryside home with character and space.",
     amenities: ["Acreage", "Barn", "Well", "Pond"],
   },
+  // Shortlets with caution fees
   {
     id: "13",
     images: ["/modern-apartment-living-room.png", "/modern-apartment-kitchen.png", "/cozy-apartment-bedroom.png"],
@@ -315,6 +317,7 @@ export const SAMPLE_LISTINGS: Listing[] = [
     ],
     description: "Luxurious short-term rental with full amenities.",
     amenities: ["WiFi", "Kitchen", "AC", "Smart TV", "Washer/Dryer"],
+    cautionFee: 120, // 20% of nightly rate
   },
   {
     id: "14",
@@ -333,6 +336,7 @@ export const SAMPLE_LISTINGS: Listing[] = [
     prices: [{ beds: 1, price: 110 }],
     description: "Urban chic shortlet in the heart of Raleigh.",
     amenities: ["WiFi", "Kitchenette", "Parking", "Gym Access"],
+    cautionFee: 110, // 20% of nightly rate
   },
   {
     id: "15",
@@ -351,6 +355,7 @@ export const SAMPLE_LISTINGS: Listing[] = [
     prices: [{ beds: 1, price: 95 }],
     description: "Cozy and comfortable short-term rental perfect for travelers.",
     amenities: ["WiFi", "Full Kitchen", "Linens Included", "Coffee Maker"],
+    cautionFee: 95, // 20% of nightly rate
   },
   {
     id: "16",
@@ -376,6 +381,7 @@ export const SAMPLE_LISTINGS: Listing[] = [
     ],
     description: "Premium shortlet with high-end furnishings and services.",
     amenities: ["WiFi", "Full Kitchen", "Concierge", "Pool Access", "Parking"],
+    cautionFee: 150, // 20% of nightly rate
   },
   {
     id: "17",
@@ -394,6 +400,7 @@ export const SAMPLE_LISTINGS: Listing[] = [
     prices: [{ beds: 1, price: 75 }],
     description: "Budget-friendly shortlet without compromising on comfort.",
     amenities: ["WiFi", "Basic Kitchen", "Fan", "Shared Lounge"],
+    cautionFee: 75, // 20% of nightly rate
   },
   {
     id: "18",

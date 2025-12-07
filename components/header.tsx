@@ -233,7 +233,7 @@ export default function Header() {
                   onClick={() => setShowManageRentalsDropdown((prev) => !prev)}
                   className="text-foreground hover:text-primary font-medium text-sm transition-colors whitespace-nowrap"
                 >
-                  Manage rentals
+                  Rental Enscroll
                 </button>
 
                 {/* Fully Responsive Dropdown - Works on Phones Too */}
@@ -264,27 +264,27 @@ export default function Header() {
                       <div className="space-y-6">
                         <div>
                           <h3 className="font-semibold text-base mb-4 text-foreground">
-                            Rental Management Tools
+                            Enscroll Management 
                           </h3>
                           <div className="space-y-3">
                             <a
                               href="#"
                               className="block text-sm text-primary hover:underline"
                             >
-                              Inbox
+                              Buyer
                             </a>
                             <a
-                              href="/renter-hub"
+                              href="#"
                               className="block text-sm text-primary hover:underline"
                             >
-                              Applications
+                              Seller
                             </a>
                           </div>
                         </div>
 
-                        <hr className="border-border" />
+                        {/* <hr className="border-border" /> */}
 
-                        <div>
+                        {/* <div>
                           <h4 className="font-semibold text-sm mb-3 text-foreground">
                             Learn More
                           </h4>
@@ -296,7 +296,7 @@ export default function Header() {
                               Help Center
                             </a>
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   </>

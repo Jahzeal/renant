@@ -1,10 +1,11 @@
 "use client"
 import { useEffect, useState } from "react"
-import { Search, ChevronDown, X, Dog, Cat, CircleSlash } from "lucide-react"
+import { Search, ChevronDown } from "lucide-react"
 import { Button } from "./ui/button"
 import PriceRangeModal from "./modal/price-range-modal"
 import BedsBathsModal from "./modal/beds-bath-modal"
 import PropertyTypeModal from "./modal/property-type-modal"
+import MoreOptionsModal, { type MoreOptionsFilters } from "./modal/more-options-modal"
 
 interface FilterProps {
   label: string
@@ -104,193 +105,6 @@ const FilterButton = ({ label, options = [], isPrice = false, onApply, onSelect 
         </div>
       )}
     </div>
-  )
-}
-
-interface MoreOptionsModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onApply: (filters: MoreOptionsFilters) => void
-}
-
-interface MoreOptionsFilters {
-  moveInDate: string
-  selectedPets: string[]
-  // shortTermLease: boolean
-  // commuteTime: string
-  // showCommuteFilters: boolean
-  keywords: string
-  threeDTour: boolean
-}
-
-const MoreOptionsModal = ({
-  isOpen,
-  onClose,
-  onApply,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onApply: (filters: MoreOptionsFilters) => void
-}) => {
-  const [moveInDate, setMoveInDate] = useState("")
-  const [selectedPets, setSelectedPets] = useState<string[]>([])
-  // const [shortTermLease, setShortTermLease] = useState(false)
-  // const [commuteTime, setCommuteTime] = useState("")
-  // const [showCommuteFilters, setShowCommuteFilters] = useState(false)
-  const [keywords, setKeywords] = useState("")
-
-  const petOptions = [
-    { id: "small-dogs", label: "Allows small dogs", icon: Dog },
-    { id: "large-dogs", label: "Allows large dogs", icon: Dog },
-    { id: "cats", label: "Allows cats", icon: Cat },
-    { id: "no-pets", label: "No pets allowed", icon: CircleSlash },
-  ]
-
-  const handlePetToggle = (petId: string) => {
-    setSelectedPets((prev) => (prev.includes(petId) ? prev.filter((id) => id !== petId) : [...prev, petId]))
-  }
-
-  const handleApply = () => {
-    onApply({
-      moveInDate,
-      selectedPets,
-      // shortTermLease,
-      // commuteTime,
-      // showCommuteFilters,
-      keywords,
-      threeDTour: false,
-    })
-    onClose()
-  }
-
-  const handleReset = () => {
-    setMoveInDate("")
-    setSelectedPets([])
-    // setShortTermLease(false)
-    // setCommuteTime("")
-    // setShowCommuteFilters(false)
-    setKeywords("")
-  }
-
-  if (!isOpen) return null
-
-  return (
-    <>
-      <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={onClose} />
-      <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 w-full">
-        <div className="w-full md:max-w-2xl bg-white rounded-t-2xl md:rounded-lg shadow-xl max-h-[92vh] overflow-y-auto mx-auto">
-          <div className="sticky top-0 flex items-center justify-between p-4 md:p-6 border-b border-border bg-white">
-            <h2 className="text-lg md:text-xl font-semibold text-foreground">More options</h2>
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-muted rounded-lg transition-colors"
-              aria-label="Close modal"
-            >
-              <X size={24} className="text-foreground" />
-            </button>
-          </div>
-
-          <div className="p-4 md:p-6 space-y-6">
-            <div>
-              <label className="text-sm font-medium text-foreground block mb-2">Move in date</label>
-              <input
-                type="date"
-                value={moveInDate}
-                onChange={(e) => setMoveInDate(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-
-            {/* <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="short-term-lease"
-                checked={shortTermLease}
-                onChange={(e) => setShortTermLease(e.target.checked)}
-                className="w-4 h-4 rounded border border-border cursor-pointer"
-              />
-              <label htmlFor="short-term-lease" className="text-sm font-medium text-foreground cursor-pointer">
-                Short term lease available
-              </label>
-            </div> */}
-
-            {/* <div>
-              <label className="text-sm font-semibold text-foreground block mb-2">Commute time</label>
-              <div className="flex items-center gap-2 mb-2">
-                <input
-                  type="text"
-                  placeholder="Enter address, city, state and ZIP code"
-                  value={commuteTime}
-                  onChange={(e) => setCommuteTime(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <button
-                  className="px-3 py-2 text-primary font-medium text-sm hover:underline"
-                  aria-label="Use current location"
-                >
-                  📍
-                </button>
-              </div>
-              <button
-                onClick={() => setShowCommuteFilters(!showCommuteFilters)}
-                className="text-primary text-sm font-semibold hover:underline"
-              >
-                {showCommuteFilters ? "Hide" : "Show"} commute filters
-              </button>
-            </div> */}
-
-            <div>
-              <label className="text-sm font-semibold text-foreground block mb-2">Keywords</label>
-              <input
-                type="text"
-                placeholder="Furnished, short term, etc."
-                value={keywords}
-                onChange={(e) => setKeywords(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-
-            <div>
-              <h3 className="text-base md:text-lg font-semibold text-foreground mb-3">Pets</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {petOptions.map((pet) => {
-                  const IconComponent = pet.icon
-                  return (
-                    <button
-                      key={pet.id}
-                      onClick={() => handlePetToggle(pet.id)}
-                      className={`p-3 md:p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
-                        selectedPets.includes(pet.id)
-                          ? "border-primary bg-muted"
-                          : "border-border bg-white hover:border-muted"
-                      }`}
-                    >
-                      <IconComponent size={24} className="text-foreground" />
-                      <span className="text-xs md:text-sm font-medium text-center text-foreground">{pet.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-
-          <div className="sticky bottom-0 flex gap-2 md:gap-3 p-4 md:p-6 border-t border-border bg-white">
-            <button
-              onClick={handleReset}
-              className="flex-1 px-4 py-2 text-primary font-semibold text-sm md:text-base hover:bg-muted rounded-lg transition-colors"
-            >
-              Reset all filters
-            </button>
-            <button
-              onClick={handleApply}
-              className="flex-1 px-4 py-2 bg-primary text-primary-foreground font-semibold text-sm md:text-base rounded-lg hover:opacity-90 transition-opacity"
-            >
-              Apply filters
-            </button>
-          </div>
-        </div>
-      </div>
-    </>
   )
 }
 
@@ -461,7 +275,7 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
 
                 const updated = { ...appliedFilters, category: "houses" }
                 setAppliedFilters(updated)
-                onFiltersChange?.(updated) // 👈 send to parent
+                onFiltersChange?.(updated)
               }}
             >
               Houses
@@ -474,7 +288,7 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
 
                 const updated = { ...appliedFilters, category: "shortlets" }
                 setAppliedFilters(updated)
-                onFiltersChange?.(updated) // 👈 send to parent
+                onFiltersChange?.(updated)
               }}
             >
               Shortlets
@@ -541,24 +355,31 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
                 )}
               </div>
               {appliedFilters.moreOptions && (
-                <div className="space-y-1">
+                <div className="flex flex-wrap gap-2 pt-2">
                   {appliedFilters.moreOptions.moveInDate && (
-                    <div>Move in date: {new Date(appliedFilters.moreOptions.moveInDate).toLocaleDateString()}</div>
+                    <span className="bg-muted px-2 py-1 rounded">Move in: {appliedFilters.moreOptions.moveInDate}</span>
                   )}
-                  {appliedFilters.moreOptions.selectedPets?.length > 0 && (
-                    <div>Pets: {appliedFilters.moreOptions.selectedPets.join(", ")}</div>
+                  {appliedFilters.moreOptions.selectedPets.length > 0 && (
+                    <span className="bg-muted px-2 py-1 rounded">
+                      Pets: {appliedFilters.moreOptions.selectedPets.join(", ")}
+                    </span>
                   )}
-                  {/* {appliedFilters.moreOptions.shortTermLease && <div>Short term lease available</div>} */}
-                  {/* {appliedFilters.moreOptions.commuteTime && (
-                    <div>Commute time: {appliedFilters.moreOptions.commuteTime}</div>
-                  )} */}
-                  {appliedFilters.moreOptions.keywords && <div>Keywords: {appliedFilters.moreOptions.keywords}</div>}
+                  {appliedFilters.moreOptions.keywords && (
+                    <span className="bg-muted px-2 py-1 rounded">Keywords: {appliedFilters.moreOptions.keywords}</span>
+                  )}
                 </div>
               )}
             </div>
           )}
         </div>
       </div>
+
+      <MoreOptionsModal
+        isOpen={isMoreOptionsOpen}
+        onClose={() => setIsMoreOptionsOpen(false)}
+        onApply={handleMoreOptionsApply}
+        initialFilters={appliedFilters.moreOptions || undefined}
+      />
 
       <PriceRangeModal
         isOpen={isPriceModalOpen}
@@ -568,19 +389,12 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
       <BedsBathsModal
         isOpen={isBedsBathsModalOpen}
         onClose={() => setIsBedsBathsModalOpen(false)}
-        onApply={handleBedsApply} // ✅ Now correctly accepts {beds, baths}
+        onApply={handleBedsApply}
       />
-
       <PropertyTypeModal
         isOpen={isPropertyTypeModalOpen}
         onClose={() => setIsPropertyTypeModalOpen(false)}
         onApply={handlePropertyTypeApply}
-      />
-
-      <MoreOptionsModal
-        isOpen={isMoreOptionsOpen}
-        onClose={() => setIsMoreOptionsOpen(false)}
-        onApply={handleMoreOptionsApply}
       />
     </>
   )

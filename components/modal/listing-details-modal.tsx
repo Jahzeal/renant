@@ -1,14 +1,14 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
-import { useAuth } from "@/hooks/use-auth" // Import useAuth
-import { useRouter } from "next/navigation" // Import useRouter
+import { useAuth } from "@/hooks/use-auth"
+import { useRouter } from "next/navigation"
 import { X, Heart, ChevronLeft, ChevronRight } from "lucide-react"
 import { RequestTourModal } from "./request-tour-modal"
 import { RequestToApplyModal } from "./request-to-apply-modal"
 
-
-// Define the type for the listing details (used in props)
 interface ListingDetailsModalProps {
   listing: {
     id: string | number
@@ -26,6 +26,7 @@ interface ListingDetailsModalProps {
       company: string
       phone: string
     }
+    type?: string
   }
   isOpen: boolean
   onClose: () => void
@@ -40,39 +41,23 @@ export default function ListingDetailsModal({
   isFavorited = false,
   onFavoriteToggle,
 }: ListingDetailsModalProps) {
-  // --- State Management ---
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showTourModal, setShowTourModal] = useState(false)
   const [showApplyModal, setShowApplyModal] = useState(false)
 
-  // --- Hooks ---
   const router = useRouter()
-  
-  // ✅ FIX: Use a direct selector to get the 'user' object from the store.
-  // This is the standard best practice for Zustand/Redux and avoids the
-  // re-render/call stack issue caused by creating a new temporary object
-  // on every render (which the previous line of code was doing).
-  const user = useAuth((state) => state.user);
-  
-  // Return null if the modal is closed
-  if (!isOpen) return null
+  const user = useAuth((state) => state.user)
 
-  // --- Image Navigation Handlers ---
+  if (!isOpen) return null
 
   const handlePrevImage = () => {
     setCurrentImageIndex((prev) => (prev === 0 ? listing.images.length - 1 : prev - 1))
   }
-  
+
   const handleNextImage = () => {
     setCurrentImageIndex((prev) => (prev === listing.images.length - 1 ? 0 : prev + 1))
   }
 
-  // --- Protected Action Handlers ---
-
-  /**
-   * Checks if the user is authenticated. If not, redirects to signin.
-   * If yes, opens the specified modal.
-   */
   const handleProtectedAction = (setModalState: React.Dispatch<React.SetStateAction<boolean>>) => {
     if (!user) {
       router.push("/signin")
@@ -80,10 +65,7 @@ export default function ListingDetailsModal({
       setModalState(true)
     }
   }
-  
-  /**
-   * Handles the favorite click, requiring authentication first.
-   */
+
   const handleFavoriteClick = () => {
     if (!user) {
       router.push("/signin")
@@ -92,7 +74,16 @@ export default function ListingDetailsModal({
     }
   }
 
-  // --- Render ---
+  const handleBookNow = () => {
+    if (!user) {
+      router.push("/signin")
+    } else {
+      onClose()
+      router.push(`/booking/${listing.id}?title=${encodeURIComponent(String(listing.title))}&price=${listing.price}`)
+    }
+  }
+
+  const isShortlet = listing.type === "Shortlet"
 
   return (
     <>
@@ -130,9 +121,9 @@ export default function ListingDetailsModal({
                 <ChevronRight size={20} />
               </button>
 
-              {/* Favorite Button (Uses Protected Handler) */}
+              {/* Favorite Button */}
               <button
-                onClick={handleFavoriteClick} 
+                onClick={handleFavoriteClick}
                 className="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-muted"
               >
                 <Heart size={20} className={isFavorited ? "fill-red-500 text-red-500" : ""} />
@@ -171,27 +162,50 @@ export default function ListingDetailsModal({
               </div>
             )}
 
-            {/* Action Buttons (Uses Protected Handler) */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <button
-                onClick={() => handleProtectedAction(setShowTourModal)}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-              >
-                Send tour request
-              </button>
-              <button
-                onClick={() => handleProtectedAction(setShowApplyModal)}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-              >
-                Request to apply
-              </button>
+              {isShortlet ? (
+                <>
+                  <button
+                    onClick={() => handleProtectedAction(setShowTourModal)}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Request to tour
+                  </button>
+                  <button
+                    onClick={handleBookNow}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Book now
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => handleProtectedAction(setShowTourModal)}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Send tour request
+                  </button>
+                  <button
+                    onClick={() => handleProtectedAction(setShowApplyModal)}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Request to apply
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* Modals */}
-      <RequestTourModal isOpen={showTourModal} onClose={() => setShowTourModal(false)} listingTitle={listing.title}listingId={String(listing.id)} />
+      <RequestTourModal
+        isOpen={showTourModal}
+        onClose={() => setShowTourModal(false)}
+        listingTitle={listing.title}
+        listingId={String(listing.id)}
+      />
       <RequestToApplyModal
         isOpen={showApplyModal}
         onClose={() => setShowApplyModal(false)}
