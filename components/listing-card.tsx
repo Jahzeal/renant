@@ -52,9 +52,7 @@ export default function ListingCard({
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    console.log("[v0] Heart clicked, isFavorited before:", isFavorited)
     onFavoriteToggle?.()
-    console.log("[v0] toggleFavorite called for listing:", listing.id)
   }
 
   const handleCardClick = () => {
@@ -115,7 +113,7 @@ export default function ListingCard({
         </div>
         <div className="flex-1">
           <h3 className="font-semibold text-base md:text-lg text-foreground mb-1">
-            ${listing.price}+ • {listing.bedrooms} bd
+            ₦{listing.price}+ • {listing.bedrooms} bd
           </h3>
           <p className="text-foreground font-medium text-sm md:text-base mb-1">{listing.title}</p>
           <p
@@ -127,7 +125,7 @@ export default function ListingCard({
           <div className="flex flex-wrap gap-2">
             {listing.prices.map((p) => (
               <div key={p.beds} className="px-3 py-2 border border-border rounded text-center">
-                <div className="text-primary font-semibold text-sm">${p.price}+</div>
+                <div className="text-primary font-semibold text-sm">₦{p.price}+</div>
                 <div className="text-muted-foreground text-xs">{p.beds} bd</div>
               </div>
             ))}
