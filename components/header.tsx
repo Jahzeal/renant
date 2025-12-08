@@ -268,7 +268,7 @@ export default function Header() {
                           </h3>
                           <div className="space-y-3">
                             <a
-                              href="#"
+                              href="/buyer"
                               className="block text-sm text-primary hover:underline"
                             >
                               Buyer
