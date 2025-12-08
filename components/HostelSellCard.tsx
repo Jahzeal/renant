@@ -1,94 +1,68 @@
-
+// components/HostelSellCard.tsx
 import React from "react";
-import { Edit2, Trash2, Eye } from "lucide-react";
 
 interface HostelSellCardProps {
   hostelName: string;
   price: string;
   address: string;
-  isActive?: boolean;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  onView?: () => void;
+  isActive: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
 const HostelSellCard: React.FC<HostelSellCardProps> = ({
   hostelName,
   price,
   address,
-  isActive = true,
+  isActive,
   onEdit,
   onDelete,
-  onView,
 }) => {
   return (
-    <div className="bg-card rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-border overflow-hidden group">
-      <div className="p-6">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl font-bold text-primary">
-                {hostelName.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div>
-              <h3 className="text-lg font-extrabold text-foreground">{hostelName}</h3>
-              <div className="flex items-center gap-2 mt-1">
-                <span
-                  className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                    isActive
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                  }`}
-                >
-                  {isActive ? "Active" : "Paused"}
-                </span>
-                <span className="text-xs text-muted-foreground">• Your Listing</span>
-              </div>
-            </div>
+    <div className="group relative bg-card rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-border overflow-hidden">
+      <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none" />
+
+      <div className="relative p-5 sm:p-6">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="text-xl font-extrabold text-foreground">{hostelName}</h3>
+            <p className="text-2xl font-bold text-primary mt-1">{price}</p>
+            <p className="text-sm text-muted-foreground">per night</p>
           </div>
 
-          <div className="text-right">
-            <div className="text-2xl font-extrabold text-primary">{price}</div>
-            <p className="text-xs text-muted-foreground mt-1">per night</p>
+          <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+            isActive
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-gray-100 text-gray-600"
+          }`}>
+            {isActive ? "Active" : "Inactive"}
           </div>
         </div>
 
-        {/* Address */}
-        <p className="text-sm text-muted-foreground mb-6 flex items-center gap-2">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          {address}
-        </p>
+          <span className="font-medium truncate">{address}</span>
+        </div>
 
-        {/* Action Buttons */}
         <div className="flex gap-3">
           <button
-            onClick={onView}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 transition"
-          >
-            
-                Sell
-          </button>
-
-          <button
             onClick={onEdit}
-            className="p-3 border border-border rounded-xl hover:bg-muted transition"
-            aria-label="Edit listing"
+            className="flex-1 py-3 bg-muted border border-border rounded-xl font-semibold hover:bg-muted/80 transition"
           >
-            <Edit2 size={18} className="text-foreground" />
+            Edit
           </button>
-
           <button
             onClick={onDelete}
-            className="p-3 border border-destructive/30 rounded-xl hover:bg-destructive/10 transition"
-            aria-label="Delete listing"
+            className="flex-1 py-3 bg-red-500/10 text-red-600 border border-red-200 rounded-xl font-semibold hover:bg-red-500/20 transition"
           >
-            <Trash2 size={18} className="text-destructive" />
+            Delete
           </button>
         </div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
     </div>
   );

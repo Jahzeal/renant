@@ -5,7 +5,7 @@ import React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth"; // Your Zustand store hook
-import SocialButton from "@/components/SocialButton"; 
+import SocialButton from "@/components/SocialButton";
 
 // ... SocialButton Component (assumed structure) ...
 
@@ -14,8 +14,8 @@ export default function SigninPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  
-  const [localError, setLocalError] = useState(""); 
+
+  const [localError, setLocalError] = useState("");
   const router = useRouter();
 
   // 1. 🟢 FIX: Call the base hook at the top level
@@ -42,33 +42,52 @@ export default function SigninPage() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError("");
-    
+
     try {
-      await signIn(email, password); 
+      await signIn(email, password);
       router.push("/");
     } catch (err) {
-      setLocalError("Login failed. Please check the error message."); 
+      setLocalError("Login failed. Please check the error message.");
     }
   };
 
   // --- SVG Icons (omitted for brevity) ---
   const googleIcon = (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">...</svg>
+    <svg
+      className="w-5 h-5"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      ...
+    </svg>
   );
   const appleIcon = (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">...</svg>
+    <svg
+      className="w-5 h-5"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      ...
+    </svg>
   );
   const facebookIcon = (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">...</svg>
+    <svg
+      className="w-5 h-5"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      ...
+    </svg>
   );
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-white">
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center px-6 sm:px-8 bg-white">
         <div className="w-full max-w-sm">
-          <div className="mb-4">
-            {/* Logo placeholder */}
-          </div>
+          <div className="mb-4">{/* Logo placeholder */}</div>
 
           <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-6">
             Sign in
@@ -86,7 +105,10 @@ export default function SigninPage() {
           >
             {/* Email Input */}
             <div>
-              <label htmlFor="email" className="text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium text-gray-700"
+              >
                 Email Address <span className="text-red-500">*</span>
               </label>
               <input
@@ -106,7 +128,10 @@ export default function SigninPage() {
             {/* Password Input (Conditional) */}
             {emailSubmitted && (
               <div>
-                <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative mt-1">
@@ -129,8 +154,8 @@ export default function SigninPage() {
                     {showPassword ? "Hide" : "Show"}
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-right hover:underline">
-                  <a href="">Forget Password</a>
+                <p className="mt-2 text-xs text-blue-500 text-right hover:underline">
+                  <a href="/forget-password">Forget Password</a>
                 </p>
               </div>
             )}
