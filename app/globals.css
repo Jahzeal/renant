@@ -123,4 +123,11 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* ensure inputs are 16px minimum to prevent auto-zoom on mobile */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
 }
