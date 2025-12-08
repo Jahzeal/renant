@@ -129,12 +129,9 @@ export default function SigninPage() {
                     {showPassword ? "Hide" : "Show"}
                   </button>
                 </div>
-<<<<<<< HEAD
                 <p className="mt-2 text-xs text-right hover:underline">
                   <a href="">Forget Password</a>
                 </p>
-=======
->>>>>>> 224145399029cb1680a8fc21c17110d8ad915090
               </div>
             )}
 

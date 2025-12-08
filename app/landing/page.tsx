@@ -475,7 +475,7 @@ export default function LandingPage() {
               {
                 title: "Rent a home",
                 desc: "Browse verified rentals, compare neighborhoods, and discover a place that fits your lifestyle.",
-                btn: "Find a local agent",
+                btn: "Find a home",
                 icon: "👥",
                 href: "/rentals?propertyType=Home",
               },

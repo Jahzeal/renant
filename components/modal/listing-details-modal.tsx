@@ -9,6 +9,8 @@ import { X, Heart, ChevronLeft, ChevronRight } from "lucide-react"
 import { RequestTourModal } from "./request-tour-modal"
 import { RequestToApplyModal } from "./request-to-apply-modal"
 
+
+// Define the type for the listing details (used in props)
 interface ListingDetailsModalProps {
   listing: {
     id: string | number
@@ -41,6 +43,7 @@ export default function ListingDetailsModal({
   isFavorited = false,
   onFavoriteToggle,
 }: ListingDetailsModalProps) {
+  // --- State Management ---
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showTourModal, setShowTourModal] = useState(false)
   const [showApplyModal, setShowApplyModal] = useState(false)
@@ -50,10 +53,12 @@ export default function ListingDetailsModal({
 
   if (!isOpen) return null
 
+  // --- Image Navigation Handlers ---
+
   const handlePrevImage = () => {
     setCurrentImageIndex((prev) => (prev === 0 ? listing.images.length - 1 : prev - 1))
   }
-
+  
   const handleNextImage = () => {
     setCurrentImageIndex((prev) => (prev === listing.images.length - 1 ? 0 : prev + 1))
   }
@@ -162,6 +167,7 @@ export default function ListingDetailsModal({
               </div>
             )}
 
+            {/* Action Buttons (Uses Protected Handler) */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
               {isShortlet ? (
                 <>
