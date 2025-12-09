@@ -11,10 +11,14 @@ type PropertyType = "homes" | "shortlets" | "hostels"
 
 interface PropertyFormData {
   type: PropertyType
+  title: string
   price: string
   address: string
   latitude: string
   longitude: string
+  beds: string
+  baths: string
+  amenities: string
   about: string
   photos: File[]
 }
@@ -22,10 +26,14 @@ interface PropertyFormData {
 export default function PropertyUpload() {
   const [formData, setFormData] = useState<PropertyFormData>({
     type: "homes",
+    title: "",
     price: "",
     address: "",
     latitude: "",
     longitude: "",
+    beds: "",
+    baths: "",
+    amenities: "",
     about: "",
     photos: [],
   })
@@ -76,15 +84,19 @@ export default function PropertyUpload() {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     console.log("[v0] Property uploaded:", formData)
-    alert(`Property submitted! Type: ${formData.type}, Price: ${formData.price}, Address: ${formData.address}`)
+    alert(`Property submitted! Type: ${formData.type}, Title: ${formData.title}, Price: ${formData.price}`)
 
     // Reset form
     setFormData({
       type: "homes",
+      title: "",
       price: "",
       address: "",
       latitude: "",
       longitude: "",
+      beds: "",
+      baths: "",
+      amenities: "",
       about: "",
       photos: [],
     })
@@ -140,6 +152,19 @@ export default function PropertyUpload() {
               <CardDescription>Enter the basic information about your property</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Property Title</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Luxury Beachfront Villa"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Price</label>
@@ -161,6 +186,33 @@ export default function PropertyUpload() {
                     value={formData.address}
                     onChange={handleInputChange}
                     placeholder="Enter full address"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Beds</label>
+                  <input
+                    type="text"
+                    name="beds"
+                    value={formData.beds}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 4"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Bathrooms</label>
+                  <input
+                    type="text"
+                    name="baths"
+                    value={formData.baths}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 2"
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
@@ -192,6 +244,19 @@ export default function PropertyUpload() {
                     required
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Amenities</label>
+                <textarea
+                  name="amenities"
+                  value={formData.amenities}
+                  onChange={handleInputChange}
+                  placeholder="List amenities (e.g., WiFi, Pool, Air Conditioning, Gym, Kitchen, etc.)"
+                  rows={3}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
               </div>
 
               <div>
@@ -277,10 +342,14 @@ export default function PropertyUpload() {
               onClick={() => {
                 setFormData({
                   type: "homes",
+                  title: "",
                   price: "",
                   address: "",
                   latitude: "",
                   longitude: "",
+                  beds: "",
+                  baths: "",
+                  amenities: "",
                   about: "",
                   photos: [],
                 })

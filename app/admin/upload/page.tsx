@@ -5,7 +5,7 @@ import Sidebar from "../sidebar"
 import PropertyUpload from "./property-upload"
 
 export default function UploadPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
     <div className="flex h-screen bg-background">
