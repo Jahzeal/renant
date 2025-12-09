@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo, useState } from "react";
+import { ChevronLeft } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import HostelCard from "@/components/HostelCard";
 import PriceRangeModal from "@/components/modal/price-range-modal";
@@ -43,8 +44,11 @@ export default function Buying() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col py-4 gap-4">
             {/* Title + Toggle */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-primary text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"> 
+              <button onClick={() => router.back()} className="p-2 hover:bg-muted rounded-lg transition-colors">
+            <ChevronLeft size={24} className="text-foreground" />
+          </button>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-primary text-center sm:text-left">
                 Buyer Dashboard
               </h1>
 

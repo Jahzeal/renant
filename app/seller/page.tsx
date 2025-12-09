@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import HostelSellCard from "@/components/HostelSellCard";
 import PostHostelModal from "@/components/modal/post-hostel-modal";
 import { useListingsStore } from "@/lib/listing-store";
@@ -30,7 +31,7 @@ export default function Seller() {
       price: `₦${Number(data.price).toLocaleString()}`,
       amount: Number(data.price),
       address: data.address,
-      name: currentUserName, 
+      name: currentUserName,
     });
 
     setIsPostModalOpen(false);
@@ -45,6 +46,12 @@ export default function Seller() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col py-4 gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <button
+                onClick={() => router.back()}
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+              >
+                <ChevronLeft size={24} className="text-foreground" />
+              </button>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-primary text-center sm:text-left">
                 Seller Dashboard
               </h1>
@@ -119,7 +126,9 @@ export default function Seller() {
                 isActive={listing.isActive}
                 onEdit={() => alert("Edit feature coming soon!")}
                 onDelete={() => {
-                  if (confirm("Are you sure you want to delete this listing?")) {
+                  if (
+                    confirm("Are you sure you want to delete this listing?")
+                  ) {
                     removeListing(listing.id);
                   }
                 }}
@@ -152,7 +161,12 @@ export default function Seller() {
         className="fixed bottom-6 right-6 z-40 sm:hidden w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform"
         aria-label="Post hostel"
       >
-        <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-7 h-7"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
