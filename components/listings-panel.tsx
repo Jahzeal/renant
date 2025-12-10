@@ -34,8 +34,8 @@ interface Listing {
   title: string
   address: string
   price: number
-  bedrooms: number
-  bathrooms: number
+  beds: number
+  baths: number
   room_type: "room_self_contain" | "2_bedrooms" | "room_parlor" | "3_plus_bedrooms"
   style: string
   offers: string | null
@@ -45,6 +45,7 @@ interface Listing {
   description?: string
   amenities?: Amenity[] // Array of objects
   coords?: { lng: number; lat: number }
+  
 }
 
 export default function ListingsPanel({ searchLocation = "", filters, onLocationClick }: ListingsPanelProps) {
