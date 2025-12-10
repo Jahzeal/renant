@@ -203,8 +203,8 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
             title: selectedListing.title,
             location: selectedListing.location,
             price: `₦${selectedListing.price}`,
-            beds: selectedListing.bedrooms,
-            baths: selectedListing.bathrooms,
+            beds: selectedListing.beds,
+            baths: selectedListing.baths,
             images: selectedListing.images,
             description: selectedListing.description,
             // Fix: Map amenities objects to strings before passing
