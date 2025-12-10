@@ -227,11 +227,10 @@ export default function LandingPage() {
           className="absolute inset-0 bg-cover bg-no-repeat"
           style={{
             backgroundImage: "url(/buying.jpg)",
-            backgroundPosition: "50% 5%", 
+            backgroundPosition: "50% 5%",
           }}
         />
         <div className="absolute inset-0 bg-black/25" />
-
 
         <div className="relative z-10 h-full flex flex-col justify-center px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto w-full">
@@ -476,28 +475,32 @@ export default function LandingPage() {
                 title: "Rent a home",
                 desc: "Browse verified rentals, compare neighborhoods, and discover a place that fits your lifestyle.",
                 btn: "Find a home",
-                icon: "👥",
+                image: "/rentahome.jpg", 
                 href: "/rentals?propertyType=Home",
               },
               {
                 title: "Book a Shortlet",
                 desc: "Explore premium short-term rentals with flexible stay options and instant availability.",
                 btn: "Find rentals",
-                icon: "🏘️",
+                image: "/shortlet.jpg", 
                 href: "/rentals?propertyType=Shortlet",
               },
               {
                 title: "Rent a Hostel",
                 desc: "Find affordable, comfortable hostel stays anywhere. Compare rooms, check availability, and reserve instantly.",
                 btn: "See your option",
-                icon: "🔑",
+                image: "/hostel.jpg", 
                 href: "/rentals?propertyType=Hostel",
               },
             ].map((action, i) => (
               <Link href={action.href} key={i}>
-                <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 hover:shadow-xl transition-all hover:scale-105 duration-300 text-center h-full flex flex-col">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-xl mx-auto mb-4 sm:mb-6 flex items-center justify-center flex-shrink-0">
-                    <span className="text-4xl sm:text-5xl">{action.icon}</span>
+                <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 hover:shadow-xl transition-all hover:scale-105 duration-300 text-center h-full flex flex-col group">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-2xl mx-auto mb-6 overflow-hidden flex-shrink-0 border-2 border-gray-200">
+                    <img
+                      src={action.image}
+                      alt={action.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
                   </div>
                   <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-3 sm:mb-4">
                     {action.title}

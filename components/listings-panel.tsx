@@ -1,16 +1,16 @@
 "use client"
-import { useState, useMemo } from "react"
+
+import { useState, useEffect, useMemo } from "react"
 import { useFavorites } from "@/lib/favorites-context"
 import ListingCard from "./listing-card"
 import ListingDetailsModal from "./modal/listing-details-modal"
-import { SAMPLE_LISTINGS } from "@/lib/sample-listing"
+import { filterRentals, getRentals } from "@/lib/getRentals-api"
 import type { MoreOptionsFilters } from "./modal/more-options-modal"
 
 interface AppliedFilters {
   price: { min: number; max: number } | null
   roomType: string
   propertyType: string
-  category: string
   moreOptions: MoreOptionsFilters | null
 }
 
@@ -20,131 +20,97 @@ interface ListingsPanelProps {
   onLocationClick?: (coords: { lng: number; lat: number }, address: string) => void
 }
 
+// Updated Listing interface: amenities are objects from backend
+interface Amenity {
+  id: string
+  name: string
+  propertyId: string
+}
+
 interface Listing {
+  
   id: string
   images: string[]
   title: string
   address: string
   price: number
-  bedrooms: number
-  bathrooms: number
+  beds: number
+  baths: number
   room_type: "room_self_contain" | "2_bedrooms" | "room_parlor" | "3_plus_bedrooms"
   style: string
-  offer: string | null
+  offers: string | null
   prices: { beds: number; price: number }[]
   location: string
   type: string
   description?: string
-  amenities?: string[]
+  amenities?: Amenity[] // Array of objects
   coords?: { lng: number; lat: number }
+  
 }
 
 export default function ListingsPanel({ searchLocation = "", filters, onLocationClick }: ListingsPanelProps) {
   const { favorites, toggleFavorite } = useFavorites()
+  const [allListings, setAllListings] = useState<Listing[]>([])
+  const [filteredListings, setFilteredListings] = useState<Listing[]>([])
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const [sortBy, setSortBy] = useState<"recommended" | "price-low" | "price-high" | "newest" | "lot-size">("recommended")
+  const [loading, setLoading] = useState(false)
 
-  const [sortBy, setSortBy] = useState<"recommended" | "price-low" | "price-high" | "newest" | "lot-size">(
-    "recommended",
-  )
-
-  const filteredListings = useMemo(() => {
-    let results = [...SAMPLE_LISTINGS]
-
-    if (filters?.category && filters.category !== "all") {
-      const categoryMap: { [key: string]: string } = {
-        houses: "Home",
-        shortlets: "Shortlet",
-        hostels: "Hostel",
-      }
-      const typeToFilter = categoryMap[filters.category]
-      if (typeToFilter) {
-        results = results.filter((listing) => listing.type === typeToFilter)
+  // Fetch all rentals on mount
+  useEffect(() => {
+    let mounted = true
+    const fetchAll = async () => {
+      try {
+        const data = await getRentals()
+        if (!mounted) return
+        setAllListings(data)
+        setFilteredListings(data)
+      } catch (e) {
+        console.error("Failed to load rentals:", e)
+        if (mounted) setAllListings([])
       }
     }
+    fetchAll()
+    return () => { mounted = false }
+  }, [])
 
-    if (filters?.propertyType && filters.propertyType !== "All types") {
-      const propertyTypeMap: { [key: string]: string } = {
-        Home: "Home",
-        Shortlet: "Shortlet",
-        Hostel: "Hostel",
-      }
-      const typeToFilter = propertyTypeMap[filters.propertyType]
-      if (typeToFilter) {
-        results = results.filter((listing) => listing.type === typeToFilter)
-      }
+  // Apply filters
+  useEffect(() => {
+    if (!filters && !searchLocation) {
+      setFilteredListings(allListings)
+      return
     }
 
-    // FILTER — Location Search
-    if (searchLocation) {
-      const searchTerm = searchLocation.toLowerCase().trim()
-      const searchCity = searchTerm.split(",")[0].trim()
-
-      results = results.filter(
-        (listing) =>
-          listing.location.toLowerCase().includes(searchCity) ||
-          listing.location.toLowerCase().includes(searchTerm) ||
-          listing.address.toLowerCase().includes(searchCity) ||
-          listing.address.toLowerCase().includes(searchTerm),
-      )
-    }
-
-    if (filters?.price && (filters.price.min !== 0 || filters.price.max !== Number.POSITIVE_INFINITY)) {
-      const { min, max } = filters.price
-      results = results.filter((listing) => listing.price >= min && listing.price <= max)
-    }
-
-    if (filters?.roomType && filters.roomType !== "Any") {
-      const roomTypeMap: { [key: string]: string } = {
-        "Room self-contain": "room_self_contain",
-        "2 bedrooms": "2_bedrooms",
-        "Room & parlor": "room_parlor",
-        "3+ bedrooms": "3_plus_bedrooms",
-      }
-      const roomTypeToFilter = roomTypeMap[filters.roomType]
-      if (roomTypeToFilter) {
-        results = results.filter((listing) => listing.room_type === roomTypeToFilter)
-      }
-    }
-
-    if (filters?.moreOptions) {
-      const more = filters.moreOptions
-
-      // Keywords
-      if (more.keywords && more.keywords.trim() !== "") {
-        const keyword = more.keywords.toLowerCase()
-        results = results.filter(
-          (listing) =>
-            listing.title.toLowerCase().includes(keyword) ||
-            listing.description?.toLowerCase().includes(keyword) ||
-            listing.amenities?.some((a) => a.toLowerCase().includes(keyword)),
-        )
-      }
-
-      // Pets
-      if (more.selectedPets && more.selectedPets.length > 0) {
-        results = results.filter((listing) => {
-          const text = `${listing.title} ${listing.description ?? ""} ${(listing.amenities ?? []).join(
-            " ",
-          )}`.toLowerCase()
-
-          // If "no-pets" is selected, only show listings that mention no pets
-          if (more.selectedPets.includes("no-pets")) {
-            return text.includes("no pet")
-          }
-
-          // Otherwise, check for pet-friendly listings
-          return more.selectedPets.some((pet) => {
-            if (pet === "small-dogs") return text.includes("small") && text.includes("dog")
-            if (pet === "large-dogs") return text.includes("large") && text.includes("dog")
-            if (pet === "cats") return text.includes("cat")
-            return false
-          })
+    let mounted = true
+    const fetchFiltered = async () => {
+      setLoading(true)
+      try {
+        const data = await filterRentals({
+          propertyType: filters?.propertyType,
+          price: filters?.price,
+          roomType: filters?.roomType,
+          searchLocation,
+          moreOptions: filters?.moreOptions,
         })
+        if (!mounted) return
+        setFilteredListings(Array.isArray(data) ? data : [])
+      } catch (e) {
+        console.error("Failed to fetch filtered rentals:", e)
+        if (mounted) setFilteredListings([])
+      } finally {
+        if (mounted) setLoading(false)
       }
     }
 
-    // SORTING
+    fetchFiltered()
+    return () => { mounted = false }
+  }, [filters, searchLocation, allListings])
+
+  // Sort filtered listings
+  const sortedListings = useMemo(() => {
+    const results = [...filteredListings]
+
     switch (sortBy) {
       case "price-low":
         results.sort((a, b) => a.price - b.price)
@@ -160,14 +126,14 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
     }
 
     return results
-  }, [searchLocation, filters, sortBy])
+  }, [filteredListings, sortBy])
 
   const handleViewDetails = (listing: Listing) => {
     setSelectedListing(listing)
     setIsDetailsOpen(true)
   }
 
-  const listingCount = filteredListings.length
+  const listingCount = sortedListings.length
 
   return (
     <div className="bg-white w-full h-full flex flex-col">
@@ -182,18 +148,13 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
                 : `${listingCount} rentals available`}
             </p>
           </div>
-
-          {/* Sort Dropdown */}
           <div className="w-full sm:w-auto">
             <select
               value={sortBy}
               onChange={(e) =>
                 setSortBy(e.target.value as "recommended" | "price-low" | "price-high" | "newest" | "lot-size")
               }
-              className="
-                w-full sm:w-48 text-primary font-semibold text-sm cursor-pointer px-3 py-2
-                border border-primary rounded-md bg-white
-              "
+              className="w-full sm:w-48 text-primary font-semibold text-sm cursor-pointer px-3 py-2 border border-primary rounded-md bg-white"
             >
               <option value="recommended">Sort: Recommended</option>
               <option value="price-low">Payment (Low to High)</option>
@@ -207,18 +168,22 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
 
       {/* Listings */}
       <div className="flex-1 divide-y overflow-y-auto">
-        {filteredListings.length > 0 ? (
-          filteredListings.map((listing) => (
+        {loading ? (
+          <p className="p-6 text-center text-muted-foreground">Loading...</p>
+        ) : sortedListings.length > 0 ? (
+          sortedListings.map((listing) => (
             <ListingCard
               key={listing.id}
-              listing={listing}
+              listing={{
+                ...listing,
+                // Map amenities objects to names here as well for safety
+                amenities: listing.amenities?.map(a => a.name) || [],
+              }}
               isFavorited={favorites.includes(listing.id)}
               onFavoriteToggle={() => toggleFavorite(listing.id)}
               onViewDetails={() => handleViewDetails(listing)}
               onLocationClick={() => {
-                if (listing.coords) {
-                  onLocationClick?.(listing.coords, listing.address)
-                }
+                if (listing.coords) onLocationClick?.(listing.coords, listing.address)
               }}
             />
           ))
@@ -238,11 +203,12 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
             title: selectedListing.title,
             location: selectedListing.location,
             price: `₦${selectedListing.price}`,
-            beds: selectedListing.bedrooms,
-            baths: selectedListing.bathrooms,
+            beds: selectedListing.beds,
+            baths: selectedListing.baths,
             images: selectedListing.images,
             description: selectedListing.description,
-            amenities: selectedListing.amenities,
+            // Fix: Map amenities objects to strings before passing
+            amenities: selectedListing.amenities?.map(a => a.name) || [],
             type: selectedListing.type,
           }}
           isOpen={isDetailsOpen}

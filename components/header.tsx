@@ -227,7 +227,7 @@ export default function Header() {
               </div>
             )}
 
-            <div className="flex items-center gap-4 md:gap-6">
+            <div className="hidden md:flex items-center gap-4 md:gap-6">
               <div className="relative" ref={manageRentalsDropdownRef}>
                 <button
                   onClick={() => setShowManageRentalsDropdown((prev) => !prev)}
@@ -264,11 +264,17 @@ export default function Header() {
                       <div className="space-y-6">
                         <div>
                           <h3 className="font-semibold text-base mb-4 text-foreground">
-                            Enscroll Management 
+                            Enscroll Management
                           </h3>
                           <div className="space-y-3">
                             <a
-                              href="#"
+                              href="/how-it-works"
+                              className="block text-sm text-primary hover:underline"
+                            >
+                              How Enscroll works
+                            </a>
+                            <a
+                              href="/buyer"
                               className="block text-sm text-primary hover:underline"
                             >
                               Buyer
@@ -281,29 +287,13 @@ export default function Header() {
                             </a>
                           </div>
                         </div>
-
-                        {/* <hr className="border-border" /> */}
-
-                        {/* <div>
-                          <h4 className="font-semibold text-sm mb-3 text-foreground">
-                            Learn More
-                          </h4>
-                          <div className="space-y-3">
-                            <a
-                              href="#"
-                              className="block text-sm text-primary hover:underline"
-                            >
-                              Help Center
-                            </a>
-                          </div>
-                        </div> */}
                       </div>
                     </div>
                   </>
                 )}
               </div>
 
-              <button className="text-foreground hover:text-primary font-medium text-sm transition-colors">
+              <button className="text-foreground hover:text-primary font-medium text-sm transition-colors whitespace-nowrap">
                 Get help
               </button>
 
@@ -391,13 +381,13 @@ export default function Header() {
           </div>
 
           <div
-            className={`md:hidden transition-all duration-300 overflow-hidden ${
+            className={`fixed md:hidden left-0 right-0 top-[60px] transition-all duration-300 overflow-hidden bg-white z-40 ${
               mobileMenuOpen
-                ? "max-h-[500px] opacity-100 mt-4"
-                : "max-h-0 opacity-0"
+                ? "h-[calc(100vh-60px)] opacity-100"
+                : "h-0 opacity-0"
             }`}
           >
-            <div className="pb-4 border-t border-border pt-4 space-y-3">
+            <div className="px-4 sm:px-6 py-4 space-y-3 overflow-y-auto h-full">
               {navItems.map((item) => (
                 <a
                   key={item.label}
@@ -409,6 +399,8 @@ export default function Header() {
                 </a>
               ))}
               <hr className="border-border" />
+
+              {/* Rental Enscroll in mobile menu */}
               <div className="w-full">
                 <button
                   onClick={() =>
@@ -416,36 +408,34 @@ export default function Header() {
                   }
                   className="w-full text-left text-foreground hover:text-primary font-medium text-sm py-2 transition-colors"
                 >
-                  Manage rentals
+                  Rental Enscroll
                 </button>
 
                 {showManageRentalsDropdown && (
                   <div className="pl-4 space-y-2 mt-2">
                     <a
-                      href="#"
+                      href="/buyer"
                       className="block text-sm text-primary hover:underline"
                     >
-                      Inbox
-                    </a>
-                    <a
-                      href="/renter-hub"
-                      className="block text-sm text-primary hover:underline"
-                    >
-                      Applications
+                      Buyer
                     </a>
                     <a
                       href="#"
                       className="block text-sm text-primary hover:underline"
                     >
-                      Help Center
+                      Seller
                     </a>
                   </div>
                 )}
               </div>
 
+              {/* Get help in mobile menu */}
               <button className="w-full text-left text-foreground hover:text-primary font-medium text-sm py-2 transition-colors">
                 Get help
               </button>
+
+              <hr className="border-border" />
+
               {user ? (
                 <button
                   onClick={handleSignOut}
@@ -505,4 +495,3 @@ export default function Header() {
     </>
   );
 }
-``;
