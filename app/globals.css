@@ -123,6 +123,9 @@
   body {
     @apply bg-background text-foreground;
   }
+  .parent-container-of-listing-cards {
+    overflow-x: hidden;
+  }
 
   /* ensure inputs are 16px minimum to prevent auto-zoom on mobile */
   input,

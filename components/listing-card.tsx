@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState } from "react";
-import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, ChevronLeft, ChevronRight, MapPin, Bed, Bath, LayoutGrid } from "lucide-react"; // Added MapPin, Bed, Bath, LayoutGrid for icons
 
 interface Listing {
   id: string;
@@ -39,10 +39,10 @@ export default function ListingCard({
 }: ListingCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Default images to empty array
   const images =
     listing.images ||
     (listing.image ? [listing.image] : ["/cozy-cabin-interior.png"]);
+
   const prices = listing.prices || [];
   const amenities = listing.amenities || [];
 
@@ -70,13 +70,19 @@ export default function ListingCard({
     onLocationClick?.();
   };
 
+  // Helper for formatting large numbers
+  const formatPrice = (price: number) => new Intl.NumberFormat('en-US').format(price);
+
   return (
     <div
       className="p-3 sm:p-4 md:p-6 hover:bg-muted/30 transition-colors rounded-lg cursor-pointer border-b"
       onClick={handleCardClick}
+      // *** FIX: Added style to hide horizontal overflow within the card container itself ***
+      style={{ overflowX: 'hidden' }}
     >
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative w-full sm:w-64 h-56 sm:h-48 rounded-lg overflow-hidden bg-gray-200 group flex-shrink-0">
+      <div className="flex flex-col sm:flex-row gap-6"> {/* Increased gap for separation */}
+        {/* IMAGE SECTION (Kept the same) */}
+        <div className="relative w-full sm:w-64 h-56 sm:h-48 rounded-xl overflow-hidden bg-gray-200 group flex-shrink-0 shadow-md"> {/* Added rounded-xl and shadow */}
           <img
             src={
               images[currentImageIndex] ||
@@ -85,117 +91,150 @@ export default function ListingCard({
             alt={listing.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
-          <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
-            <span className="px-2 py-1 bg-white text-xs font-semibold rounded shadow">
+
+          {/* Labels */}
+          <div className="absolute top-3 left-3 flex gap-2 flex-wrap z-10">
+            <span className="px-3 py-1 bg-white text-xs font-semibold rounded-full shadow-lg"> {/* Pill shape for style */}
               {listing.style}
             </span>
             {listing.offers && (
-              <span className="px-2 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded shadow">
+              <span className="px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full shadow-lg"> {/* Pill shape for offers */}
                 {listing.offers}
               </span>
             )}
           </div>
+
+          {/* Favorite */}
           <button
             onClick={handleFavoriteClick}
-            className="absolute top-3 right-3 p-2 bg-white rounded-full hover:bg-muted transition-colors shadow z-10"
-            aria-label={
-              isFavorited ? "Remove from favorites" : "Add to favorites"
-            }
+            className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-lg z-10"
           >
             <Heart
               size={20}
               className={
-                isFavorited ? "fill-red-500 text-red-500" : "text-foreground"
+                isFavorited ? "fill-red-500 text-red-500" : "text-gray-600 hover:text-red-500" // Subtle default color
               }
             />
           </button>
+
+          {/* Image navigation */}
           {images.length > 1 && (
             <>
               <button
                 onClick={handlePrevImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all"
+                className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all shadow-md z-10"
               >
                 <ChevronLeft size={18} />
               </button>
               <button
                 onClick={handleNextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all"
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all shadow-md z-10"
               >
                 <ChevronRight size={18} />
               </button>
-              <div className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-1 rounded text-xs">
+
+              <div className="absolute bottom-3 right-3 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-medium z-10">
                 {currentImageIndex + 1}/{images.length}
               </div>
             </>
           )}
         </div>
+
+        {/* TEXT SECTION */}
         <div className="flex-1">
-          <h3 className="font-semibold text-base md:text-lg text-foreground mb-1">
-            ₦{listing.price}+ • {listing.beds} bd
+          {/* Main Price and Bedrooms/Bathrooms - HIGHLIGHTED */}
+          <h3 className="font-bold text-xl md:text-2xl text-primary mb-1 leading-snug">
+            ₦{formatPrice(listing.price)}+
+            <span className="ml-3 text-lg font-semibold text-foreground/80">
+                • {listing.beds} bd
+            </span>
           </h3>
-          <p className="text-foreground font-medium text-sm md:text-base mb-1">
+
+          {/* Listing Title - Sub-highlighted */}
+          <p className="text-foreground font-semibold text-base md:text-lg mb-2">
             {listing.title}
           </p>
+
+          {/* Address (Location) - Styled with Icon */}
           <p
             onClick={handleLocationClick}
-            className="text-muted-foreground text-xs md:text-sm mb-3 hover:text-primary hover:underline transition-colors cursor-pointer font-semibold"
+            className="text-sm text-gray-600 hover:text-primary hover:underline transition-colors cursor-pointer flex items-center mb-4"
           >
-            {listing.address}
-            <div className="text-xs md:text-sm text-muted-foreground mb-2">
-              <p>
-                Type:{" "}
-                <span className="text-foreground font-medium">
-                  {listing.type}
-                </span>
-              </p>
-              <p>
-                Beds:{" "}
-                <span className="text-foreground font-medium">
-                  {listing.beds}
-                </span>
-              </p>
-              <p>
-                Baths:{" "}
-                <span className="text-foreground font-medium">
-                  {listing.baths}
-                </span>
-              </p>
+            <MapPin size={14} className="mr-1.5 text-primary" />
+            <span className="font-medium">{listing.address}</span>
+          </p>
+
+          <div className="space-y-4">
+            {/* Type / Beds / Baths - Grouped and Cleaned up */}
+            <div className="flex items-center space-x-6 text-sm">
+                {listing.type && (
+                    <div className="flex items-center text-muted-foreground">
+                        <LayoutGrid size={16} className="mr-1.5 text-primary/70" />
+                        <span className="font-normal mr-1">Type:</span>
+                        <span className="text-foreground font-medium">{listing.type}</span>
+                    </div>
+                )}
+                <div className="flex items-center text-muted-foreground">
+                    <Bed size={16} className="mr-1.5 text-primary/70" />
+                    <span className="font-normal mr-1">Beds:</span>
+                    <span className="text-foreground font-medium">{listing.beds}</span>
+                </div>
+                {listing.baths && (
+                    <div className="flex items-center text-muted-foreground">
+                        <Bath size={16} className="mr-1.5 text-primary/70" />
+                        <span className="font-normal mr-1">Baths:</span>
+                        <span className="text-foreground font-medium">{listing.baths}</span>
+                    </div>
+                )}
             </div>
 
-            {/* Description */}
+            {/* Description - Styled as a call-out box */}
             {listing.description && (
-              <p className="text-xs md:text-sm text-muted-foreground mt-2">
-                {listing.description.length > 100
-                  ? listing.description.slice(0, 100) + "..."
-                  : listing.description}
-              </p>
-            )}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {prices.map((p) => (
-              <div
-                key={p.beds}
-                className="px-3 py-2 border border-border rounded text-center"
-              >
-                <div className="text-primary font-semibold text-sm">
-                  ₦{p.price}+
+                <div className="pt-2">
+                    <p className="text-xs md:text-sm text-gray-700 leading-relaxed italic border-l-4 border-primary/50 pl-3 bg-primary/5 p-2 rounded-r-md">
+                    {listing.description.length > 150
+                        ? listing.description.slice(0, 150) + "..." // Increased slice length
+                        : listing.description}
+                    </p>
                 </div>
-                <div className="text-muted-foreground text-xs">{p.beds} bd</div>
-              </div>
-            ))}
+            )}
+
+            {/* Price options - More subtle chips */}
+            {prices.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                    {prices.map((p) => (
+                    <div
+                        key={p.beds}
+                        className="px-3 py-1.5 border border-primary/20 bg-primary/5 rounded-lg text-center transition-colors hover:bg-primary/10"
+                    >
+                        <div className="text-primary font-bold text-sm">
+                        ₦{formatPrice(p.price)}+
+                        </div>
+                        <div className="text-muted-foreground text-xs">
+                        {p.beds} bd
+                        </div>
+                    </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Amenities - Distinctive pill styling */}
+            {amenities.length > 0 && (
+                <div className="pt-2">
+                    <h4 className="text-sm font-semibold text-foreground mb-1.5">Key Amenities:</h4>
+                    <div className="flex flex-wrap gap-2">
+                    {amenities.map((a, idx) => (
+                        <span
+                        key={idx}
+                        className="px-3 py-1 bg-gray-100 border border-gray-200 text-gray-700 rounded-full text-xs font-medium hover:bg-gray-200 transition-colors"
+                        >
+                        {a}
+                        </span>
+                    ))}
+                    </div>
+                </div>
+            )}
           </div>
-          {amenities.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {amenities.map((a, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-1 bg-gray-200 rounded text-xs"
-                >
-                  {a}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>
