@@ -1,33 +1,33 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Heart, ChevronLeft, ChevronRight } from "lucide-react"
+import type React from "react";
+import { useState } from "react";
+import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Listing {
-  id: string
-  images?: string[]
-  image?: string
-  title: string
-  address: string
-  price: number
-  bedrooms: number
-  bathrooms?: number
-  style: string
-  offer: string | null
-  prices: { beds: number; price: number }[]
-  location?: string
-  type?: string
-  description?: string
-  amenities?: string[]
+  id: string;
+  images?: string[];
+  image?: string;
+  title: string;
+  address: string;
+  price: number;
+  beds: number;
+  baths?: number;
+  style: string;
+  offers: string | null;
+  prices?: { beds: number; price: number }[];
+  location?: string;
+  type?: string;
+  description?: string;
+  amenities?: string[];
 }
 
 interface ListingCardProps {
-  listing: Listing
-  isFavorited?: boolean
-  onFavoriteToggle?: () => void
-  onViewDetails?: () => void
-  onLocationClick?: () => void
+  listing: Listing;
+  isFavorited?: boolean;
+  onFavoriteToggle?: () => void;
+  onViewDetails?: () => void;
+  onLocationClick?: () => void;
 }
 
 export default function ListingCard({
@@ -37,32 +37,38 @@ export default function ListingCard({
   onViewDetails,
   onLocationClick,
 }: ListingCardProps) {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const images = listing.images || (listing.image ? [listing.image] : ["/cozy-cabin-interior.png"])
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Default images to empty array
+  const images =
+    listing.images ||
+    (listing.image ? [listing.image] : ["/cozy-cabin-interior.png"]);
+  const prices = listing.prices || [];
+  const amenities = listing.amenities || [];
 
   const handlePrevImage = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
-  }
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
 
   const handleNextImage = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
-  }
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    onFavoriteToggle?.()
-  }
+    e.stopPropagation();
+    onFavoriteToggle?.();
+  };
 
   const handleCardClick = () => {
-    onViewDetails?.()
-  }
+    onViewDetails?.();
+  };
 
   const handleLocationClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    onLocationClick?.()
-  }
+    e.stopPropagation();
+    onLocationClick?.();
+  };
 
   return (
     <div
@@ -72,24 +78,36 @@ export default function ListingCard({
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative w-full sm:w-64 h-56 sm:h-48 rounded-lg overflow-hidden bg-gray-200 group flex-shrink-0">
           <img
-            src={images[currentImageIndex] || "/placeholder.svg?height=300&width=400&query=home"}
+            src={
+              images[currentImageIndex] ||
+              "/placeholder.svg?height=300&width=400&query=home"
+            }
             alt={listing.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
           <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
-            <span className="px-2 py-1 bg-white text-xs font-semibold rounded shadow">{listing.style}</span>
-            {listing.offer && (
+            <span className="px-2 py-1 bg-white text-xs font-semibold rounded shadow">
+              {listing.style}
+            </span>
+            {listing.offers && (
               <span className="px-2 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded shadow">
-                {listing.offer}
+                {listing.offers}
               </span>
             )}
           </div>
           <button
             onClick={handleFavoriteClick}
             className="absolute top-3 right-3 p-2 bg-white rounded-full hover:bg-muted transition-colors shadow z-10"
-            aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+            aria-label={
+              isFavorited ? "Remove from favorites" : "Add to favorites"
+            }
           >
-            <Heart size={20} className={isFavorited ? "fill-red-500 text-red-500" : "text-foreground"} />
+            <Heart
+              size={20}
+              className={
+                isFavorited ? "fill-red-500 text-red-500" : "text-foreground"
+              }
+            />
           </button>
           {images.length > 1 && (
             <>
@@ -113,25 +131,73 @@ export default function ListingCard({
         </div>
         <div className="flex-1">
           <h3 className="font-semibold text-base md:text-lg text-foreground mb-1">
-            ₦{listing.price}+ • {listing.bedrooms} bd
+            ₦{listing.price}+ • {listing.beds} bd
           </h3>
-          <p className="text-foreground font-medium text-sm md:text-base mb-1">{listing.title}</p>
+          <p className="text-foreground font-medium text-sm md:text-base mb-1">
+            {listing.title}
+          </p>
           <p
             onClick={handleLocationClick}
             className="text-muted-foreground text-xs md:text-sm mb-3 hover:text-primary hover:underline transition-colors cursor-pointer font-semibold"
           >
             {listing.address}
+            <div className="text-xs md:text-sm text-muted-foreground mb-2">
+              <p>
+                Type:{" "}
+                <span className="text-foreground font-medium">
+                  {listing.type}
+                </span>
+              </p>
+              <p>
+                Beds:{" "}
+                <span className="text-foreground font-medium">
+                  {listing.beds}
+                </span>
+              </p>
+              <p>
+                Baths:{" "}
+                <span className="text-foreground font-medium">
+                  {listing.baths}
+                </span>
+              </p>
+            </div>
+
+            {/* Description */}
+            {listing.description && (
+              <p className="text-xs md:text-sm text-muted-foreground mt-2">
+                {listing.description.length > 100
+                  ? listing.description.slice(0, 100) + "..."
+                  : listing.description}
+              </p>
+            )}
           </p>
           <div className="flex flex-wrap gap-2">
-            {listing.prices.map((p) => (
-              <div key={p.beds} className="px-3 py-2 border border-border rounded text-center">
-                <div className="text-primary font-semibold text-sm">₦{p.price}+</div>
+            {prices.map((p) => (
+              <div
+                key={p.beds}
+                className="px-3 py-2 border border-border rounded text-center"
+              >
+                <div className="text-primary font-semibold text-sm">
+                  ₦{p.price}+
+                </div>
                 <div className="text-muted-foreground text-xs">{p.beds} bd</div>
               </div>
             ))}
           </div>
+          {amenities.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {amenities.map((a, idx) => (
+                <span
+                  key={idx}
+                  className="px-2 py-1 bg-gray-200 rounded text-xs"
+                >
+                  {a}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
-  )
+  );
 }
