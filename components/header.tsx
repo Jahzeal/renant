@@ -380,8 +380,9 @@ export default function Header() {
             </button>
           </div>
 
+          {/* === MOBILE MENU (no backdrop, fully clickable) === */}
           <div
-            className={`fixed md:hidden left-0 right-0 top-[60px] transition-all duration-300 overflow-hidden bg-white z-40 ${
+            className={`fixed md:hidden left-0 right-0 top-[60px] transition-all duration-300 overflow-hidden bg-white z-50 ${
               mobileMenuOpen
                 ? "h-[calc(100vh-60px)] opacity-100"
                 : "h-0 opacity-0"
@@ -389,65 +390,144 @@ export default function Header() {
           >
             <div className="px-4 sm:px-6 py-4 space-y-3 overflow-y-auto h-full">
               {navItems.map((item) => (
-                <a
+                <Link
                   key={item.label}
                   href={item.href}
                   className="block text-foreground hover:text-primary font-medium text-sm py-2 transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.label}
-                </a>
+                </Link>
               ))}
+
               <hr className="border-border" />
 
               {/* Rental Enscroll in mobile menu */}
-              <div className="w-full">
+              {/* Rental Enscroll in mobile menu */}
+              <div className="w-full py-2">
                 <button
-                  onClick={() =>
-                    setShowManageRentalsDropdown(!showManageRentalsDropdown)
-                  }
-                  className="w-full text-left text-foreground hover:text-primary font-medium text-sm py-2 transition-colors"
+                  onClick={() => setShowManageRentalsDropdown((prev) => !prev)}
+                  className="w-full text-left text-foreground hover:text-primary font-medium text-base py-3 transition-colors flex items-center justify-between"
                 >
-                  Rental Enscroll
+                  <span>Rental Enscroll</span>
+                  <svg
+                    className={`w-5 h-5 transition-transform duration-200 ${
+                      showManageRentalsDropdown ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
                 </button>
 
-                {showManageRentalsDropdown && (
-                  <div className="pl-4 space-y-2 mt-2">
-                    <a
+                {/* Dropdown items - animate slide down */}
+                <div
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                    showManageRentalsDropdown
+                      ? "max-h-64 opacity-100"
+                      : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <div className="pl-6 pt-2 pb-4 space-y-3 border-l-2 border-gray-200">
+                    <Link
+                      href="/how-it-works"
+                      className="block text-sm text-primary hover:underline py-2"
+                      onClick={() => {
+                        setShowManageRentalsDropdown(false);
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      How Enscroll works
+                    </Link>
+
+                    <Link
                       href="/buyer"
-                      className="block text-sm text-primary hover:underline"
+                      className="block text-sm text-primary hover:underline py-2"
+                      onClick={() => {
+                        setShowManageRentalsDropdown(false);
+                        setMobileMenuOpen(false);
+                      }}
                     >
                       Buyer
-                    </a>
-                    <a
-                      href="#"
-                      className="block text-sm text-primary hover:underline"
+                    </Link>
+
+                    <Link
+                      href="/seller"
+                      className="block text-sm text-primary hover:underline py-2"
+                      onClick={() => {
+                        setShowManageRentalsDropdown(false);
+                        setMobileMenuOpen(false);
+                      }}
                     >
                       Seller
-                    </a>
+                    </Link>
                   </div>
-                )}
+                </div>
               </div>
 
-              {/* Get help in mobile menu */}
-              <button className="w-full text-left text-foreground hover:text-primary font-medium text-sm py-2 transition-colors">
+              {/* Get help */}
+              <Link
+                href="/help"
+                className="block text-foreground hover:text-primary font-medium text-sm py-2 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 Get help
-              </button>
+              </Link>
 
               <hr className="border-border" />
 
+              {/* Auth */}
               {user ? (
-                <button
-                  onClick={handleSignOut}
-                  className="w-full text-left text-foreground hover:text-primary font-medium text-sm py-2 transition-colors flex items-center gap-2"
-                >
-                  <LogOut size={16} />
-                  Sign out
-                </button>
+                <>
+                  <Link
+                    href="/saved-homes"
+                    className="block text-foreground hover:text-primary font-medium text-sm py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Saved homes
+                  </Link>
+
+                  <Link
+                    href="/renter-hub"
+                    className="block text-foreground hover:text-primary font-medium text-sm py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Renter Hub
+                  </Link>
+
+                  <Link
+                    href="/account-settings"
+                    className="block text-foreground hover:text-primary font-medium text-sm py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Account settings
+                  </Link>
+
+                  <hr className="border-border my-2" />
+
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left text-foreground hover:text-primary font-medium text-sm py-2 transition-colors flex items-center gap-2"
+                  >
+                    <LogOut size={16} />
+                    Sign out
+                  </button>
+                </>
               ) : (
                 <Link
                   href="/signin"
-                  className="text-black font-semibold text-sm hover:opacity-80 transition-opacity block py-2"
+                  className="block text-black font-semibold text-sm hover:opacity-80 transition-opacity py-2"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   Sign in
                 </Link>
