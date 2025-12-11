@@ -2,6 +2,9 @@
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 import {apiRequest} from "@/lib/authenticate"
+
+export type Property = any;
+
 /**
  * Helper to get the token for Authorization header.
  */
@@ -13,12 +16,9 @@ const getAuthToken = () => {
 /**
  * 1. Fetches the current list of favorite IDs for the authenticated user.
  */
-export async function fetchUserFavorites(): Promise<string[]> {
+export async function fetchUserFavorites(): Promise<any[]> {
     const token = getAuthToken();
-    if (!token) {
-        // If no token, user is logged out, return empty array
-        return [];
-    }
+    if (!token) return [];
 
     const res = await apiRequest(`${API_BASE_URL}/users/favourite`, {
         method: 'GET',
@@ -29,41 +29,47 @@ export async function fetchUserFavorites(): Promise<string[]> {
     });
 
     if (!res?.ok) {
-        // Handle unauthorized or other errors gracefully
         console.error('API Error fetching favorites:', res?.statusText);
-        // You might want to throw an error or return an empty array based on desired behavior
-        return []; 
+        return [];
     }
 
-    // Assuming the backend returns an array of IDs, e.g., { ids: ["id1", "id2"] }
     const data = await res.json();
-    return data.ids || []; 
+
+    // backend returns array of favorites → extract property objects
+    return data.map((fav: any) => fav.property);
 }
+
 
 /**
  * 2. Saves the new list of favorite IDs to the backend database.
  */
-export async function saveUserFavorites(propertyId: string): Promise<void> {
-    const token = getAuthToken();
-    if (!token) {
-        throw new Error("Authentication required to save favorites.");
-    }
+export async function saveUserFavorites(propertyId: string): Promise<Property> {
+  const token = getAuthToken();
+  if (!token) throw new Error("Authentication required");
 
-    const res = await apiRequest(`${API_BASE_URL}/users/favourite/update`, { // Use a dedicated update endpoint
-        method: 'POST', 
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-        // Send the full array of IDs to be saved/overwritten on the backend
-        body: JSON.stringify({ propertyId }), 
-    });
+  const res = await apiRequest(`${API_BASE_URL}/users/favourite/update`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ propertyId }),
+  });
 
-    if (!res?.ok) {
-        const errorData = await res?.json();
-        throw new Error(errorData.message || "Failed to save favorites to database.");
+  if (!res) {
+    throw new Error("No response from server");
   }
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.message || "Failed to save favorite");
+  }
+
+  const data = await res.json();
+  return data.property; // full Property object
 }
+
+
   
   export async function deleteFavorite(id: string): Promise<void> {
     const token = getAuthToken();
