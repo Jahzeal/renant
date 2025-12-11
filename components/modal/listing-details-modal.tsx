@@ -9,7 +9,6 @@ import { X, Heart, ChevronLeft, ChevronRight } from "lucide-react"
 import { RequestTourModal } from "./request-tour-modal"
 import { RequestToApplyModal } from "./request-to-apply-modal"
 
-
 // Define the type for the listing details (used in props)
 interface ListingDetailsModalProps {
   listing: {
@@ -58,7 +57,7 @@ export default function ListingDetailsModal({
   const handlePrevImage = () => {
     setCurrentImageIndex((prev) => (prev === 0 ? listing.images.length - 1 : prev - 1))
   }
-  
+
   const handleNextImage = () => {
     setCurrentImageIndex((prev) => (prev === listing.images.length - 1 ? 0 : prev + 1))
   }
@@ -84,11 +83,11 @@ export default function ListingDetailsModal({
       router.push("/signin")
     } else {
       onClose()
-      router.push(`/booking/${listing.id}?title=${encodeURIComponent(String(listing.title))}&price=${listing.price}`)
+      router.push(`/booking/${listing.id}`)
     }
   }
 
-  const isShortlet = listing.type === "Shortlet"
+  const isShortlet = listing.type === "ShortLET"
 
   return (
     <>

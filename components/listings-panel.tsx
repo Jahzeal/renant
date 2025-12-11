@@ -28,7 +28,6 @@ interface Amenity {
 }
 
 interface Listing {
-  
   id: string
   images: string[]
   title: string
@@ -45,7 +44,6 @@ interface Listing {
   description?: string
   amenities?: Amenity[] // Array of objects
   coords?: { lng: number; lat: number }
-  
 }
 
 export default function ListingsPanel({ searchLocation = "", filters, onLocationClick }: ListingsPanelProps) {
@@ -54,7 +52,9 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
   const [filteredListings, setFilteredListings] = useState<Listing[]>([])
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
-  const [sortBy, setSortBy] = useState<"recommended" | "price-low" | "price-high" | "newest" | "lot-size">("recommended")
+  const [sortBy, setSortBy] = useState<"recommended" | "price-low" | "price-high" | "newest" | "lot-size">(
+    "recommended",
+  )
   const [loading, setLoading] = useState(false)
 
   // Fetch all rentals on mount
@@ -72,7 +72,9 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       }
     }
     fetchAll()
-    return () => { mounted = false }
+    return () => {
+      mounted = false
+    }
   }, [])
 
   // Apply filters
@@ -104,7 +106,9 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
     }
 
     fetchFiltered()
-    return () => { mounted = false }
+    return () => {
+      mounted = false
+    }
   }, [filters, searchLocation, allListings])
 
   // Sort filtered listings
@@ -177,7 +181,7 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
               listing={{
                 ...listing,
                 // Map amenities objects to names here as well for safety
-                amenities: listing.amenities?.map(a => a.name) || [],
+                amenities: listing.amenities?.map((a) => a.name) || [],
               }}
               isFavorited={favorites.includes(listing.id)}
               onFavoriteToggle={() => toggleFavorite(listing.id)}
@@ -199,7 +203,7 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       {selectedListing && (
         <ListingDetailsModal
           listing={{
-            id: Number(selectedListing.id),
+            id: selectedListing.id,
             title: selectedListing.title,
             location: selectedListing.location,
             price: `₦${selectedListing.price}`,
@@ -208,7 +212,7 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
             images: selectedListing.images,
             description: selectedListing.description,
             // Fix: Map amenities objects to strings before passing
-            amenities: selectedListing.amenities?.map(a => a.name) || [],
+            amenities: selectedListing.amenities?.map((a) => a.name) || [],
             type: selectedListing.type,
           }}
           isOpen={isDetailsOpen}

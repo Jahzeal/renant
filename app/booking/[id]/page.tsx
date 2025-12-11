@@ -1,16 +1,35 @@
 "use client"
-import { SAMPLE_LISTINGS } from "@/lib/sample-listing"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
 import { ChevronLeft, ChevronRight, Calendar, MapPin } from "lucide-react"
+import { getRentals } from "@/lib/getRentals-api"
 
 interface DateRange {
   checkIn: Date | null
   checkOut: Date | null
 }
 
-export default function BookingPage({ params }: { params: { id: string } }) {
+interface Listing {
+  id: string
+  images: string[]
+  title: string
+  location: string
+  price: number
+  beds: number
+  baths: number
+  room_type: string
+  type: string
+  description?: string
+}
+
+export default function BookingPage() {
   const router = useRouter()
+  const params = useParams()
+  const listingId = Array.isArray(params?.id) ? params.id[0] : (params?.id as string)
+
+  const [listing, setListing] = useState<Listing | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [dateRange, setDateRange] = useState<DateRange>({
     checkIn: null,
@@ -18,12 +37,48 @@ export default function BookingPage({ params }: { params: { id: string } }) {
   })
   const [noteToOwner, setNoteToOwner] = useState("")
 
-  const listing = SAMPLE_LISTINGS.find((l) => l.id === params.id)
-  const listingTitle = listing?.title || "Beautiful Modern Apartment"
-  const price = listing?.price || 150
-  const location = listing?.location || "San Francisco, CA"
-  const image = listing?.images?.[0] || "/placeholder.svg"
-  const cautionFee = listing?.cautionFee || 0
+  useEffect(() => {
+    const fetchListing = async () => {
+      try {
+        setError(null)
+        console.log(" Fetching listings for ID:", listingId)
+        console.log(" API_BASE_URL:", process.env.NEXT_PUBLIC_API_URL)
+        const listings = await getRentals()
+
+        if (!listings || listings.length === 0) {
+          setError("No listings available. Make sure NEXT_PUBLIC_API_URL is set correctly.")
+          setListing(null)
+          setLoading(false)
+          return
+        }
+
+        console.log(" All listings fetched:", listings)
+        const found = listings.find((l: any) => String(l.id) === String(listingId))
+        console.log(" Found listing:", found)
+
+        if (!found) {
+          console.warn(" Listing not found with ID:", listingId)
+          setError("Listing not found")
+          setListing(null)
+        } else {
+          setListing(found)
+        }
+      } catch (err) {
+        console.error(" Failed to fetch listing:", err)
+        setError(err instanceof Error ? err.message : "Failed to load listing")
+        setListing(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (listingId) {
+      fetchListing()
+    } else {
+      setError("No listing ID provided")
+      setLoading(false)
+    }
+  }, [listingId])
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -87,6 +142,12 @@ export default function BookingPage({ params }: { params: { id: string } }) {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
   }
 
+  const calculateNights = (): number => {
+    if (!dateRange.checkIn || !dateRange.checkOut) return 0
+    const time = dateRange.checkOut.getTime() - dateRange.checkIn.getTime()
+    return Math.ceil(time / (1000 * 60 * 60 * 24))
+  }
+
   const daysInMonth = getDaysInMonth(currentMonth)
   const firstDay = getFirstDayOfMonth(currentMonth)
   const monthName = currentMonth.toLocaleString("default", {
@@ -102,28 +163,53 @@ export default function BookingPage({ params }: { params: { id: string } }) {
     days.push(i)
   }
 
-  const calculateNights = (): number => {
-    if (!dateRange.checkIn || !dateRange.checkOut) return 0
-    const time = dateRange.checkOut.getTime() - dateRange.checkIn.getTime()
-    return Math.ceil(time / (1000 * 60 * 60 * 24))
-  }
-
   const nights = calculateNights()
-  const totalPrice = nights * Number.parseFloat(String(price))
-
-  const grandTotal = totalPrice + (cautionFee > 0 ? cautionFee : 0)
+  const totalPrice = nights * (listing?.price || 0)
 
   const handleContinue = () => {
     if (!dateRange.checkIn || !dateRange.checkOut) {
       alert("Please select both check-in and check-out dates")
       return
     }
-    router.push(
-      `/booking/${
-        params.id
-      }/payment?checkIn=${dateRange.checkIn.toISOString()}&checkOut=${dateRange.checkOut.toISOString()}&note=${encodeURIComponent(
-        noteToOwner,
-      )}&nights=${nights}&total=${totalPrice}&cautionFee=${cautionFee}`,
+
+    const queryParams = new URLSearchParams({
+      checkIn: dateRange.checkIn.toISOString(),
+      checkOut: dateRange.checkOut.toISOString(),
+      note: noteToOwner,
+      nights: nights.toString(),
+      total: totalPrice.toString(),
+    })
+
+    router.push(`/booking/${listingId}/payment?${queryParams.toString()}`)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading listing...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <p className="text-red-500 font-semibold">Error: {error}</p>
+        <button onClick={() => router.back()} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          Go Back
+        </button>
+      </div>
+    )
+  }
+
+  if (!listing) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <p className="text-muted-foreground">Listing not found</p>
+        <button onClick={() => router.back()} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          Go Back
+        </button>
+      </div>
     )
   }
 
@@ -254,7 +340,7 @@ export default function BookingPage({ params }: { params: { id: string } }) {
                 <textarea
                   value={noteToOwner}
                   onChange={(e) => setNoteToOwner(e.target.value)}
-                  placeholder="This home has been a place of peace, comfort, and great memories. We've cared for it with love, and we hope the next owner enjoys it as much as we have."
+                  placeholder="Add any special requests or notes for the property owner..."
                   className="w-full border border-border rounded-lg p-3 sm:p-4 text-xs sm:text-sm bg-muted/20 text-foreground placeholder-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={4}
                 />
@@ -262,23 +348,24 @@ export default function BookingPage({ params }: { params: { id: string } }) {
             </div>
           </div>
 
+          {/* Sidebar with Listing Details */}
           <div className="lg:col-span-1">
             <div className="bg-card rounded-xl border border-border p-4 sm:p-8 sticky top-24 space-y-4 sm:space-y-6">
               <div className="space-y-3 sm:space-y-4 pb-4 sm:pb-6 border-b border-border">
-                {image && (
+                {listing.images && listing.images.length > 0 && (
                   <div className="relative w-full h-40 sm:h-48 rounded-lg overflow-hidden bg-muted">
                     <img
-                      src={image || "/cozy-apartment-bedroom.png"}
-                      alt={listingTitle}
+                      src={listing.images[0] || "/placeholder.svg"}
+                      alt={listing.title}
                       className="w-full h-full object-cover"
                     />
                   </div>
                 )}
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-foreground text-balance">{listingTitle}</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground text-balance">{listing.title}</h3>
                   <div className="flex items-center gap-2 text-muted-foreground mt-1 sm:mt-2">
                     <MapPin size={16} />
-                    <span className="text-xs sm:text-sm">{location}</span>
+                    <span className="text-xs sm:text-sm">{listing.location}</span>
                   </div>
                 </div>
               </div>
@@ -287,20 +374,14 @@ export default function BookingPage({ params }: { params: { id: string } }) {
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex justify-between items-center text-sm sm:text-base">
                   <span className="text-foreground">
-                    ₦{price} x {nights} {nights === 1 ? "night" : "nights"}
+                    ₦{listing.price.toLocaleString()} x {nights} {nights === 1 ? "night" : "nights"}
                   </span>
-                  <span className="font-semibold text-foreground">₦{totalPrice.toFixed(2)}</span>
+                  <span className="font-semibold text-foreground">₦{totalPrice.toLocaleString()}</span>
                 </div>
 
-                {cautionFee > 0 && (
-                  <div className="flex justify-between items-center text-muted-foreground text-xs sm:text-sm">
-                    <span>Caution fee</span>
-                    <span>₦{cautionFee.toFixed(2)}</span>
-                  </div>
-                )}
                 <div className="border-t border-border pt-3 sm:pt-4 flex justify-between items-center">
                   <span className="font-semibold text-foreground text-sm sm:text-base">Total</span>
-                  <span className="text-lg sm:text-xl font-bold text-foreground">₦{grandTotal.toFixed(2)}</span>
+                  <span className="text-lg sm:text-xl font-bold text-foreground">₦{totalPrice.toLocaleString()}</span>
                 </div>
               </div>
 
