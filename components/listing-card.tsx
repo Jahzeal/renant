@@ -106,11 +106,11 @@ export default function ListingCard({
           />
           {/* Labels */}
           <div className="absolute top-3 left-3 flex gap-2 flex-wrap z-10">
-            <span className="px-3 py-1 bg-white text-xs font-semibold rounded-full shadow-lg">
+            {/* <span className="px-3 py-1 bg-white text-xs font-semibold rounded-full shadow-lg">
               {" "}
               {/* Pill shape for style */}
               {listing.style}
-            </span>
+            {/* </span>  */}
             {listing.offers && (
               <span className="px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full shadow-lg">
                 {" "}
