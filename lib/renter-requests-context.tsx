@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import type { ApplyResponse } from "@/lib/renter-request-api"   // <-- make sure this path is correct
 
 export interface TourRequest {
   id: string
@@ -17,13 +18,9 @@ export interface TourRequest {
 
 export interface ApplyRequest {
   id: string
-  listingId: string
-  listingTitle: string
-  listingPrice?: number
-  name: string
-  email: string
-  phone: string
-  message: string
+  propertyId: string
+  propertyTitle: string
+  propertyPrice?: number
   createdAt: string
   status: "pending" | "submitted" | "approved" | "rejected"
 }
@@ -32,7 +29,7 @@ interface RenterRequestsContextType {
   tourRequests: TourRequest[]
   applyRequests: ApplyRequest[]
   addTourRequest: (request: Omit<TourRequest, "id" | "createdAt">) => void
-  addApplyRequest: (request: Omit<ApplyRequest, "id" | "createdAt">) => void
+  addApplyRequest: (response: ApplyResponse) => void
   updateTourRequestStatus: (id: string, status: TourRequest["status"]) => void
   updateApplyRequestStatus: (id: string, status: ApplyRequest["status"]) => void
   removeTourRequest: (id: string) => void
@@ -46,7 +43,7 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
   const [applyRequests, setApplyRequests] = useState<ApplyRequest[]>([])
   const [isHydrated, setIsHydrated] = useState(false)
 
-  // Load from localStorage on mount
+  // Load from localStorage
   useEffect(() => {
     try {
       const savedTourRequests = localStorage.getItem("tourRequests")
@@ -76,6 +73,7 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
     }
   }, [tourRequests, applyRequests, isHydrated])
 
+  // ---------------------- TOUR (UNTTOUCHED) ----------------------
   const addTourRequest = (request: Omit<TourRequest, "id" | "createdAt">) => {
     const newRequest: TourRequest = {
       ...request,
@@ -85,13 +83,18 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
     setTourRequests((prev) => [newRequest, ...prev])
   }
 
-  const addApplyRequest = (request: Omit<ApplyRequest, "id" | "createdAt">) => {
-    const newRequest: ApplyRequest = {
-      ...request,
-      id: `apply-${Date.now()}`,
-      createdAt: new Date().toISOString(),
+  // ---------------------- APPLY (UPDATED) ----------------------
+  const addApplyRequest = (response: ApplyResponse) => {
+    const newReq: ApplyRequest = {
+      id: response.request.id,
+      propertyId: response.property.id,
+      propertyTitle: response.property.title,
+      propertyPrice: response.property.price,
+      createdAt: response.request.requestedAt,
+      status: "submitted",
     }
-    setApplyRequests((prev) => [newRequest, ...prev])
+
+    setApplyRequests((prev) => [newReq, ...prev])
   }
 
   const updateTourRequestStatus = (id: string, status: TourRequest["status"]) => {
@@ -130,7 +133,7 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
 
 export function useRenterRequests() {
   const context = useContext(RenterRequestsContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useRenterRequests must be used within a RenterRequestsProvider")
   }
   return context
