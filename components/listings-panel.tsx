@@ -192,7 +192,8 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       {selectedListing && (
         <ListingDetailsModal
           listing={{
-            id: Number(selectedListing.id),
+            id: selectedListing.id,
+            // id: Number(selectedListing.id),
             title: selectedListing.title,
             location: selectedListing.location,
             price: `₦${selectedListing.price}`,

@@ -1,10 +1,8 @@
 "use client";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
-/**
- * Helper to get the token for Authorization header.
- */
 const getAuthToken = () => {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("access_token");
@@ -37,6 +35,7 @@ interface RenterRequestsContextType {
   applyRequests: ApplyRequest[];
   addTourRequest: (request: Omit<TourRequest, "id" | "createdAt">) => void;
   requestToApply: (propertyId: string) => Promise<ApplyRequest | null>;
+  getRequestsFromDb: () => Promise<ApplyRequest[] | null>;
   updateTourRequestStatus: (id: string, status: TourRequest["status"]) => void;
   updateApplyRequestStatus: (id: string, status: ApplyRequest["status"]) => void;
   removeTourRequest: (id: string) => void;
@@ -48,33 +47,6 @@ const RenterRequestsContext = createContext<RenterRequestsContextType | undefine
 export function RenterRequestsProvider({ children }: { children: ReactNode }) {
   const [tourRequests, setTourRequests] = useState<TourRequest[]>([]);
   const [applyRequests, setApplyRequests] = useState<ApplyRequest[]>([]);
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  // Load from localStorage
-  useEffect(() => {
-    try {
-      const savedTourRequests = localStorage.getItem("tourRequests");
-      const savedApplyRequests = localStorage.getItem("applyRequests");
-
-      if (savedTourRequests) setTourRequests(JSON.parse(savedTourRequests));
-      if (savedApplyRequests) setApplyRequests(JSON.parse(savedApplyRequests));
-    } catch (error) {
-      console.error("Failed to load renter requests:", error);
-    }
-    setIsHydrated(true);
-  }, []);
-
-  // Save to localStorage when requests change
-  useEffect(() => {
-    if (isHydrated) {
-      try {
-        localStorage.setItem("tourRequests", JSON.stringify(tourRequests));
-        localStorage.setItem("applyRequests", JSON.stringify(applyRequests));
-      } catch (error) {
-        console.error("Failed to save renter requests:", error);
-      }
-    }
-  }, [tourRequests, applyRequests, isHydrated]);
 
   // ---------------------- TOUR ----------------------
   const addTourRequest = (request: Omit<TourRequest, "id" | "createdAt">) => {
@@ -90,22 +62,18 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
   const requestToApply = async (propertyId: string): Promise<ApplyRequest | null> => {
     const token = getAuthToken();
     if (!token) return null;
+
     try {
       const response = await fetch(`${API_BASE_URL}/users/requestToApply`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
-        
-        body: JSON.stringify({ propertyId }), // Only send propertyId to backend
+        body: JSON.stringify({ propertyId }),
       }).then((res) => res.json());
 
-      if (!response || !response.request || !response.property) {
-        console.log("Applying for propertyId:", propertyId);
-        console.error("Invalid apply response from backend:", response);
-        return null;
-      }
+      if (!response || !response.request || !response.property) return null;
 
       const newReq: ApplyRequest = {
         id: response.request.id,
@@ -124,6 +92,45 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Fetch all apply requests from DB (used by Rentals Hub)
+  const getRequestsFromDb = async (): Promise<ApplyRequest[] | null> => {
+  const token = getAuthToken();
+  if (!token) return null;
+
+  try {
+    const data = await fetch(`${API_BASE_URL}/users/appliesRequested`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }).then((res) => res.json());
+
+    // 🔥 BACKEND RETURNS ARRAY
+    if (!Array.isArray(data)) {
+      console.error("Expected array, got:", data);
+      return null;
+    }
+
+    const formatted: ApplyRequest[] = data.map((req: any) => ({
+      id: req.id,
+      propertyId: req.property.id,
+      propertyTitle: req.property.title,
+      propertyPrice: req.property.price,
+      createdAt: req.createdAt, // Prisma field
+      status: req.status ?? "submitted",
+    }));
+
+    setApplyRequests(formatted);
+    return formatted;
+  } catch (error) {
+    console.error("Failed to fetch apply requests from DB:", error);
+    return null;
+  }
+};
+
+
+  // ---------------------- UPDATE / REMOVE ----------------------
   const updateTourRequestStatus = (id: string, status: TourRequest["status"]) => {
     setTourRequests((prev) => prev.map((req) => (req.id === id ? { ...req, status } : req)));
   };
@@ -147,6 +154,7 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
         applyRequests,
         addTourRequest,
         requestToApply,
+        getRequestsFromDb,
         updateTourRequestStatus,
         updateApplyRequestStatus,
         removeTourRequest,
