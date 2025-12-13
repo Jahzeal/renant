@@ -2,7 +2,7 @@
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-
+import { useCallback } from "react";
 const getAuthToken = () => {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("access_token");
@@ -93,41 +93,44 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
   };
 
   // Fetch all apply requests from DB (used by Rentals Hub)
-  const getRequestsFromDb = async (): Promise<ApplyRequest[] | null> => {
+
+const getRequestsFromDb = useCallback(async (): Promise<ApplyRequest[] | null> => {
   const token = getAuthToken();
   if (!token) return null;
 
   try {
-    const data = await fetch(`${API_BASE_URL}/users/appliesRequested`, {
-      method: "GET",
+    const res = await fetch(`${API_BASE_URL}/users/appliesRequested`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }).then((res) => res.json());
+    });
 
-    // 🔥 BACKEND RETURNS ARRAY
+    const data = await res.json();
+
     if (!Array.isArray(data)) {
       console.error("Expected array, got:", data);
       return null;
     }
 
-    const formatted: ApplyRequest[] = data.map((req: any) => ({
+    const formatted = data.map((req: any) => ({
       id: req.id,
       propertyId: req.property.id,
       propertyTitle: req.property.title,
       propertyPrice: req.property.price,
-      createdAt: req.createdAt, // Prisma field
+      createdAt: req.createdAt,
       status: req.status ?? "submitted",
     }));
 
     setApplyRequests(formatted);
+    console.log("RAW APPLY DATA:", data);
     return formatted;
-  } catch (error) {
-    console.error("Failed to fetch apply requests from DB:", error);
+  } catch (err) {
+    console.error(err);
     return null;
   }
-};
+}, []);
+
 
 
   // ---------------------- UPDATE / REMOVE ----------------------
