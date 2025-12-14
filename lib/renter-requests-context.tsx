@@ -3,6 +3,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { useCallback } from "react";
+import { apiRequest } from "./authenticate";
 const getAuthToken = () => {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("access_token");
@@ -40,6 +41,8 @@ interface RenterRequestsContextType {
   updateApplyRequestStatus: (id: string, status: ApplyRequest["status"]) => void;
   removeTourRequest: (id: string) => void;
   removeApplyRequest: (id: string) => void;
+  deleteApplyRequest: (propertyId: string) => void;
+  
 }
 
 const RenterRequestsContext = createContext<RenterRequestsContextType | undefined>(undefined);
@@ -64,14 +67,14 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
     if (!token) return null;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/users/requestToApply`, {
+      const response = await apiRequest(`${API_BASE_URL}/users/requestToApply`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ propertyId }),
-      }).then((res) => res.json());
+      }).then((res) => res?.json());
 
       if (!response || !response.request || !response.property) return null;
 
@@ -99,14 +102,37 @@ const getRequestsFromDb = useCallback(async (): Promise<ApplyRequest[] | null> =
   if (!token) return null;
 
   try {
-    const res = await fetch(`${API_BASE_URL}/users/appliesRequested`, {
+    const res = await apiRequest(`${API_BASE_URL}/users/appliesRequested`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     });
 
-    const data = await res.json();
+    if (!res) {
+      console.error("No response received from apiRequest");
+      return null;
+    }
+
+    // If apiRequest returned a Response-like object, verify status and parse JSON.
+    // If it already returned parsed JSON, use it directly.
+    let data: any;
+    if (typeof (res as any)?.json === "function") {
+      const response = res as Response;
+      if (!response.ok) {
+        let errText = "";
+        try {
+          errText = await response.text();
+        } catch {
+          // ignore parse error
+        }
+        console.error("Request failed:", response.status, errText);
+        return null;
+      }
+      data = await response.json();
+    } else {
+      data = res;
+    }
 
     if (!Array.isArray(data)) {
       console.error("Expected array, got:", data);
@@ -150,6 +176,36 @@ const getRequestsFromDb = useCallback(async (): Promise<ApplyRequest[] | null> =
     setApplyRequests((prev) => prev.filter((req) => req.id !== id));
   };
 
+
+  
+  const deleteApplyRequest = async (propertyId: string) => {
+  const token = getAuthToken();
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/users/cancel-apply/${propertyId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res) {
+      console.error("No response received from apiRequest");
+      return null;
+    }
+    // Find the request id from the propertyId
+    const request = applyRequests.find((req) => req.propertyId === propertyId);
+    if (request) {
+      removeApplyRequest(request.id); // Remove by request id
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+
   return (
     <RenterRequestsContext.Provider
       value={{
@@ -162,6 +218,7 @@ const getRequestsFromDb = useCallback(async (): Promise<ApplyRequest[] | null> =
         updateApplyRequestStatus,
         removeTourRequest,
         removeApplyRequest,
+        deleteApplyRequest,
       }}
     >
       {children}

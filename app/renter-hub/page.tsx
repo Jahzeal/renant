@@ -7,7 +7,8 @@ import { Calendar, DollarSign, Trash2 } from "lucide-react";
 import PageHeader from "@/components/page-header";
 
 export default function RenterHubPage() {
-  const { applyRequests, getRequestsFromDb, removeApplyRequest } = useRenterRequests();
+  const { applyRequests, getRequestsFromDb, removeApplyRequest, deleteApplyRequest } =
+    useRenterRequests();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,16 +53,28 @@ export default function RenterHubPage() {
         <div className="w-full px-2 sm:px-4 md:px-6">
           <div className="flex items-center gap-2 sm:gap-4 h-14 sm:h-16">
             <nav className="flex gap-3 sm:gap-6 overflow-x-auto text-xs sm:text-sm flex-1">
-              <Link href="/saved-homes" className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap">
+              <Link
+                href="/saved-homes"
+                className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+              >
                 Saved homes
               </Link>
-              <Link href="/manage-tours" className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap">
+              <Link
+                href="/manage-tours"
+                className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+              >
                 Manage tours
               </Link>
-              <Link href="/renter-hub" className="pb-2 sm:pb-4 border-b-2 border-primary text-primary font-medium whitespace-nowrap">
+              <Link
+                href="/renter-hub"
+                className="pb-2 sm:pb-4 border-b-2 border-primary text-primary font-medium whitespace-nowrap"
+              >
                 Renter Hub
               </Link>
-              <Link href="/account-settings" className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap">
+              <Link
+                href="/account-settings"
+                className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+              >
                 Account settings
               </Link>
             </nav>
@@ -71,7 +84,9 @@ export default function RenterHubPage() {
 
       {/* Page content */}
       <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
-        <h1 className="text-2xl sm:text-3xl md:4xl font-bold mb-8">Renter Hub</h1>
+        <h1 className="text-2xl sm:text-3xl md:4xl font-bold mb-8">
+          Renter Hub
+        </h1>
 
         {/* Loading state */}
         {loading && (
@@ -88,7 +103,8 @@ export default function RenterHubPage() {
                 No application requests yet
               </h2>
               <p className="text-muted-foreground">
-                When you request to apply for homes, they'll appear here so you can track your applications.
+                When you request to apply for homes, they'll appear here so you
+                can track your applications.
               </p>
               <Link
                 href="/rentals"
@@ -104,7 +120,10 @@ export default function RenterHubPage() {
         {!loading && applyRequests.length > 0 && (
           <div className="space-y-4">
             {applyRequests.map((request) => (
-              <div key={request.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+              <div
+                key={request.id}
+                className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+              >
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-foreground">
@@ -124,12 +143,16 @@ export default function RenterHubPage() {
                   </div>
 
                   <div className="flex flex-col items-end gap-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
-                      {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                        request.status
+                      )}`}
+                    >
+                      {request.status.charAt(0).toUpperCase() +
+                        request.status.slice(1)}
                     </span>
-
                     <button
-                      onClick={() => removeApplyRequest(request.id)}
+                      onClick={() => deleteApplyRequest(request.propertyId)}
                       className="p-2 text-muted-foreground hover:text-destructive transition-colors"
                       aria-label="Delete application request"
                     >
