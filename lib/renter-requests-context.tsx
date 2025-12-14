@@ -103,6 +103,7 @@ const getRequestsFromDb = useCallback(async (): Promise<ApplyRequest[] | null> =
 
   try {
     const res = await apiRequest(`${API_BASE_URL}/users/appliesRequested`, {
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -144,7 +145,7 @@ const getRequestsFromDb = useCallback(async (): Promise<ApplyRequest[] | null> =
       propertyId: req.property.id,
       propertyTitle: req.property.title,
       propertyPrice: req.property.price,
-      createdAt: req.createdAt,
+      createdAt: req.createdAt ?? req.requestedAt,
       status: req.status ?? "submitted",
     }));
 
