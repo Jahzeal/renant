@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRenterRequests } from "@/lib/renter-requests-context";
-import { Calendar, DollarSign, Trash2 } from "lucide-react";
+import { Calendar, Trash2 } from "lucide-react";
 import PageHeader from "@/components/page-header";
 
 export default function RenterHubPage() {
-  const { applyRequests, getRequestsFromDb, removeApplyRequest, deleteApplyRequest } =
+  const { applyRequests, getRequestsFromDb,} =
     useRenterRequests();
   const [loading, setLoading] = useState(true);
 
@@ -151,13 +151,6 @@ export default function RenterHubPage() {
                       {request.status.charAt(0).toUpperCase() +
                         request.status.slice(1)}
                     </span>
-                    <button
-                      onClick={() => deleteApplyRequest(request.propertyId)}
-                      className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                      aria-label="Delete application request"
-                    >
-                      <Trash2 size={18} />
-                    </button>
                   </div>
                 </div>
               </div>

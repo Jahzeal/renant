@@ -40,8 +40,8 @@ interface RenterRequestsContextType {
   updateTourRequestStatus: (id: string, status: TourRequest["status"]) => void;
   updateApplyRequestStatus: (id: string, status: ApplyRequest["status"]) => void;
   removeTourRequest: (id: string) => void;
-  removeApplyRequest: (id: string) => void;
-  deleteApplyRequest: (propertyId: string) => void;
+
+  
   
 }
 
@@ -172,37 +172,10 @@ const getRequestsFromDb = useCallback(async (): Promise<ApplyRequest[] | null> =
     setTourRequests((prev) => prev.filter((req) => req.id !== id));
   };
 
-  const removeApplyRequest = (id: string) => {
-    setApplyRequests((prev) => prev.filter((req) => req.id !== id));
-  };
 
 
   
-  const deleteApplyRequest = async (propertyId: string) => {
-  const token = getAuthToken();
-  if (!token) return;
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/users/cancel-apply/${propertyId}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!res) {
-      console.error("No response received from apiRequest");
-      return null;
-    }
-    // Find the request id from the propertyId
-    const request = applyRequests.find((req) => req.propertyId === propertyId);
-    if (request) {
-      removeApplyRequest(request.id); // Remove by request id
-    }
-  } catch (error) {
-    console.error(error);
-  }
-};
+ 
 
 
 
@@ -217,8 +190,6 @@ const getRequestsFromDb = useCallback(async (): Promise<ApplyRequest[] | null> =
         updateTourRequestStatus,
         updateApplyRequestStatus,
         removeTourRequest,
-        removeApplyRequest,
-        deleteApplyRequest,
       }}
     >
       {children}
