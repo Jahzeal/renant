@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import mapboxgl from "mapbox-gl"
 import "mapbox-gl/dist/mapbox-gl.css"
 
@@ -11,69 +11,62 @@ interface MapProps {
   zoom?: number
 }
 
-if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
-  console.warn("[v0] Mapbox token not configured in NEXT_PUBLIC_MAPBOX_TOKEN")
-}
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ""
 
 export default function Map({ center, locationName, height = "500px", zoom = 12 }: MapProps) {
   const mapContainer = useRef<HTMLDivElement | null>(null)
   const mapInstance = useRef<mapboxgl.Map | null>(null)
   const markerRef = useRef<mapboxgl.Marker | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
-    if (!mapContainer.current) {
-      console.log("[v0] Map container not yet available")
-      return
-    }
+    if (!mapContainer.current || mapInstance.current) return
 
-    if (mapInstance.current) {
-      console.log(" Map already initialized")
+    if (!mapboxgl.accessToken) {
+      console.error("[v0] Mapbox token is missing. Add NEXT_PUBLIC_MAPBOX_TOKEN to environment variables")
+      setHasError(true)
+      setIsLoading(false)
       return
     }
 
     try {
-      console.log("Initializing Mapbox map")
-      mapInstance.current = new mapboxgl.Map({
+      const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/streets-v11",
-        center: [0, 0],
-        zoom: 2,
+        center: center ? [center.lng, center.lat] : [0, 0],
+        zoom: center ? zoom : 2,
       })
 
-      mapInstance.current.addControl(new mapboxgl.NavigationControl())
+      map.addControl(new mapboxgl.NavigationControl(), "bottom-right")
 
-      const handleResize = () => {
-        if (mapInstance.current) {
-          mapInstance.current.resize()
-        }
-      }
+      map.on("load", () => {
+        setIsLoading(false)
+      })
 
-      const resizeObserver = new ResizeObserver(handleResize)
-      resizeObserver.observe(mapContainer.current)
+      map.on("error", (e) => {
+        console.error("[v0] Map error:", e)
+        setHasError(true)
+        setIsLoading(false)
+      })
+
+      mapInstance.current = map
 
       return () => {
-        resizeObserver.disconnect()
-        if (mapInstance.current) {
-          mapInstance.current.remove()
-          mapInstance.current = null
-        }
+        map.remove()
+        mapInstance.current = null
       }
     } catch (error) {
-      console.error(" Error initializing map:", error)
+      console.error("[v0] Error initializing map:", error)
+      setHasError(true)
+      setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    if (!mapInstance.current || !center) {
-      console.log(" Map or center not available", { hasMap: !!mapInstance.current, hasCenter: !!center })
-      return
-    }
+    if (!mapInstance.current || !center) return
 
     try {
-      console.log(" Updating map center and marker", center)
-
-      // Fly to the new location
       mapInstance.current.flyTo({
         center: [center.lng, center.lat],
         zoom,
@@ -81,47 +74,43 @@ export default function Map({ center, locationName, height = "500px", zoom = 12 
       })
 
       if (markerRef.current) {
-        markerRef.current.setLngLat([center.lng, center.lat])
-
-        if (locationName) {
-          const popup = markerRef.current.getPopup()
-          if (!popup) {
-            markerRef.current.setPopup(new mapboxgl.Popup({ offset: 25 }).setText(locationName))
-          } else {
-            popup.setText(locationName)
-          }
-        } else {
-          markerRef.current.setPopup(null)
-        }
-      } else {
-        markerRef.current = new mapboxgl.Marker({ color: "#007aff" }).setLngLat([center.lng, center.lat])
-
-        if (locationName) {
-          const popup = new mapboxgl.Popup({ offset: 25 }).setText(locationName)
-          markerRef.current.setPopup(popup)
-        }
-
-        if (mapInstance.current.isStyleLoaded()) {
-          markerRef.current.addTo(mapInstance.current)
-        } else {
-          mapInstance.current.once("style.load", () => {
-            if (markerRef.current && mapInstance.current) {
-              markerRef.current.addTo(mapInstance.current)
-            }
-          })
-        }
+        markerRef.current.remove()
       }
+
+      const marker = new mapboxgl.Marker({ color: "#3b82f6" }).setLngLat([center.lng, center.lat])
+
+      if (locationName) {
+        marker.setPopup(
+          new mapboxgl.Popup({ offset: 25 }).setHTML(`<div class="text-sm font-semibold">${locationName}</div>`),
+        )
+      }
+
+      marker.addTo(mapInstance.current)
+      markerRef.current = marker
     } catch (error) {
-      console.error(" Error updating marker:", error)
+      console.error("[v0] Error updating marker:", error)
     }
   }, [center, locationName, zoom])
 
   return (
     <div className="relative w-full rounded-lg overflow-hidden border border-gray-200" style={{ height }}>
-      <div ref={mapContainer} className="w-full h-full bg-gray-100" style={{ minHeight: height }} />
-      {!mapInstance.current && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-200 bg-opacity-50">
-          <p className="text-gray-600">Loading map...</p>
+      <div ref={mapContainer} className="w-full h-full" style={{ minHeight: height }} />
+
+      {isLoading && !hasError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+            <p className="mt-2 text-sm text-gray-600">Loading map...</p>
+          </div>
+        </div>
+      )}
+
+      {hasError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+          <div className="text-center p-4">
+            <p className="text-sm text-gray-600">Unable to load map</p>
+            {locationName && <p className="text-xs text-gray-500 mt-1">{locationName}</p>}
+          </div>
         </div>
       )}
     </div>

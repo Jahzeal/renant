@@ -6,6 +6,8 @@ import { X, Heart, ChevronLeft, ChevronRight } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { RequestTourModal } from "./request-tour-modal"
 import { RequestToApplyModal } from "./request-to-apply-modal"
+import Map from "@/components/map"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface ListingDetailsModalProps {
   listing: {
@@ -20,6 +22,7 @@ interface ListingDetailsModalProps {
     description?: string
     amenities?: string[]
     type?: string
+    coords?: { lng: number; lat: number }
   }
   isOpen: boolean
   onClose: () => void
@@ -36,6 +39,7 @@ export default function ListingDetailsModal({
 }: ListingDetailsModalProps) {
   const router = useRouter()
   const user = useAuth((state) => state.user)
+  const isMobile = useIsMobile()
 
   const [imageIndex, setImageIndex] = useState(0)
   const [showTourModal, setShowTourModal] = useState(false)
@@ -51,11 +55,9 @@ export default function ListingDetailsModal({
     openModal()
   }
 
-  const nextImage = () =>
-    setImageIndex((i) => (i + 1) % listing.images.length)
+  const nextImage = () => setImageIndex((i) => (i + 1) % listing.images.length)
 
-  const prevImage = () =>
-    setImageIndex((i) => (i === 0 ? listing.images.length - 1 : i - 1))
+  const prevImage = () => setImageIndex((i) => (i === 0 ? listing.images.length - 1 : i - 1))
 
   const handleFavorite = () => {
     if (!user) {
@@ -112,14 +114,8 @@ export default function ListingDetailsModal({
                 <ChevronRight size={20} />
               </button>
 
-              <button
-                onClick={handleFavorite}
-                className="absolute top-4 right-4 bg-white p-2 rounded-full"
-              >
-                <Heart
-                  size={20}
-                  className={isFavorited ? "fill-red-500 text-red-500" : ""}
-                />
+              <button onClick={handleFavorite} className="absolute top-4 right-4 bg-white p-2 rounded-full">
+                <Heart size={20} className={isFavorited ? "fill-red-500 text-red-500" : ""} />
               </button>
             </div>
 
@@ -138,9 +134,7 @@ export default function ListingDetailsModal({
             {listing.description && (
               <div>
                 <h4 className="font-semibold mb-2">About</h4>
-                <p className="text-sm text-muted-foreground">
-                  {listing.description}
-                </p>
+                <p className="text-sm text-muted-foreground">{listing.description}</p>
               </div>
             )}
 
@@ -158,19 +152,26 @@ export default function ListingDetailsModal({
               </div>
             ) : null}
 
+            {isMobile && listing.coords && (
+              <div>
+                <h4 className="font-semibold mb-2">Location</h4>
+                <Map center={listing.coords} locationName={listing.location} height="250px" zoom={15} />
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
               {isShortlet ? (
                 <>
                   <button
                     onClick={() => requireAuth(() => setShowApplyModal(true))}
-                    className="flex-1 btn-primary"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                   >
                     Request to apply
                   </button>
                   <button
                     onClick={handleBookNow}
-                    className="flex-1 btn-primary"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                   >
                     Book now
                   </button>
@@ -179,13 +180,13 @@ export default function ListingDetailsModal({
                 <>
                   <button
                     onClick={() => requireAuth(() => setShowTourModal(true))}
-                    className="flex-1 btn-primary"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                   >
                     Send tour request
                   </button>
                   <button
                     onClick={() => requireAuth(() => setShowApplyModal(true))}
-                    className="flex-1 btn-primary"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                   >
                     Request to apply
                   </button>
@@ -209,7 +210,8 @@ export default function ListingDetailsModal({
         onClose={() => setShowApplyModal(false)}
         listingId={String(listing.id)}
         listingTitle={listing.title}
-        listingPrice={Number(listing.price)}      />
+        listingPrice={Number(listing.price)}
+      />
     </>
   )
 }
