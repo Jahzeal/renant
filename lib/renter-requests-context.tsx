@@ -102,7 +102,7 @@ const getRequestsFromDb = useCallback(async (): Promise<ApplyRequest[] | null> =
   if (!token) return null;
 
   try {
-    const res = await apiRequest(`${API_BASE_URL}/users/appliesRequested`, {
+    const res = await apiRequest(`${API_BASE_URL}/users/appliesRequested?limit=1000`, {
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",
@@ -140,14 +140,22 @@ const getRequestsFromDb = useCallback(async (): Promise<ApplyRequest[] | null> =
       return null;
     }
 
-    const formatted = data.map((req: any) => ({
-      id: req.id,
-      propertyId: req.property.id,
-      propertyTitle: req.property.title,
-      propertyPrice: req.property.price,
-      createdAt: req.createdAt ?? req.requestedAt,
-      status: req.status ?? "submitted",
-    }));
+    const formatted = data
+      .map((req: any) => {
+        if (!req.property) {
+          console.warn("Skipping request with missing property:", req);
+          return null;
+        }
+        return {
+          id: req.id,
+          propertyId: req.property.id,
+          propertyTitle: req.property.title,
+          propertyPrice: req.property.price,
+          createdAt: req.createdAt ?? req.requestedAt,
+          status: req.status ?? "submitted",
+        };
+      })
+      .filter((req: any) => req !== null);
 
     setApplyRequests(formatted);
     console.log("RAW APPLY DATA:", data);
