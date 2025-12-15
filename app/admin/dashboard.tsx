@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   LineChart,
@@ -11,10 +11,21 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts"
-import StatCard from "./stat-card"
-import BusinessCard from "./business-card"
-import { Users, MapPin, FileText, CheckCircle, Home, Building2, TrendingUp, Download } from "lucide-react"
+} from "recharts";
+import { useState, useEffect } from "react";
+import StatCard from "./stat-card";
+import BusinessCard from "./business-card";
+import { getTotalCustomers } from "@/lib/getCustomers";
+import {
+  Users,
+  MapPin,
+  FileText,
+  CheckCircle,
+  Home,
+  Building2,
+  TrendingUp,
+  Download,
+} from "lucide-react";
 
 // Sample data
 const chartData = [
@@ -24,20 +35,32 @@ const chartData = [
   { name: "Apr", value: 1200 },
   { name: "May", value: 1400 },
   { name: "Jun", value: 1600 },
-]
+];
 
 const businessPerformance = [
   { name: "Houses", value: 45 },
   { name: "Shortlets", value: 30 },
   { name: "Hostels", value: 25 },
-]
+];
 
-const colors = ["#f97316", "#0ea5e9", "#8b5cf6"]
+const colors = ["#f97316", "#0ea5e9", "#8b5cf6"];
 
 export default function Dashboard() {
+  const [totalCustomers, setTotalCustomers] = useState<number>(0);
+  const [loadingCustomers, setLoadingCustomers] = useState(true);
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      const total = await getTotalCustomers();
+      setTotalCustomers(total);
+      setLoadingCustomers(false);
+    };
+
+    fetchCustomers();
+  }, []);
+
   const handleDownloadReport = () => {
     const reportData = {
-      totalCustomers: "1,245",
+      totalCustomers: totalCustomers.toLocaleString(),
       totalTours: "568",
       tourRequests: "342",
       doneTours: "156",
@@ -47,7 +70,7 @@ export default function Dashboard() {
       hostels: "34",
       generatedDate: new Date().toLocaleDateString(),
       generatedTime: new Date().toLocaleTimeString(),
-    }
+    };
 
     // Create CSV content
     const csvContent = `Admin Dashboard Report
@@ -63,25 +86,31 @@ Total Shortlets,${reportData.shortlets}
 Total Hotels,${reportData.hotels}
 Total Houses,${reportData.houses}
 Total Hostels,${reportData.hostels}
-`
+`;
 
     // Create blob and download
-    const element = document.createElement("a")
-    const file = new Blob([csvContent], { type: "text/csv" })
-    element.href = URL.createObjectURL(file)
-    element.download = `admin-report-${new Date().toISOString().split("T")[0]}.csv`
-    document.body.appendChild(element)
-    element.click()
-    document.body.removeChild(element)
-  }
+    const element = document.createElement("a");
+    const file = new Blob([csvContent], { type: "text/csv" });
+    element.href = URL.createObjectURL(file);
+    element.download = `admin-report-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
 
   return (
     <div className="p-4 md:p-8 bg-background">
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-          <p className="text-muted-foreground text-sm mt-1">Welcome back! Here's your business overview.</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            Admin Dashboard
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Welcome back! Here's your business overview.
+          </p>
         </div>
         <button
           onClick={handleDownloadReport}
@@ -97,10 +126,13 @@ Total Hostels,${reportData.hostels}
         <StatCard
           icon={Users}
           label="Total Customers"
-          value="1,245"
+          value={
+            loadingCustomers ? "Loading..." : totalCustomers.toLocaleString()
+          }
           change="+12% from last month"
           color="bg-blue-100 text-blue-600"
         />
+
         <StatCard
           icon={MapPin}
           label="Total Tours"
@@ -160,7 +192,9 @@ Total Hostels,${reportData.hostels}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Revenue Chart */}
         <div className="bg-card rounded-lg border border-border p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Booking Trends</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            Booking Trends
+          </h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -188,7 +222,9 @@ Total Hostels,${reportData.hostels}
 
         {/* Top Performing Business */}
         <div className="bg-card rounded-lg border border-border p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Top Performing Business</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            Top Performing Business
+          </h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -202,7 +238,10 @@ Total Hostels,${reportData.hostels}
                 dataKey="value"
               >
                 {businessPerformance.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={colors[index % colors.length]}
+                  />
                 ))}
               </Pie>
               <Tooltip
@@ -243,5 +282,5 @@ Total Hostels,${reportData.hostels}
         />
       </div>
     </div>
-  )
+  );
 }
