@@ -5,7 +5,7 @@ import mapboxgl from "mapbox-gl"
 import "mapbox-gl/dist/mapbox-gl.css"
 
 interface MapProps {
-  coords?: { lng: number; lat: number } | null
+  coords?: { lng: number; lat: number } | { longitude: number; latitude: number } | null
   locationName?: string
   height?: string
   zoom?: number
@@ -66,9 +66,14 @@ export default function Map({ coords, locationName, height = "500px", zoom = 12 
   useEffect(() => {
     if (!mapInstance.current || !coords) return
 
-    // Validate that coordinates are valid numbers
-    const lng = typeof coords.lng === "number" && isFinite(coords.lng) ? coords.lng : null
-    const lat = typeof coords.lat === "number" && isFinite(coords.lat) ? coords.lat : null
+    // Validate that coordinates are valid numbers and support both formats
+    // We cast to any here to safely access potential properties without complex type guards
+    const c = coords as any
+    const rawLng = c.lng ?? c.longitude
+    const rawLat = c.lat ?? c.latitude
+
+    const lng = typeof rawLng === "number" && isFinite(rawLng) ? rawLng : null
+    const lat = typeof rawLat === "number" && isFinite(rawLat) ? rawLat : null
 
     if (lng === null || lat === null) {
       console.warn("[v0] Invalid coordinates received:", coords)

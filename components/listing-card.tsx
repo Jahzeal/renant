@@ -79,8 +79,11 @@ export default function ListingCard({
   };
 
   // Helper for formatting large numbers
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("en-US").format(price);
+  const formatPrice = (price: any) => {
+    const num = Number(price);
+    if (isNaN(num)) return "N/A";
+    return new Intl.NumberFormat("en-US").format(num);
+  }
 
   return (
     <div

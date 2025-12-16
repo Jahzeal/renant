@@ -45,6 +45,51 @@ interface Listing {
   coords?: { lng: number; lat: number }
 }
 
+const normalizeListing = (data: any): Listing => {
+  // Normalize price
+  let price = Number(data.price)
+  if (isNaN(price)) {
+    // Attempt to extract from object or clean string
+    if (typeof data.price === "string") {
+      price = Number.parseFloat(data.price.replace(/[^0-9.-]+/g, ""))
+    } else if (typeof data.price === "object" && data.price !== null) {
+      price = Number(data.price.amount || data.price.value || 0)
+    }
+  }
+  // If still NaN, default to 0 (or could be left as 0 to indicate issue)
+  if (isNaN(price)) price = 0
+
+  // Normalize coords
+  let coords: { lng: number; lat: number } | undefined
+  // Check if coords exists as object, or if lat/lng are at root
+  const c = data.coords || {}
+
+  // Try to find lat/lng in various places
+  // Priority: coords.lat/lng -> coords.latitude/longitude -> root lat/lng -> root latitude/longitude
+  const rawLat = c.lat ?? c.latitude ?? data.lat ?? data.latitude
+  const rawLng = c.lng ?? c.longitude ?? data.lng ?? data.longitude
+
+  const lat = Number(rawLat)
+  const lng = Number(rawLng)
+
+  if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
+    coords = { lat, lng }
+  }
+
+  // Ensure amenities is an array
+  const amenities = Array.isArray(data.amenities) ? data.amenities : []
+
+  return {
+    ...data,
+    price,
+    coords,
+    amenities,
+    // Ensure other required fields have fallbacks if needed
+    beds: Number(data.beds) || 0,
+    baths: Number(data.baths) || 0,
+  }
+}
+
 export default function ListingsPanel({ searchLocation = "", filters, onLocationClick }: ListingsPanelProps) {
   const { toggleFavorite, isFavorited } = useFavorites()
 
@@ -64,8 +109,9 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       try {
         const data = await getRentals()
         if (!mounted) return
-        setAllListings(data)
-        setFilteredListings(data)
+        const normalized = Array.isArray(data) ? data.map(normalizeListing) : []
+        setAllListings(normalized)
+        setFilteredListings(normalized)
       } catch (e) {
         console.error("Failed to load rentals:", e)
         if (mounted) setAllListings([])
@@ -96,7 +142,8 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
           moreOptions: filters?.moreOptions,
         })
         if (!mounted) return
-        setFilteredListings(Array.isArray(data) ? data : [])
+        const normalized = Array.isArray(data) ? data.map(normalizeListing) : []
+        setFilteredListings(normalized)
       } catch (e) {
         console.error("Failed to fetch filtered rentals:", e)
         if (mounted) setFilteredListings([])
