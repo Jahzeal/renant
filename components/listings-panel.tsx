@@ -52,7 +52,9 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
   const [filteredListings, setFilteredListings] = useState<Listing[]>([])
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
-  const [sortBy, setSortBy] = useState<"recommended" | "price-low" | "price-high" | "newest" | "lot-size">("recommended")
+  const [sortBy, setSortBy] = useState<"recommended" | "price-low" | "price-high" | "newest" | "lot-size">(
+    "recommended",
+  )
   const [loading, setLoading] = useState(false)
 
   // Fetch all rentals
@@ -70,7 +72,9 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       }
     }
     fetchAll()
-    return () => { mounted = false }
+    return () => {
+      mounted = false
+    }
   }, [])
 
   // Apply filters
@@ -102,7 +106,9 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
     }
 
     fetchFiltered()
-    return () => { mounted = false }
+    return () => {
+      mounted = false
+    }
   }, [filters, searchLocation, allListings])
 
   // Sort filtered listings
@@ -170,7 +176,7 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
               key={listing.id}
               listing={{
                 ...listing,
-                amenities: listing.amenities?.map(a => a.name) || [],
+                amenities: listing.amenities?.map((a) => a.name) || [],
               }}
               isFavorited={isFavorited(listing.id)}
               onFavoriteToggle={() => toggleFavorite(listing.id)}
@@ -188,12 +194,10 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
         )}
       </div>
 
-      {/* Modal */}
       {selectedListing && (
         <ListingDetailsModal
           listing={{
             id: selectedListing.id,
-            // id: Number(selectedListing.id),
             title: selectedListing.title,
             location: selectedListing.location,
             price: `₦${selectedListing.price}`,
@@ -201,8 +205,9 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
             baths: selectedListing.baths,
             images: selectedListing.images,
             description: selectedListing.description,
-            amenities: selectedListing.amenities?.map(a => a.name) || [],
+            amenities: selectedListing.amenities?.map((a) => a.name) || [],
             type: selectedListing.type,
+            coords: selectedListing.coords,
           }}
           isOpen={isDetailsOpen}
           onClose={() => setIsDetailsOpen(false)}

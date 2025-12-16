@@ -43,7 +43,7 @@ export default function MainContent({ location, locationName, filters }: MainCon
   return (
     <div className="flex flex-col lg:flex-row w-full h-full bg-gray-50 overflow-hidden">
       <div className="hidden lg:block lg:w-1/2 h-64 sm:h-96 md:h-[500px] lg:h-full bg-gray-200 relative z-0 isolate">
-        <Map center={selectedLocation || location} locationName={selectedAddress || locationName} />
+        <Map coords={selectedLocation || location} locationName={selectedAddress || locationName} />
       </div>
 
       <div className="w-full lg:w-1/2 h-full flex flex-col bg-white shadow-inner overflow-hidden">
