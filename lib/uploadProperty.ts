@@ -1,7 +1,11 @@
+import { apiRequest } from "@/lib/authenticate"
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
-interface PropertyUploadData {
-  type: string
+type PropertyTypeLocal = "homes" | "shortlets" | "hostels"
+
+interface PropertyFormData {
+  type: PropertyTypeLocal
   title: string
   price: string
   address: string
@@ -14,69 +18,64 @@ interface PropertyUploadData {
   photos: File[]
 }
 
+
 const getAuthToken = () => {
   if (typeof window === "undefined") return null
   return localStorage.getItem("access_token")
 }
 
-export async function uploadProperty(
-  propertyData: Omit<PropertyUploadData, "photos"> & { photos: File[] }
-) {
-  try {
-    if (!API_BASE_URL) {
-      throw new Error("API_BASE_URL is not configured")
-    }
 
-    // ✅ Convert & validate coords
-    const latitude = JSON.parse(propertyData.latitude)
-    const longitude = JSON.parse(propertyData.longitude)
-
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-      throw new Error("Invalid latitude or longitude")
-    }
-
-    const formData = new FormData()
-
-    // ✅ Append normalized fields
-    formData.append("type", propertyData.type)
-    formData.append("title", propertyData.title)
-    formData.append("price", String(Number(propertyData.price) || 0))
-    formData.append("address", propertyData.address)
-    formData.append("latitude", String(latitude))
-    formData.append("longitude", String(longitude))
-    formData.append("beds", String(Number(propertyData.beds) || 0))
-    formData.append("baths", String(Number(propertyData.baths) || 0))
-    formData.append("amenities", propertyData.amenities)
-    formData.append("about", propertyData.about)
-
-    // ✅ Append photos correctly
-    propertyData.photos.forEach((photo) => {
-      formData.append("photos", photo)
-    })
-
-    const token = getAuthToken()
-
-    console.log(" Uploading property to:", `${API_BASE_URL}/admin/createproperties`)
-
-    const response = await fetch(`${API_BASE_URL}/admin/createproperties`, {
-      method: "POST",
-      headers: token
-        ? { Authorization: `Bearer ${token}` }
-        : undefined,
-      body: formData,
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(" Upload API error:", errorText)
-      throw new Error(`Failed to upload property: ${response.status}`)
-    }
-
-    const data = await response.json()
-    console.log(" Property uploaded successfully:", data)
-    return data
-  } catch (error) {
-    console.error(" uploadProperty error:", error)
-    throw error
+const mapPropertyType = (type: PropertyTypeLocal) => {
+  switch (type) {
+    case "homes":
+      return "APARTMENT"
+    case "shortlets":
+      return "ShortLET"
+    case "hostels":
+      return "Hostels"
+    default:
+      return "APARTMENT"
   }
+}
+
+export async function uploadProperty(formData: PropertyFormData): Promise<any> {
+  const token = getAuthToken()
+  if (!token) throw new Error("Authentication required")
+
+  // Convert price and beds/baths to correct types for DTO
+  const dto = {
+    title: formData.title,
+    description: formData.about,
+    type: mapPropertyType(formData.type),
+    price: [{ amount: Number(formData.price) }],
+    address: formData.address,
+    images: formData.photos.map((file) => file.name), 
+    beds: Number(formData.beds),
+    baths: Number(formData.baths),
+    typerooms: "N/A",
+    amenities: formData.amenities.split(",").map((a) => a.trim()),
+    offers: "",
+    location: formData.address,
+    coords: {
+      latitude: Number(formData.latitude),
+      longitude: Number(formData.longitude),
+    },
+  }
+
+  const res = await apiRequest(`${API_BASE_URL}/admin/createproperties`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(dto),
+  })
+
+  if (!res?.ok) {
+    const errorData = await res?.json().catch(() => ({}))
+    throw new Error(errorData.message || "Failed to upload property")
+  }
+
+  const data = await res.json()
+  return data
 }
