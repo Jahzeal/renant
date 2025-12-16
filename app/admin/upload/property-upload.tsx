@@ -25,6 +25,7 @@ interface PropertyFormData {
   longitude: string;
   beds: string;
   baths: string;
+  offers: string;
   amenities: string;
   about: string;
   photos: File[];
@@ -40,6 +41,7 @@ export default function PropertyUpload() {
     longitude: "",
     beds: "",
     baths: "",
+    offers: "",
     amenities: "",
     about: "",
     photos: [],
@@ -106,6 +108,7 @@ export default function PropertyUpload() {
         price: "",
         address: "",
         latitude: "",
+        offers  : "",
         longitude: "",
         beds: "",
         baths: "",
@@ -188,6 +191,20 @@ export default function PropertyUpload() {
                   value={formData.title}
                   onChange={handleInputChange}
                   placeholder="e.g., Luxury Beachfront Villa"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                Offers
+                </label>
+                <input
+                  type="text"
+                  name="offers"
+                  value={formData.offers}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Special discount available"
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
@@ -398,6 +415,7 @@ export default function PropertyUpload() {
                   latitude: "",
                   longitude: "",
                   beds: "",
+                  offers  : "",
                   baths: "",
                   amenities: "",
                   about: "",

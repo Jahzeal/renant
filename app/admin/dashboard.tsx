@@ -62,6 +62,7 @@ export default function Dashboard() {
     const reportData = {
       totalCustomers: totalCustomers.toLocaleString(),
       totalTours: "568",
+      totalRentals: "342",
       tourRequests: "342",
       doneTours: "156",
       shortlets: "89",
@@ -80,6 +81,7 @@ BUSINESS METRICS
 ================
 Total Customers,${reportData.totalCustomers}
 Total Tours,${reportData.totalTours}
+Total Rentals,${reportData.totalRentals}
 Tour Requests,${reportData.tourRequests}
 Done Tours,${reportData.doneTours}
 Total Shortlets,${reportData.shortlets}
@@ -137,6 +139,13 @@ Total Hostels,${reportData.hostels}
           icon={MapPin}
           label="Total Tours"
           value="568"
+          change="+8% from last month"
+          color="bg-orange-100 text-orange-600"
+        />
+           <StatCard
+          icon={Home}
+          label="Total Rentals"
+          value="342"
           change="+8% from last month"
           color="bg-orange-100 text-orange-600"
         />
