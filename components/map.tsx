@@ -5,7 +5,7 @@ import mapboxgl from "mapbox-gl"
 import "mapbox-gl/dist/mapbox-gl.css"
 
 interface MapProps {
-  center?: { lng: number; lat: number } | null
+  coords?: { lng: number; lat: number } | null
   locationName?: string
   height?: string
   zoom?: number
@@ -13,7 +13,7 @@ interface MapProps {
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ""
 
-export default function Map({ center, locationName, height = "500px", zoom = 12 }: MapProps) {
+export default function Map({ coords, locationName, height = "500px", zoom = 12 }: MapProps) {
   const mapContainer = useRef<HTMLDivElement | null>(null)
   const mapInstance = useRef<mapboxgl.Map | null>(null)
   const markerRef = useRef<mapboxgl.Marker | null>(null)
@@ -34,8 +34,8 @@ export default function Map({ center, locationName, height = "500px", zoom = 12 
       const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: "mapbox://styles/mapbox/streets-v11",
-        center: center ? [center.lng, center.lat] : [0, 0],
-        zoom: center ? zoom : 2,
+        center: coords ? [coords.lng, coords.lat] : [0, 0],
+        zoom: coords ? zoom : 2,
       })
 
       map.addControl(new mapboxgl.NavigationControl(), "bottom-right")
@@ -64,11 +64,20 @@ export default function Map({ center, locationName, height = "500px", zoom = 12 
   }, [])
 
   useEffect(() => {
-    if (!mapInstance.current || !center) return
+    if (!mapInstance.current || !coords) return
+
+    // Validate that coordinates are valid numbers
+    const lng = typeof coords.lng === "number" && isFinite(coords.lng) ? coords.lng : null
+    const lat = typeof coords.lat === "number" && isFinite(coords.lat) ? coords.lat : null
+
+    if (lng === null || lat === null) {
+      console.warn("[v0] Invalid coordinates received:", coords)
+      return
+    }
 
     try {
       mapInstance.current.flyTo({
-        center: [center.lng, center.lat],
+        center: [lng, lat],
         zoom,
         essential: true,
       })
@@ -77,7 +86,7 @@ export default function Map({ center, locationName, height = "500px", zoom = 12 
         markerRef.current.remove()
       }
 
-      const marker = new mapboxgl.Marker({ color: "#3b82f6" }).setLngLat([center.lng, center.lat])
+      const marker = new mapboxgl.Marker({ color: "#3b82f6" }).setLngLat([lng, lat])
 
       if (locationName) {
         marker.setPopup(
@@ -90,7 +99,7 @@ export default function Map({ center, locationName, height = "500px", zoom = 12 
     } catch (error) {
       console.error("[v0] Error updating marker:", error)
     }
-  }, [center, locationName, zoom])
+  }, [coords, locationName, zoom])
 
   return (
     <div className="relative w-full rounded-lg overflow-hidden border border-gray-200" style={{ height }}>
