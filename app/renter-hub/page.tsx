@@ -14,7 +14,9 @@ export default function RenterHubPage() {
   useEffect(() => {
     // Fetch all apply requests from backend on mount
     const fetchApplies = async () => {
-      await getRequestsFromDb(); // "" = fetch all
+      const result = await getRequestsFromDb(); // "" = fetch all
+          console.log("Fetching apply requests from DB...", result);
+
       setLoading(false);
     };
 
@@ -130,11 +132,11 @@ export default function RenterHubPage() {
                       {request.propertyTitle}
                     </h3>
                     <div className="flex flex-wrap gap-3 mt-2 text-sm text-muted-foreground">
-                      {request.propertyPrice && (
-                        <div className="flex items-center gap-1">
-                          <span>₦{request.propertyPrice}</span>
-                        </div>
-                      )}
+                     {request.propertyPrice !== undefined && request.propertyPrice !== null && (
+  <div className="flex items-center gap-1">
+    <span>₦{request.propertyPrice}</span>
+  </div>
+)}
                       <div className="flex items-center gap-1">
                         <Calendar size={16} />
                         {formatDate(request.createdAt)}

@@ -99,9 +99,15 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
 
 const getRequestsFromDb = useCallback(async (): Promise<ApplyRequest[] | null> => {
   const token = getAuthToken();
-  if (!token) return null;
+  // console.log("🧪 Frontend token:", token);
+  if (!token) {
+    console.warn("No auth token");
+    return null;
+  }
 
   try {
+    console.log(" Fetching appliesRequested...");
+
     const res = await apiRequest(`${API_BASE_URL}/users/appliesRequested`, {
       headers: {
         "Content-Type": "application/json",
@@ -109,50 +115,64 @@ const getRequestsFromDb = useCallback(async (): Promise<ApplyRequest[] | null> =
       },
     });
 
+    // console.log("🟡 Raw response:", res);
+
     if (!res) {
-      console.error("No response received from apiRequest");
+      console.error("❌ No response received from apiRequest");
       return null;
     }
 
-    // If apiRequest returned a Response-like object, verify status and parse JSON.
-    // If it already returned parsed JSON, use it directly.
     let data: any;
+
     if (typeof (res as any)?.json === "function") {
       const response = res as Response;
+
+      // console.log("🟡 HTTP status:", response.status);
+
       if (!response.ok) {
-        let errText = "";
-        try {
-          errText = await response.text();
-        } catch {
-          // ignore parse error
-        }
-        console.error("Request failed:", response.status, errText);
+        const errText = await response.text();
+        console.error("❌ Request failed:", response.status, errText);
         return null;
       }
+
       data = await response.json();
     } else {
       data = res;
     }
 
+    // 🔥 THIS IS THE MOST IMPORTANT LOG
+    // console.log("🟢 FULL DATA FROM API:", data);
+    // console.log("🟢 Length:", Array.isArray(data) ? data.length : "not an array");
+
     if (!Array.isArray(data)) {
-      console.error("Expected array, got:", data);
+      console.error("❌ Expected array, got:", data);
       return null;
     }
 
-    const formatted = data.map((req: any) => ({
-      id: req.id,
-      propertyId: req.property.id,
-      propertyTitle: req.property.title,
-      propertyPrice: req.property.price,
-      createdAt: req.createdAt,
-      status: req.status ?? "submitted",
-    }));
+    // Inspect first item deeply
+    // console.log("🧪 First item:", data[0]);
+
+   const formatted = data.map((req: any) => ({
+  id: req.id,
+  propertyId: req.property.id,
+  propertyTitle: req.property.title,
+  propertyPrice:
+    typeof req.property.price === "object"
+      ? req.property.price?.amount ?? 0
+      : req.property.price ?? 0,
+  createdAt: req.createdAt || new Date().toISOString(),
+  status: req.status ?? "submitted",
+}));
+
+
+
+
+    // console.log("✅ Formatted data:", formatted);
 
     setApplyRequests(formatted);
-    console.log("RAW APPLY DATA:", data);
     return formatted;
   } catch (err) {
-    console.error(err);
+    console.error("fetch error:", err);
     return null;
   }
 }, []);
