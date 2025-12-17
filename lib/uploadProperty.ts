@@ -17,7 +17,7 @@ interface PropertyFormData {
   baths: string
   amenities: string
   about: string
-  photos: File[]
+  images: File[] // Renamed from photos to images
 }
 
 const getAuthToken = () => {
@@ -53,10 +53,9 @@ export async function uploadProperty(formData: PropertyFormData): Promise<any> {
   const uploadedImageUrls: string[] = []
 
   try {
-    // First, upload all images to get their URLs
-    console.log("[v0] Starting image upload for", formData.photos.length, "photos")
+    console.log("[v0] Starting image upload for", formData.images.length, "images")
 
-    for (const photo of formData.photos) {
+    for (const photo of formData.images) {
       const imageFormData = new FormData()
       imageFormData.append("file", photo)
 
@@ -87,9 +86,8 @@ export async function uploadProperty(formData: PropertyFormData): Promise<any> {
     }
   } catch (error) {
     console.error("[v0] Image upload error:", error)
-    // Use placeholders as fallback
     uploadedImageUrls.push(
-      ...formData.photos.map(
+      ...formData.images.map(
         (file) =>
           `/placeholder.svg?height=400&width=600&query=${encodeURIComponent(file.name.replace(/\.[^/.]+$/, ""))}`,
       ),
@@ -104,7 +102,7 @@ export async function uploadProperty(formData: PropertyFormData): Promise<any> {
     type: mapPropertyType(formData.type),
     price: Number(formData.price),
     address: formData.address,
-    images: uploadedImageUrls, // Now using full URLs instead of just filenames
+    images: uploadedImageUrls,
     beds: Number(formData.beds),
     baths: Number(formData.baths),
     typerooms: "N/A",

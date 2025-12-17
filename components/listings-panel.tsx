@@ -66,7 +66,7 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       try {
         const data = await getRentals()
         if (!mounted) return
-        console.log("[v0] Fetched all rentals:", data) // Debug log
+        console.log("Fetched all rentals:", data) // Debug log
         const normalizedData = data.map((listing: any) => {
           const coords =
             listing.coords ||
@@ -84,7 +84,7 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
             }
           }
 
-          console.log("[v0] Normalized listing:", listing.id, { coords, images })
+          console.log("Normalized listing:", listing.id, { coords, images })
 
           return {
             ...listing,
@@ -164,11 +164,11 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
           }
         }
 
-        console.log("[v0] Applying filters:", apiFilters) // Debug log
+        console.log(" Applying filters:", apiFilters) // Debug log
 
         const data = await filterRentals(apiFilters)
         if (!mounted) return
-        console.log("[v0] Filtered results:", data) // Debug log
+        console.log(" Filtered results:", data) // Debug log
         const normalizedData = (Array.isArray(data) ? data : []).map((listing: any) => {
           const coords =
             listing.coords ||
@@ -278,7 +278,7 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
               onFavoriteToggle={() => toggleFavorite(listing.id)}
               onViewDetails={() => handleViewDetails(listing)}
               onLocationClick={() => {
-                console.log("[v0] Location click handler called for listing:", {
+                console.log("Location click handler called for listing:", {
                   id: listing.id,
                   title: listing.title,
                   address: listing.address,
@@ -289,16 +289,16 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
                   const lng = Number(listing.coords.lng)
                   const lat = Number(listing.coords.lat)
 
-                  console.log("[v0] Parsed coordinates:", { lng, lat })
+                  console.log(" Parsed coordinates:", { lng, lat })
 
                   if (isFinite(lng) && isFinite(lat)) {
-                    console.log("[v0] Calling onLocationClick with valid coords")
+                    console.log(" Calling onLocationClick with valid coords")
                     onLocationClick?.({ lng, lat }, listing.address)
                   } else {
-                    console.warn("[v0] Invalid coordinate values after parsing:", { lng, lat })
+                    console.warn(" Invalid coordinate values after parsing:", { lng, lat })
                   }
                 } else {
-                  console.warn("[v0] Missing or invalid coordinates:", listing.coords)
+                  console.warn(" Missing or invalid coordinates:", listing.coords)
                 }
               }}
             />

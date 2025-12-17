@@ -31,7 +31,7 @@ export default function MainContent({ location, locationName, filters }: MainCon
   }, [location])
 
   const handleLocationClick = (coords: { lng: number; lat: number }, address: string) => {
-    console.log("[v0] MainContent handleLocationClick called with:", { coords, address })
+    console.log("MainContent handleLocationClick called with:", { coords, address })
     setSelectedLocation(coords)
     setSelectedAddress(address)
   }

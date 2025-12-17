@@ -224,7 +224,7 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
   }
 
   const handleApplyFilters = () => {
-    console.log("[v0] Applying filters:", appliedFilters) // Debug log
+    console.log("Applying filters:", appliedFilters) 
     onFiltersChange?.(appliedFilters)
     setIsSaved(true)
     setTimeout(() => setIsSaved(false), 2000)

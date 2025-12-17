@@ -22,7 +22,7 @@ interface PropertyFormData {
   offers: string
   amenities: string
   about: string
-  photos: File[]
+  images: File[] // Renamed from photos to images
 }
 
 export default function PropertyUpload() {
@@ -38,7 +38,7 @@ export default function PropertyUpload() {
     offers: "",
     amenities: "",
     about: "",
-    photos: [],
+    images: [], // Renamed from photos to images
   })
 
   const [photoPreview, setPhotoPreview] = useState<string[]>([])
@@ -55,10 +55,10 @@ export default function PropertyUpload() {
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    const newPhotos = [...formData.photos, ...files]
+    const newPhotos = [...formData.images, ...files]
     setFormData((prev) => ({
       ...prev,
-      photos: newPhotos,
+      images: newPhotos,
     }))
 
     // Create previews
@@ -74,7 +74,7 @@ export default function PropertyUpload() {
   const removePhoto = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index),
+      images: prev.images.filter((_, i) => i !== index), // Updated from photos to images
     }))
     setPhotoPreview((prev) => prev.filter((_, i) => i !== index))
   }
@@ -102,7 +102,7 @@ export default function PropertyUpload() {
         baths: "",
         amenities: "",
         about: "",
-        photos: [],
+        images: [], // Renamed from photos to images
       })
       setPhotoPreview([])
     } catch (error: any) {
@@ -369,11 +369,11 @@ export default function PropertyUpload() {
                   latitude: "",
                   longitude: "",
                   beds: "",
-                  offers: "",
                   baths: "",
+                  offers: "",
                   amenities: "",
                   about: "",
-                  photos: [],
+                  images: [], // Renamed from photos to images
                 })
                 setPhotoPreview([])
               }}
