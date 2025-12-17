@@ -1,33 +1,28 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 
-import { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { uploadProperty } from "@/lib/uploadProperty";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Upload, X } from "lucide-react";
+import { useState, useRef } from "react"
+import { Button } from "@/components/ui/button"
+import { uploadProperty } from "@/lib/uploadProperty"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Upload, X } from "lucide-react"
 
-type PropertyType = "homes" | "shortlets" | "hostels";
+type PropertyType = "homes" | "shortlets" | "hostels"
 
 interface PropertyFormData {
-  type: PropertyType;
-  title: string;
-  price: string;
-  address: string;
-  latitude: string;
-  longitude: string;
-  beds: string;
-  baths: string;
-  amenities: string;
-  about: string;
-  photos: File[];
+  type: PropertyType
+  title: string
+  price: string
+  address: string
+  latitude: string
+  longitude: string
+  beds: string
+  baths: string
+  offers: string
+  amenities: string
+  about: string
+  images: File[] // Renamed from photos to images
 }
 
 export default function PropertyUpload() {
@@ -40,64 +35,59 @@ export default function PropertyUpload() {
     longitude: "",
     beds: "",
     baths: "",
+    offers: "",
     amenities: "",
     about: "",
-    photos: [],
-  });
+    images: [], // Renamed from photos to images
+  })
 
-  const [photoPreview, setPhotoPreview] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }));
-  };
+    }))
+  }
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const newPhotos = [...formData.photos, ...files];
+    const files = Array.from(e.target.files || [])
+    const newPhotos = [...formData.images, ...files]
     setFormData((prev) => ({
       ...prev,
-      photos: newPhotos,
-    }));
+      images: newPhotos,
+    }))
 
     // Create previews
     files.forEach((file) => {
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onloadend = () => {
-        setPhotoPreview((prev) => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
-  };
+        setPhotoPreview((prev) => [...prev, reader.result as string])
+      }
+      reader.readAsDataURL(file)
+    })
+  }
 
   const removePhoto = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index),
-    }));
-    setPhotoPreview((prev) => prev.filter((_, i) => i !== index));
-  };
+      images: prev.images.filter((_, i) => i !== index), // Updated from photos to images
+    }))
+    setPhotoPreview((prev) => prev.filter((_, i) => i !== index))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+    e.preventDefault()
+    setIsSubmitting(true)
 
     try {
-      const response = await uploadProperty(formData);
+      const response = await uploadProperty(formData)
 
-      console.log("Property uploaded successfully:", response);
-      alert(
-        `Property uploaded! Title: ${response.title}, Type: ${response.type}`
-      );
+      console.log("Property uploaded successfully:", response)
+      alert(`Property uploaded! Title: ${response.title}, Type: ${response.type}`)
 
       // Reset form
       setFormData({
@@ -106,33 +96,30 @@ export default function PropertyUpload() {
         price: "",
         address: "",
         latitude: "",
+        offers: "",
         longitude: "",
         beds: "",
         baths: "",
         amenities: "",
         about: "",
-        photos: [],
-      });
-      setPhotoPreview([]);
+        images: [], // Renamed from photos to images
+      })
+      setPhotoPreview([])
     } catch (error: any) {
-      console.error("Error uploading property:", error);
-      alert(error.message || "Failed to upload property");
+      console.error("Error uploading property:", error)
+      alert(error.message || "Failed to upload property")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            Upload Properties
-          </h1>
-          <p className="text-slate-600">
-            Add your homes, shortlets, or hostels to our platform
-          </p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">Upload Properties</h1>
+          <p className="text-slate-600">Add your homes, shortlets, or hostels to our platform</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -156,9 +143,7 @@ export default function PropertyUpload() {
                   className="sr-only"
                 />
                 <div className="flex flex-col">
-                  <span className="font-semibold text-slate-900 capitalize">
-                    {type}
-                  </span>
+                  <span className="font-semibold text-slate-900 capitalize">{type}</span>
                   <span className="text-sm text-slate-500">
                     {type === "homes" && "Residential homes"}
                     {type === "shortlets" && "Short-term rentals"}
@@ -173,15 +158,11 @@ export default function PropertyUpload() {
           <Card>
             <CardHeader>
               <CardTitle>Property Details</CardTitle>
-              <CardDescription>
-                Enter the basic information about your property
-              </CardDescription>
+              <CardDescription>Enter the basic information about your property</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Property Title
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Property Title</label>
                 <input
                   type="text"
                   name="title"
@@ -192,12 +173,22 @@ export default function PropertyUpload() {
                   required
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Offers</label>
+                <input
+                  type="text"
+                  name="offers"
+                  value={formData.offers}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Special discount available"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Price
-                  </label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Price</label>
                   <input
                     type="number"
                     name="price"
@@ -209,9 +200,7 @@ export default function PropertyUpload() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Address
-                  </label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Address</label>
                   <input
                     type="text"
                     name="address"
@@ -226,9 +215,7 @@ export default function PropertyUpload() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Beds
-                  </label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Beds</label>
                   <input
                     type="text"
                     name="beds"
@@ -240,9 +227,7 @@ export default function PropertyUpload() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Bathrooms
-                  </label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Bathrooms</label>
                   <input
                     type="text"
                     name="baths"
@@ -257,9 +242,7 @@ export default function PropertyUpload() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Latitude
-                  </label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Latitude</label>
                   <input
                     type="text"
                     name="latitude"
@@ -271,9 +254,7 @@ export default function PropertyUpload() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Longitude
-                  </label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Longitude</label>
                   <input
                     type="text"
                     name="longitude"
@@ -287,9 +268,7 @@ export default function PropertyUpload() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Amenities
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Amenities</label>
                 <textarea
                   name="amenities"
                   value={formData.amenities}
@@ -302,9 +281,7 @@ export default function PropertyUpload() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  About Property
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">About Property</label>
                 <textarea
                   name="about"
                   value={formData.about}
@@ -322,9 +299,7 @@ export default function PropertyUpload() {
           <Card>
             <CardHeader>
               <CardTitle>Upload Photos</CardTitle>
-              <CardDescription>
-                Upload as many photos as you want (supports multiple uploads)
-              </CardDescription>
+              <CardDescription>Upload as many photos as you want (supports multiple uploads)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Upload Button */}
@@ -334,9 +309,7 @@ export default function PropertyUpload() {
                 className="w-full border-2 border-dashed border-blue-300 rounded-lg p-8 text-center hover:bg-blue-50 transition-colors"
               >
                 <Upload className="mx-auto mb-2 text-blue-600" size={32} />
-                <p className="font-semibold text-slate-900">
-                  Click to upload photos
-                </p>
+                <p className="font-semibold text-slate-900">Click to upload photos</p>
                 <p className="text-sm text-slate-500">or drag and drop</p>
               </button>
               <input
@@ -351,9 +324,7 @@ export default function PropertyUpload() {
               {/* Photo Grid Preview */}
               {photoPreview.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-900 mb-3">
-                    Uploaded Photos ({photoPreview.length})
-                  </h3>
+                  <h3 className="text-sm font-semibold text-slate-900 mb-3">Uploaded Photos ({photoPreview.length})</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {photoPreview.map((preview, index) => (
                       <div key={index} className="relative group">
@@ -399,11 +370,12 @@ export default function PropertyUpload() {
                   longitude: "",
                   beds: "",
                   baths: "",
+                  offers: "",
                   amenities: "",
                   about: "",
-                  photos: [],
-                });
-                setPhotoPreview([]);
+                  images: [], // Renamed from photos to images
+                })
+                setPhotoPreview([])
               }}
               className="px-8"
             >
@@ -413,5 +385,5 @@ export default function PropertyUpload() {
         </form>
       </div>
     </div>
-  );
+  )
 }

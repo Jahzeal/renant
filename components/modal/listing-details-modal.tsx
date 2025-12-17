@@ -155,7 +155,7 @@ export default function ListingDetailsModal({
             {isMobile && listing.coords && (
               <div>
                 <h4 className="font-semibold mb-2">Location</h4>
-                <Map center={listing.coords} locationName={listing.location} height="250px" zoom={15} />
+                <Map coords={listing.coords} locationName={listing.location} height="250px" zoom={15} />
               </div>
             )}
 
