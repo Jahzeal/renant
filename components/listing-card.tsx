@@ -52,7 +52,7 @@ export default function ListingCard({
     return [`/placeholder.svg?height=400&width=600&query=${encodeURIComponent(listing.title || "property")}`]
   })()
 
-  console.log("[v0] ListingCard rendering with images:", {
+  console.log(" ListingCard rendering with images:", {
     listingId: listing.id,
     title: listing.title,
     rawImages: listing.images,
@@ -85,7 +85,7 @@ export default function ListingCard({
 
   const handleLocationClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    console.log("[v0] ListingCard location clicked for:", listing.id, listing.title)
+    console.log("ListingCard location clicked for:", listing.id, listing.title)
     onLocationClick?.()
   }
 

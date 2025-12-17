@@ -53,13 +53,13 @@ export async function uploadProperty(formData: PropertyFormData): Promise<any> {
   const uploadedImageUrls: string[] = []
 
   try {
-    console.log("[v0] Starting image upload for", formData.images.length, "images")
+    console.log("Starting image upload for", formData.images.length, "images")
 
     for (const photo of formData.images) {
       const imageFormData = new FormData()
       imageFormData.append("file", photo)
 
-      console.log("[v0] Uploading image:", photo.name)
+      console.log(" Uploading image:", photo.name)
 
       const imageRes = await fetch(`${API_BASE_URL}/upload`, {
         method: "POST",
@@ -71,21 +71,21 @@ export async function uploadProperty(formData: PropertyFormData): Promise<any> {
 
       if (imageRes.ok) {
         const imageData = await imageRes.json()
-        console.log("[v0] Image upload response:", imageData)
+        console.log(" Image upload response:", imageData)
         // Try multiple possible response formats
         const imageUrl = imageData.url || imageData.path || imageData.filePath || imageData.location || photo.name
         uploadedImageUrls.push(imageUrl)
-        console.log("[v0] Added image URL:", imageUrl)
+        console.log(" Added image URL:", imageUrl)
       } else {
         const errorText = await imageRes.text()
-        console.warn(`[v0] Failed to upload image ${photo.name}:`, errorText)
+        console.warn(` Failed to upload image ${photo.name}:`, errorText)
         // Fallback: use placeholder with query based on filename
         const placeholderUrl = `/placeholder.svg?height=400&width=600&query=${encodeURIComponent(photo.name.replace(/\.[^/.]+$/, ""))}`
         uploadedImageUrls.push(placeholderUrl)
       }
     }
   } catch (error) {
-    console.error("[v0] Image upload error:", error)
+    console.error(" Image upload error:", error)
     uploadedImageUrls.push(
       ...formData.images.map(
         (file) =>
@@ -94,7 +94,7 @@ export async function uploadProperty(formData: PropertyFormData): Promise<any> {
     )
   }
 
-  console.log("[v0] Final uploaded image URLs:", uploadedImageUrls)
+  console.log(" Final uploaded image URLs:", uploadedImageUrls)
 
   const dto = {
     title: formData.title,
@@ -115,7 +115,7 @@ export async function uploadProperty(formData: PropertyFormData): Promise<any> {
     },
   }
 
-  console.log("[v0] Uploading property with DTO:", dto) // Debug log
+  console.log(" Uploading property with DTO:", dto) // Debug log
 
   try {
     toast({

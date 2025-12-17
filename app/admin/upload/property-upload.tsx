@@ -38,7 +38,7 @@ export default function PropertyUpload() {
     offers: "",
     amenities: "",
     about: "",
-    images: [], // Renamed from photos to images
+    images: [], 
   })
 
   const [photoPreview, setPhotoPreview] = useState<string[]>([])

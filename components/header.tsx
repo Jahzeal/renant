@@ -5,6 +5,8 @@ import type React from "react";
 import Link from "next/link";
 import { Menu, X, Search, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { usePathname } from "next/navigation";
+
 import { useRouter } from "next/navigation";
 
 export default function Header() {
@@ -86,6 +88,8 @@ export default function Header() {
   const handleDropdownMouseLeave = () => {
     setShowRentDropdown(false);
   };
+  const pathname = usePathname();
+  const logoHref = pathname.startsWith("/rentals") ? "/" : "/rentals";
 
   return (
     <>
@@ -93,11 +97,10 @@ export default function Header() {
         <div className="max-w-full px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Link
-                href="/rentals"
-                className="text-primary font-bold text-2xl hover:opacity-80 transition-opacity"
-              >
-                Z
+              <Link href={logoHref} aria-label="Home">
+                <span className="text-primary font-bold text-2xl hover:opacity-80 transition-opacity">
+                  Z
+                </span>
               </Link>
 
               <span className="font-semibold hidden sm:inline text-lg"></span>
