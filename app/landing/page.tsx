@@ -527,31 +527,30 @@ export default function LandingPage() {
                 href: "/rentals?propertyType=Shortlet",
               },
               {
-                title: "Connect with an agent",
-                desc: "Work with local experts who know your market inside out.",
-                btn: "Find an agent",
-                image: "/agent.jpg",
-                href: "/agents",
+                title: "Rent a Hostel",
+                desc: "Find affordable, comfortable hostel stays anywhere. Compare rooms, check availability, and reserve instantly.",
+                btn: "See your option",
+                image: "/hostel.jpg",
+                href: "/rentals?propertyType=Hostel",
               },
-            ].map((card, idx) => (
-              <Link
-                key={idx}
-                href={card.href}
-                className="group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div
-                  className="h-36 sm:h-40 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${card.image})` }}
-                />
-                <div className="p-4 sm:p-5">
-                  <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
-                    {card.title}
+            ].map((action, i) => (
+              <Link href={action.href} key={i}>
+                <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 hover:shadow-xl transition-all hover:scale-105 duration-300 text-center h-full flex flex-col group">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-2xl mx-auto mb-6 overflow-hidden flex-shrink-0 border-2 border-gray-200">
+                    <img
+                      src={action.image}
+                      alt={action.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                  </div>
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-3 sm:mb-4">
+                    {action.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-gray-600 mb-4 leading-relaxed">
-                    {card.desc}
+                  <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8 leading-relaxed flex-grow">
+                    {action.desc}
                   </p>
-                  <button className="text-sm font-semibold text-blue-600 group-hover:underline">
-                    {card.btn}
+                  <button className="px-6 sm:px-8 py-2.5 sm:py-3 border-2 border-blue-600 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors text-sm sm:text-base self-center">
+                    {action.btn}
                   </button>
                 </div>
               </Link>

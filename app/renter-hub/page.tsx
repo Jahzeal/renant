@@ -7,15 +7,14 @@ import { Calendar, Trash2 } from "lucide-react";
 import PageHeader from "@/components/page-header";
 
 export default function RenterHubPage() {
-  const { applyRequests, getRequestsFromDb,} =
-    useRenterRequests();
+  const { applyRequests, getRequestsFromDb } = useRenterRequests();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Fetch all apply requests from backend on mount
     const fetchApplies = async () => {
       const result = await getRequestsFromDb(); // "" = fetch all
-          console.log("Fetching apply requests from DB...", result);
+      console.log("Fetching apply requests from DB...", result);
 
       setLoading(false);
     };
@@ -132,11 +131,12 @@ export default function RenterHubPage() {
                       {request.propertyTitle}
                     </h3>
                     <div className="flex flex-wrap gap-3 mt-2 text-sm text-muted-foreground">
-                     {request.propertyPrice !== undefined && request.propertyPrice !== null && (
-  <div className="flex items-center gap-1">
-    <span>₦{request.propertyPrice}</span>
-  </div>
-)}
+                      {request.propertyPrice !== undefined &&
+                        request.propertyPrice !== null && (
+                          <div className="flex items-center gap-1">
+                            <span>₦{request.propertyPrice}</span>
+                          </div>
+                        )}
                       <div className="flex items-center gap-1">
                         <Calendar size={16} />
                         {formatDate(request.createdAt)}
