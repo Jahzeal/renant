@@ -129,7 +129,7 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
   const [isPriceModalOpen, setIsPriceModalOpen] = useState(false)
   const [isBedsBathsModalOpen, setIsBedsBathsModalOpen] = useState(false)
   const [isPropertyTypeModalOpen, setIsPropertyTypeModalOpen] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string>("houses") // Default to houses
   const [isSearching, setIsSearching] = useState(false)
 
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilters>({
@@ -202,7 +202,6 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
   const handlePriceApply = (min: number, max: number) => {
     const updated = { ...appliedFilters, price: { min, max } }
     setAppliedFilters(updated)
-    onFiltersChange?.(updated)
   }
 
   const handleBedsApply = (selection: { beds: string; baths: string }) => {
@@ -211,24 +210,22 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
       beds: selection.beds,
       baths: selection.baths,
     }
-
     setAppliedFilters(updated)
-    onFiltersChange?.(updated)
   }
 
   const handlePropertyTypeApply = (propertyType: string) => {
     const updated = { ...appliedFilters, propertyType }
     setAppliedFilters(updated)
-    onFiltersChange?.(updated)
   }
 
   const handleMoreOptionsApply = (filters: MoreOptionsFilters) => {
     const updated = { ...appliedFilters, moreOptions: filters }
     setAppliedFilters(updated)
-    onFiltersChange?.(updated)
   }
 
-  const handleSaveChanges = () => {
+  const handleApplyFilters = () => {
+    console.log("[v0] Applying filters:", appliedFilters) // Debug log
+    onFiltersChange?.(appliedFilters)
     setIsSaved(true)
     setTimeout(() => setIsSaved(false), 2000)
   }
@@ -272,10 +269,8 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
               variant={selectedCategory === "houses" ? "default" : "outline"}
               onClick={() => {
                 setSelectedCategory("houses")
-
                 const updated = { ...appliedFilters, category: "houses" }
                 setAppliedFilters(updated)
-                onFiltersChange?.(updated)
               }}
             >
               Houses
@@ -285,10 +280,8 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
               variant={selectedCategory === "shortlets" ? "default" : "outline"}
               onClick={() => {
                 setSelectedCategory("shortlets")
-
                 const updated = { ...appliedFilters, category: "shortlets" }
                 setAppliedFilters(updated)
-                onFiltersChange?.(updated)
               }}
             >
               Shortlets
@@ -325,10 +318,10 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
               <ChevronDown size={16} />
             </button>
             <button
-              onClick={handleSaveChanges}
+              onClick={handleApplyFilters}
               className="px-4 md:px-6 py-2 bg-primary text-primary-foreground font-semibold rounded-lg text-xs sm:text-sm hover:opacity-90 whitespace-nowrap transition-all flex-shrink-0"
             >
-              {isSaved ? "Saved ✅" : "Save changes"}
+              {isSaved ? "Applied ✅" : "Apply Filters"}
             </button>
           </div>
 
@@ -342,7 +335,7 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
                   appliedFilters.price.min !== 0 &&
                   appliedFilters.price.max !== Number.POSITIVE_INFINITY && (
                     <span className="bg-muted px-2 py-1 rounded">
-                      Price: ${appliedFilters.price.min} - $
+                      Price: ₦{appliedFilters.price.min} - ₦
                       {appliedFilters.price.max === Number.POSITIVE_INFINITY ? "∞" : appliedFilters.price.max}
                     </span>
                   )}

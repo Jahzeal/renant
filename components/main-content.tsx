@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import Map from "./map"
 import ListingsPanel from "./listings-panel"
-import SearchBar from "./search-bar"
 
 interface MainContentProps {
   location: { lng: number; lat: number } | null
@@ -32,6 +31,7 @@ export default function MainContent({ location, locationName, filters }: MainCon
   }, [location])
 
   const handleLocationClick = (coords: { lng: number; lat: number }, address: string) => {
+    console.log("[v0] MainContent handleLocationClick called with:", { coords, address })
     setSelectedLocation(coords)
     setSelectedAddress(address)
   }

@@ -1,49 +1,46 @@
 // components/modal/price-range-modal.tsx
-"use client";
+"use client"
 
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useState } from "react"
+import { X } from "lucide-react"
 
 interface PriceRangeModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onApply: (min: number, max: number) => void;
+  isOpen: boolean
+  onClose: () => void
+  onApply: (min: number, max: number) => void
 }
 
 export default function PriceRangeModal({ isOpen, onClose, onApply }: PriceRangeModalProps) {
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [error, setError] = useState("");
+  const [minPrice, setMinPrice] = useState("")
+  const [maxPrice, setMaxPrice] = useState("")
+  const [error, setError] = useState("")
 
   const handleApply = () => {
-    const min = minPrice ? Number(minPrice) : 0;
-    const max = maxPrice ? Number(maxPrice) : Number.POSITIVE_INFINITY;
+    const min = minPrice ? Number(minPrice) : 0
+    const max = maxPrice ? Number(maxPrice) : Number.POSITIVE_INFINITY
 
     if (min < 0 || max < 0) {
-      setError("Prices cannot be negative");
-      return;
+      setError("Prices cannot be negative")
+      return
     }
     if (minPrice && maxPrice && min > max) {
-      setError("Min price cannot be greater than max");
-      return;
+      setError("Min price cannot be greater than max")
+      return
     }
 
-    setError("");
-    onApply(min, max);
-    setMinPrice("");
-    setMaxPrice("");
-    onClose();
-  };
+    setError("")
+    onApply(min, max)
+    setMinPrice("")
+    setMaxPrice("")
+    onClose()
+  }
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4">
@@ -51,10 +48,7 @@ export default function PriceRangeModal({ isOpen, onClose, onApply }: PriceRange
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-border">
             <h2 className="text-xl font-bold">Price Range</h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-muted rounded-full transition-colors"
-            >
+            <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors">
               <X size={24} />
             </button>
           </div>
@@ -62,9 +56,7 @@ export default function PriceRangeModal({ isOpen, onClose, onApply }: PriceRange
           {/* Body */}
           <div className="p-6 space-y-5">
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Minimum Price (₦)
-              </label>
+              <label className="block text-sm font-medium mb-2">Minimum Price (₦)</label>
               <input
                 type="number"
                 placeholder="e.g. 3000"
@@ -75,9 +67,7 @@ export default function PriceRangeModal({ isOpen, onClose, onApply }: PriceRange
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Maximum Price (₦)
-              </label>
+              <label className="block text-sm font-medium mb-2">Maximum Price (₦)</label>
               <input
                 type="number"
                 placeholder="e.g. 10000"
@@ -87,9 +77,7 @@ export default function PriceRangeModal({ isOpen, onClose, onApply }: PriceRange
               />
             </div>
 
-            {error && (
-              <p className="text-destructive text-sm font-medium">{error}</p>
-            )}
+            {error && <p className="text-destructive text-sm font-medium">{error}</p>}
           </div>
 
           {/* Footer */}
@@ -110,5 +98,5 @@ export default function PriceRangeModal({ isOpen, onClose, onApply }: PriceRange
         </div>
       </div>
     </>
-  );
+  )
 }
