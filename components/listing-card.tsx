@@ -52,6 +52,12 @@ export default function ListingCard({
     return [`/placeholder.svg?height=400&width=600&query=${encodeURIComponent(listing.title || "property")}`]
   })()
 
+  // ListingsPanel already normalizes URLs using getImageUrl, but if this component is used elsewhere
+  // or receives raw data, the images might still be relative paths.
+  // However, we rely on the parent (ListingsPanel) to pass correct URLs for now,
+  // or we could import getImageUrl here too if we wanted to be double-safe.
+  // Given the previous step updated ListingsPanel, these `images` should be full URLs now.
+
   console.log(" ListingCard rendering with images:", {
     listingId: listing.id,
     title: listing.title,

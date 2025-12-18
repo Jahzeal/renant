@@ -5,6 +5,7 @@ import { useFavorites } from "@/lib/favorites-context"
 import ListingCard from "./listing-card"
 import ListingDetailsModal from "./modal/listing-details-modal"
 import { filterRentals, getRentals } from "@/lib/getRentals-api"
+import { getImageUrl } from "@/lib/image-utils"
 import type { MoreOptionsFilters } from "./modal/more-options-modal"
 
 interface AppliedFilters {
@@ -75,21 +76,27 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
               : undefined)
 
           // Ensure images is an array
-          let images = listing.images
-          if (!Array.isArray(images)) {
-            if (typeof images === "string") {
-              images = [images]
-            } else {
-              images = []
-            }
+          let images: string[] = []
+          if (Array.isArray(listing.images)) {
+            images = listing.images
+          } else if (typeof listing.images === "string") {
+            images = [listing.images]
           }
 
-          console.log("Normalized listing:", listing.id, { coords, images })
+          // Fallback: Check for single 'image' property if 'images' array is empty
+          if (images.length === 0 && listing.image && typeof listing.image === "string") {
+            images = [listing.image]
+          }
+
+          // Normalize image URLs
+          const normalizedImages = images.map(getImageUrl)
+
+          console.log("Normalized listing:", listing.id, { coords, images: normalizedImages })
 
           return {
             ...listing,
             coords,
-            images,
+            images: normalizedImages,
           }
         })
         setAllListings(normalizedData)
@@ -177,19 +184,25 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
               : undefined)
 
           // Ensure images is an array
-          let images = listing.images
-          if (!Array.isArray(images)) {
-            if (typeof images === "string") {
-              images = [images]
-            } else {
-              images = []
-            }
+          let images: string[] = []
+          if (Array.isArray(listing.images)) {
+            images = listing.images
+          } else if (typeof listing.images === "string") {
+            images = [listing.images]
           }
+
+          // Fallback: Check for single 'image' property if 'images' array is empty
+          if (images.length === 0 && listing.image && typeof listing.image === "string") {
+            images = [listing.image]
+          }
+
+          // Normalize image URLs
+          const normalizedImages = images.map(getImageUrl)
 
           return {
             ...listing,
             coords,
-            images,
+            images: normalizedImages,
           }
         })
         setFilteredListings(normalizedData)
