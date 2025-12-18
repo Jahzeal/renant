@@ -3,7 +3,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useCallback } from "react"
-import { apiRequest } from "@/lib/authenticate"
+import { apiRequest } from "./authenticate"
 
 const getAuthToken = () => {
   if (typeof window === "undefined") return null
@@ -37,7 +37,8 @@ interface RenterRequestsContextType {
   getTourRequestsFromDb: () => Promise<TourRequest[] | null>
   updateTourRequestStatus: (id: string, status: TourRequest["status"]) => void
   updateApplyRequestStatus: (id: string, status: ApplyRequest["status"]) => void
-  removeTourRequest: (id: string) => void
+  // removeTourRequest: (id: string) => void
+  cancelTourRequest: (propertyId: string, userId: string) => Promise<void>
 }
 
 const RenterRequestsContext = createContext<RenterRequestsContextType | undefined>(undefined)
@@ -246,30 +247,70 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
     setApplyRequests((prev) => prev.map((req) => (req.id === id ? { ...req, status } : req)))
   }
 
-  const removeTourRequest = async (id: string) => {
+  // const removeTourRequest = async (id: string) => {
+  //   try {
+  //     const token = getAuthToken()
+  //     if (!token) {
+  //       console.error("No auth token for delete")
+  //       return
+  //     }
+
+  //     const res = await apiRequest(`${API_BASE_URL}/users/cancel-tours/${id}`, {
+  //       method: "DELETE",
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     })
+
+  //     if (res && !res.ok) {
+  //       console.error("Failed to delete tour from backend")
+  //       return
+  //     }
+
+  //     // Remove from local state after successful backend delete
+  //     setTourRequests((prev) => prev.filter((req) => req.id !== id))
+  //   } catch (err) {
+  //     console.error("Failed to remove tour request:", err)
+  //   }
+  // }
+
+  const cancelTourRequest = async (propertyId: string, userId: string) => {
     try {
       const token = getAuthToken()
       if (!token) {
-        console.error("No auth token for delete")
-        return
+        console.error("No auth token for cancel")
+        throw new Error("Not authenticated")
       }
 
-      const res = await apiRequest(`${API_BASE_URL}/users/cancel-tours/${id}`, {
+      const res = await apiRequest(`${API_BASE_URL}/users/cancel-tours`, {
         method: "DELETE",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ propertyId, userId }),
       })
 
-      if (res && !res.ok) {
-        console.error("Failed to delete tour from backend")
-        return
+      // Handle both Response objects and null returns
+      if (!res) {
+        console.error("No response from cancel tour API")
+        throw new Error("No response from server")
       }
 
-      // Remove from local state after successful backend delete
-      setTourRequests((prev) => prev.filter((req) => req.id !== id))
+      if (typeof (res as any)?.json === "function") {
+        const response = res as Response
+        if (!response.ok) {
+          const errText = await response.text()
+          console.error("Cancel tour failed:", response.status, errText)
+          throw new Error(`Failed to cancel tour: ${response.status}`)
+        }
+      }
+
+      // Remove from local state after successful backend cancel
+      setTourRequests((prev) => prev.filter((req) => req.propertyId !== propertyId))
     } catch (err) {
-      console.error("Failed to remove tour request:", err)
+      console.error("Failed to cancel tour request:", err)
+      throw err
     }
   }
 
@@ -284,7 +325,8 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
         getTourRequestsFromDb,
         updateTourRequestStatus,
         updateApplyRequestStatus,
-        removeTourRequest,
+        // removeTourRequest,
+        cancelTourRequest,
       }}
     >
       {children}
