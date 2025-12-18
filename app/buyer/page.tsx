@@ -44,6 +44,8 @@ export default function Buying() {
 
   const isBuyActive = pathname.includes("/buyer");
   const hasActiveFilter = minPrice !== null || maxPrice !== null;
+  const isLoggedIn =
+    typeof window !== "undefined" && localStorage.getItem("access_token");
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
@@ -175,7 +177,8 @@ export default function Buying() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {filteredListings.map((listing) => (
               <HostelCard
-                key={listing.id}
+                key={`${listing.id}-${listing.amount}`}
+                listingId={listing.id} // ✅ pass ID
                 hostelName={listing.hostelName}
                 price={`₦${listing.amount.toLocaleString()}`}
                 address={listing.address}
