@@ -57,13 +57,13 @@ export default function SavedHomesPage() {
                   Saved homes
                 </Link>
                 <Link
-                  href="/renter-hub"
+                  href="/manage-tours"
                   className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
                 >
                   Manage tours
                 </Link>
                 <Link
-                  href="/manage-tours"
+                  href="/renter-hub"
                   className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
                 >
                   Rentals Hub
@@ -73,6 +73,12 @@ export default function SavedHomesPage() {
                   className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
                 >
                   Account settings
+                </Link>
+                <Link
+                  href="/how-it-works"
+                  className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+                >
+                  How it works
                 </Link>
               </nav>
             </div>
@@ -97,7 +103,8 @@ export default function SavedHomesPage() {
                     key={listing.id}
                     listing={{
                       ...listing,
-                      amenities: listing.amenities?.map((a: any) => a.name) || [],
+                      amenities:
+                        listing.amenities?.map((a: any) => a.name) || [],
                     }}
                     isFavorited={isFavorited(listing.id)}
                     onFavoriteToggle={() => toggleFavorite(listing.id)}

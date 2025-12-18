@@ -1,40 +1,53 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useRenterRequests } from "@/lib/renter-requests-context"
-import { Calendar, XCircle } from "lucide-react"
-import PageHeader from "@/components/page-header"
+import Link from "next/link";
+import { useRenterRequests } from "@/lib/renter-requests-context";
+import { Calendar, XCircle } from "lucide-react";
+import PageHeader from "@/components/page-header";
+import { CancelTourModal } from "@/components/modal/cancel-tours-modal";
+import { useState } from "react";
 
 export default function ManageToursPage() {
-  const { tourRequests, removeTourRequest } = useRenterRequests()
+  const { tourRequests, cancelTourRequest } = useRenterRequests();
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [selectedTour, setSelectedTour] = useState<{
+    propertyId: string;
+    title: string;
+    userId: string;
+  } | null>(null);
 
-  const handleCancelTour = async (id: string) => {
-    try {
-      await removeTourRequest(id)
-    } catch (error: any) {
-      console.error("Failed to cancel tour:", error)
-    }
-  }
+  const handleCancelClick = (
+    propertyId: string,
+    title: string,
+    userId: string
+  ) => {
+    setSelectedTour({ propertyId, title, userId });
+    setCancelModalOpen(true);
+  };
+
+  const handleConfirmCancel = async (
+    propertyId: string,
+    userId: string,
+    reason: string
+  ) => {
+    // Additional logic if needed after cancel
+    console.log(
+      "Tour cancelled:",
+      propertyId,
+      "User:",
+      userId,
+      "Reason:",
+      reason
+    );
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
-    })
-  }
-  const formatPropertyType = (type: string) => {
-    switch (type) {
-      case "apartment":
-        return "Apartment"
-      case "hostel":
-        return "Hostel"
-      case "shortlet":
-        return "Shortlet"
-      default:
-        return type
-    }
-  }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,6 +82,12 @@ export default function ManageToursPage() {
               >
                 Account settings
               </Link>
+              <Link
+                href="/how-it-works"
+                className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+              >
+                How it works
+              </Link>
             </nav>
           </div>
         </div>
@@ -89,14 +108,14 @@ export default function ManageToursPage() {
               >
                 {/* Info */}
                 <div>
-                  <h3 className="font-semibold text-lg">{request.propertyTitle}</h3>
+                  <h3 className="font-semibold text-lg">
+                    {request.propertyTitle}
+                  </h3>
 
                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mt-2">
-                    
-
                     {request.propertyPrice && (
                       <span className="flex items-center gap-1">
-                       ₦{request.propertyPrice}
+                        ₦{request.propertyPrice}
                       </span>
                     )}
 
@@ -109,7 +128,13 @@ export default function ManageToursPage() {
 
                 {/* Cancel button */}
                 <button
-                  onClick={() => handleCancelTour(request.id)}
+                  onClick={() =>
+                    handleCancelClick(
+                      request.propertyId,
+                      request.propertyTitle,
+                      "USER_ID_HERE"
+                    )
+                  }
                   className="flex items-center gap-2 text-sm font-medium text-destructive hover:underline"
                 >
                   <XCircle size={18} />
@@ -120,6 +145,22 @@ export default function ManageToursPage() {
           </div>
         )}
       </div>
+
+      {/* CancelTourModal component */}
+      {selectedTour && (
+        <CancelTourModal
+          isOpen={cancelModalOpen}
+          onClose={() => {
+            setCancelModalOpen(false);
+            setSelectedTour(null);
+          }}
+          propertyId={selectedTour.propertyId}
+          userId={selectedTour.userId}
+          propertyTitle={selectedTour.title}
+          onConfirmCancel={handleConfirmCancel}
+          cancelTourRequest={cancelTourRequest}
+        />
+      )}
     </div>
-  )
+  );
 }

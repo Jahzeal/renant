@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { X } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useRenterRequests } from "@/lib/renter-requests-context"
+import { useState } from "react";
+import { X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useRenterRequests } from "@/lib/renter-requests-context";
 
 interface RequestTourModalProps {
-  isOpen: boolean
-  onClose: () => void
-  listingTitle: string
-  listingId: string
-  propertyType: "apartment" | "hostel" | "shortlet"
+  isOpen: boolean;
+  onClose: () => void;
+  listingTitle: string;
+  listingId: string;
+  propertyType: "apartment" | "hostel" | "shortlet";
 
-  listingPrice?: number
+  listingPrice?: number;
 }
 
 export function RequestTourModal({
@@ -25,48 +25,58 @@ export function RequestTourModal({
   listingPrice,
   propertyType,
 }: RequestTourModalProps) {
-  const router = useRouter()
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    message: "I'm interested in your property and would like to move forward. Can you show me around ?",
-  })
-  const { addTourRequest } = useRenterRequests()
+    message:
+      "I'm interested in your property and would like to move forward. Can you show me around ?",
+  });
+  const { addTourRequest } = useRenterRequests();
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await addTourRequest(listingId)
+    e.preventDefault();
+    await addTourRequest(listingId);
 
-    onClose()
-    router.push("/manage-tours")
+    onClose();
+    router.push("/manage-tours");
     // Reset form
     setFormData({
       name: "",
       email: "",
       phone: "",
-      message: "I'm interested in your property and would like to move forward. Can you show me around ?",
-    })
-  }
+      message:
+        "I'm interested in your property and would like to move forward. Can you show me around ?",
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg w-full max-w-4xl h-[95vh] flex flex-col">
-        <div className="sticky top-0 flex items-center justify-between p-6 border-b bg-white">
+        <div className="md:sticky md:top-0 flex items-center justify-between p-6 border-b bg-white z-10">
           <h2 className="text-2xl font-semibold">Request a tour</h2>
-          <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
+          >
             <X size={24} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-8 space-y-6"
+        >
           <div>
             <label className="text-base font-semibold text-gray-900">
               First & last name <span className="text-red-500">*</span>
@@ -112,7 +122,9 @@ export function RequestTourModal({
           </div>
 
           <div>
-            <label className="text-base font-semibold text-gray-900">Message</label>
+            <label className="text-base font-semibold text-gray-900">
+              Message
+            </label>
             <textarea
               name="message"
               value={formData.message}
@@ -131,5 +143,5 @@ export function RequestTourModal({
         </form>
       </div>
     </div>
-  )
+  );
 }

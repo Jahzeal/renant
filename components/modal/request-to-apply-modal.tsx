@@ -33,7 +33,9 @@ export function RequestToApplyModal({
 
   if (!isOpen) return null;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -79,14 +81,20 @@ export function RequestToApplyModal({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg w-full max-w-4xl h-[95vh] flex flex-col">
-        <div className="sticky top-0 flex items-center justify-between p-6 border-b bg-white">
+        <div className="md:sticky md:top-0 flex items-center justify-between p-6 border-b bg-white z-10">
           <h2 className="text-2xl font-semibold">Request to apply</h2>
-          <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
+          >
             <X size={24} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-8 space-y-6"
+        >
           <div>
             <label>Name</label>
             <input
