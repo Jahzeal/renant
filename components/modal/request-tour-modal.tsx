@@ -41,18 +41,9 @@ export function RequestTourModal({
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    addTourRequest({
-      listingId,
-      listingTitle,
-      listingPrice,
-      propertyType,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      message: formData.message,
-    })
+    await addTourRequest(listingId)
 
     onClose()
     router.push("/manage-tours")

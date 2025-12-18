@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRenterRequests } from "@/lib/renter-requests-context"
-import { Calendar, DollarSign, XCircle } from "lucide-react"
+import { Calendar, XCircle } from "lucide-react"
 import PageHeader from "@/components/page-header"
 
 export default function ManageToursPage() {
@@ -89,19 +89,14 @@ export default function ManageToursPage() {
               >
                 {/* Info */}
                 <div>
-                  <h3 className="font-semibold text-lg">{request.listingTitle}</h3>
+                  <h3 className="font-semibold text-lg">{request.propertyTitle}</h3>
 
                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mt-2">
-                    {request.propertyType && (
-                      <span className="px-2 py-0.5 rounded bg-muted text-xs font-medium">
-                        {formatPropertyType(request.propertyType)}
-                      </span>
-                    )}
+                    
 
-                    {request.listingPrice && (
+                    {request.propertyPrice && (
                       <span className="flex items-center gap-1">
-                        <DollarSign size={16} />
-                        {request.listingPrice}
+                       ₦{request.propertyPrice}
                       </span>
                     )}
 
