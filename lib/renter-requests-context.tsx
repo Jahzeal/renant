@@ -3,7 +3,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useCallback } from "react"
-import { apiRequest } from "./authenticate"
+import { apiRequest } from "@/lib/authenticate"
 
 const getAuthToken = () => {
   if (typeof window === "undefined") return null
@@ -12,14 +12,9 @@ const getAuthToken = () => {
 
 export interface TourRequest {
   id: string
-  listingId: string
-  listingTitle: string
-  listingPrice?: number
-  name: string
-  propertyType?: "apartment" | "hostel" | "shortlet"
-  email: string
-  phone: string
-  message: string
+  propertyId: string
+  propertyTitle: string
+  propertyPrice?: number
   createdAt: string
   status: "pending" | "confirmed" | "completed" | "cancelled"
 }
@@ -36,7 +31,7 @@ export interface ApplyRequest {
 interface RenterRequestsContextType {
   tourRequests: TourRequest[]
   applyRequests: ApplyRequest[]
-  addTourRequest: (request: Omit<TourRequest, "id" | "createdAt" | "status">) => Promise<TourRequest | null>
+  addTourRequest: (propertyId: string) => Promise<TourRequest | null>
   requestToApply: (propertyId: string) => Promise<ApplyRequest | null>
   getRequestsFromDb: () => Promise<ApplyRequest[] | null>
   getTourRequestsFromDb: () => Promise<TourRequest[] | null>
@@ -57,15 +52,9 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // ---------------------- TOUR ----------------------
-  const addTourRequest = async (
-    request: Omit<TourRequest, "id" | "createdAt" | "status">,
-  ): Promise<TourRequest | null> => {
+  const addTourRequest = async (propertyId: string): Promise<TourRequest | null> => {
     const token = getAuthToken()
-    if (!token) {
-      console.error("No auth token available")
-      return null
-    }
-
+    if (!token) return null
     try {
       const response = await apiRequest(`${API_BASE_URL}/users/tour-request`, {
         method: "POST",
@@ -73,43 +62,21 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          propertyId: request.listingId,
-          name: request.name,
-          email: request.email,
-          phone: request.phone,
-          message: request.message,
-        }),
-      })
+        body: JSON.stringify({ propertyId }),
+      }).then((res) => res?.json())
 
-      if (!response || !response.ok) {
-        const errText = await response?.text()
-        console.error("Failed to submit tour request:", errText)
-        return null
+      if (!response || !response.request || !response.property) return null
+
+      const newReq: TourRequest = {
+        id: response.request.id,
+        propertyId: response.property.id,
+        propertyTitle: response.property.title,
+        propertyPrice: response.property.price,
+        createdAt: response.request.requestedAt || new Date().toISOString(),
+        status: "pending",
       }
-
-      const data = await response.json()
-
-      // Format the response from backend
-      const newRequest: TourRequest = {
-        id: data.id,
-        listingId: data.property?.id || request.listingId,
-        listingTitle: data.property?.title || request.listingTitle,
-        listingPrice:
-          typeof data.property?.price === "object"
-            ? (data.property.price?.amount ?? request.listingPrice)
-            : (data.property?.price ?? request.listingPrice),
-        propertyType: data.property?.propertyType || request.propertyType,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        message: data.message || "",
-        createdAt: data.createdAt || new Date().toISOString(),
-        status: data.status || "pending",
-      }
-
-      setTourRequests((prev) => [newRequest, ...prev])
-      return newRequest
+      setTourRequests((prev) => [newReq, ...prev])
+      return newReq
     } catch (error) {
       console.error("Failed to submit tour request:", error)
       return null
@@ -119,12 +86,11 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
   const getTourRequestsFromDb = useCallback(async (): Promise<TourRequest[] | null> => {
     const token = getAuthToken()
     if (!token) {
-      console.warn("No auth token for tour requests")
+      console.warn("No auth token")
       return null
     }
-
     try {
-      console.log("Fetching tour requests...")
+      console.log(" Fetching tourRequests...")
 
       const res = await apiRequest(`${API_BASE_URL}/users/tour-requests`, {
         headers: {
@@ -132,48 +98,34 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
           Authorization: `Bearer ${token}`,
         },
       })
-
       if (!res) {
-        console.error(" No response received from tour requests API")
+        console.error(" No response received from apiRequest")
         return null
       }
-
       let data: any
-
       if (typeof (res as any)?.json === "function") {
         const response = res as Response
-
         if (!response.ok) {
           const errText = await response.text()
-          console.error(" Tour request failed:", response.status, errText)
+          console.error(" Request failed:", response.status, errText)
           return null
         }
-
         data = await response.json()
       } else {
         data = res
       }
 
-      console.log("Tour requests data:", data)
-
       if (!Array.isArray(data)) {
-        console.error(" Expected array for tour requests, got:", data)
+        console.error("Expected array, got:", data)
         return null
       }
 
-      const formatted: TourRequest[] = data.map((req: any) => ({
+      const formatted = data.map((req: any) => ({
         id: req.id,
-        listingId: req.property?.id || req.listingId,
-        listingTitle: req.property?.title || req.listingTitle,
-        listingPrice:
-          typeof req.property?.price === "object"
-            ? (req.property.price?.amount ?? 0)
-            : (req.property?.price ?? req.listingPrice ?? 0),
-        propertyType: req.property?.propertyType || req.propertyType,
-        name: req.name,
-        email: req.email,
-        phone: req.phone,
-        message: req.message || "",
+        propertyId: req.property.id,
+        propertyTitle: req.property.title,
+        propertyPrice:
+          typeof req.property.price === "object" ? (req.property.price?.amount ?? 0) : (req.property.price ?? 0),
         createdAt: req.createdAt || new Date().toISOString(),
         status: req.status ?? "pending",
       }))
@@ -183,7 +135,7 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
       setTourRequests(formatted)
       return formatted
     } catch (err) {
-      console.error("Tour fetch error:", err)
+      console.error("fetch error:", err)
       return null
     }
   }, [])
