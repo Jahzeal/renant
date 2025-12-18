@@ -8,8 +8,10 @@ import { filterRentals, getRentals } from "@/lib/getRentals-api"
 import type { MoreOptionsFilters } from "./modal/more-options-modal"
 
 interface AppliedFilters {
+  category?: string // Added category to the interface
   price: { min: number; max: number } | null
-  roomType: string
+  beds: string
+  baths: string // Added baths to match search bar
   propertyType: string
   moreOptions: MoreOptionsFilters | null
 }
@@ -34,10 +36,10 @@ interface Listing {
   price: number
   beds: number
   baths: number
-  room_type: "room_self_contain" | "2_bedrooms" | "room_parlor" | "3_plus_bedrooms"
+  room_type?: "room_self_contain" | "2_bedrooms" | "room_parlor" | "3_plus_bedrooms"
   style: string
   offers: string | null
-  prices: { beds: number; price: number }[]
+  prices?: { beds: number; price: number }[]
   location: string
   type: string
   description?: string
@@ -52,7 +54,9 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
   const [filteredListings, setFilteredListings] = useState<Listing[]>([])
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
-  const [sortBy, setSortBy] = useState<"recommended" | "price-low" | "price-high" | "newest" | "lot-size">("recommended")
+  const [sortBy, setSortBy] = useState<"recommended" | "price-low" | "price-high" | "newest" | "lot-size">(
+    "recommended",
+  )
   const [loading, setLoading] = useState(false)
 
   // Fetch all rentals
@@ -62,19 +66,47 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       try {
         const data = await getRentals()
         if (!mounted) return
-        setAllListings(data)
-        setFilteredListings(data)
+        console.log("Fetched all rentals:", data) // Debug log
+        const normalizedData = data.map((listing: any) => {
+          const coords =
+            listing.coords ||
+            (listing.latitude && listing.longitude
+              ? { lng: Number(listing.longitude), lat: Number(listing.latitude) }
+              : undefined)
+
+          // Ensure images is an array
+          let images = listing.images
+          if (!Array.isArray(images)) {
+            if (typeof images === "string") {
+              images = [images]
+            } else {
+              images = []
+            }
+          }
+
+          console.log("Normalized listing:", listing.id, { coords, images })
+
+          return {
+            ...listing,
+            coords,
+            images,
+          }
+        })
+        setAllListings(normalizedData)
+        setFilteredListings(normalizedData)
       } catch (e) {
         console.error("Failed to load rentals:", e)
         if (mounted) setAllListings([])
       }
     }
     fetchAll()
-    return () => { mounted = false }
+    return () => {
+      mounted = false
+    }
   }, [])
 
-  // Apply filters
   useEffect(() => {
+    // If no filters and no search location, show all listings
     if (!filters && !searchLocation) {
       setFilteredListings(allListings)
       return
@@ -84,15 +116,83 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
     const fetchFiltered = async () => {
       setLoading(true)
       try {
-        const data = await filterRentals({
-          propertyType: filters?.propertyType,
-          price: filters?.price,
-          roomType: filters?.roomType,
-          searchLocation,
-          moreOptions: filters?.moreOptions,
-        })
+        const apiFilters: any = {}
+
+        // Category/Property Type
+        if (filters?.category) {
+          apiFilters.category = filters.category
+        }
+
+        // Property Type
+        if (filters?.propertyType && filters.propertyType !== "All types") {
+          apiFilters.propertyType = filters.propertyType
+        }
+
+        // Price Range
+        if (filters?.price) {
+          apiFilters.minPrice = filters.price.min
+          apiFilters.maxPrice = filters.price.max === Number.POSITIVE_INFINITY ? undefined : filters.price.max
+        }
+
+        // Beds - convert "Any" or "1+" format to numbers
+        if (filters?.beds && filters.beds !== "Any") {
+          const bedsNum = filters.beds.replace("+", "")
+          apiFilters.beds = Number(bedsNum)
+        }
+
+        // Baths
+        if (filters?.baths && filters.baths !== "Any") {
+          const bathsNum = filters.baths.replace("+", "")
+          apiFilters.baths = Number(bathsNum)
+        }
+
+        // Search Location
+        if (searchLocation) {
+          apiFilters.location = searchLocation
+        }
+
+        // More Options
+        if (filters?.moreOptions) {
+          if (filters.moreOptions.moveInDate) {
+            apiFilters.moveInDate = filters.moreOptions.moveInDate
+          }
+          if (filters.moreOptions.selectedPets?.length > 0) {
+            apiFilters.pets = filters.moreOptions.selectedPets
+          }
+          if (filters.moreOptions.keywords) {
+            apiFilters.keywords = filters.moreOptions.keywords
+          }
+        }
+
+        console.log(" Applying filters:", apiFilters) // Debug log
+
+        const data = await filterRentals(apiFilters)
         if (!mounted) return
-        setFilteredListings(Array.isArray(data) ? data : [])
+        console.log(" Filtered results:", data) // Debug log
+        const normalizedData = (Array.isArray(data) ? data : []).map((listing: any) => {
+          const coords =
+            listing.coords ||
+            (listing.latitude && listing.longitude
+              ? { lng: Number(listing.longitude), lat: Number(listing.latitude) }
+              : undefined)
+
+          // Ensure images is an array
+          let images = listing.images
+          if (!Array.isArray(images)) {
+            if (typeof images === "string") {
+              images = [images]
+            } else {
+              images = []
+            }
+          }
+
+          return {
+            ...listing,
+            coords,
+            images,
+          }
+        })
+        setFilteredListings(normalizedData)
       } catch (e) {
         console.error("Failed to fetch filtered rentals:", e)
         if (mounted) setFilteredListings([])
@@ -102,7 +202,9 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
     }
 
     fetchFiltered()
-    return () => { mounted = false }
+    return () => {
+      mounted = false
+    }
   }, [filters, searchLocation, allListings])
 
   // Sort filtered listings
@@ -170,29 +272,49 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
               key={listing.id}
               listing={{
                 ...listing,
-                amenities: listing.amenities?.map(a => a.name) || [],
+                amenities: listing.amenities?.map((a) => a.name) || [],
               }}
               isFavorited={isFavorited(listing.id)}
               onFavoriteToggle={() => toggleFavorite(listing.id)}
               onViewDetails={() => handleViewDetails(listing)}
               onLocationClick={() => {
-                if (listing.coords) onLocationClick?.(listing.coords, listing.address)
+                console.log("Location click handler called for listing:", {
+                  id: listing.id,
+                  title: listing.title,
+                  address: listing.address,
+                  coords: listing.coords,
+                })
+
+                if (listing.coords?.lng && listing.coords?.lat) {
+                  const lng = Number(listing.coords.lng)
+                  const lat = Number(listing.coords.lat)
+
+                  console.log(" Parsed coordinates:", { lng, lat })
+
+                  if (isFinite(lng) && isFinite(lat)) {
+                    console.log(" Calling onLocationClick with valid coords")
+                    onLocationClick?.({ lng, lat }, listing.address)
+                  } else {
+                    console.warn(" Invalid coordinate values after parsing:", { lng, lat })
+                  }
+                } else {
+                  console.warn(" Missing or invalid coordinates:", listing.coords)
+                }
               }}
             />
           ))
         ) : (
           <div className="p-6 text-center text-muted-foreground">
-            <p>No listings found for "{searchLocation}"</p>
+            <p>No listings found {searchLocation ? `for "${searchLocation}"` : ""}</p>
             <p className="text-xs mt-2">Try adjusting your filters</p>
           </div>
         )}
       </div>
 
-      {/* Modal */}
       {selectedListing && (
         <ListingDetailsModal
           listing={{
-            id: Number(selectedListing.id),
+            id: selectedListing.id,
             title: selectedListing.title,
             location: selectedListing.location,
             price: `₦${selectedListing.price}`,
@@ -200,8 +322,9 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
             baths: selectedListing.baths,
             images: selectedListing.images,
             description: selectedListing.description,
-            amenities: selectedListing.amenities?.map(a => a.name) || [],
+            amenities: selectedListing.amenities?.map((a) => a.name) || [],
             type: selectedListing.type,
+            coords: selectedListing.coords,
           }}
           isOpen={isDetailsOpen}
           onClose={() => setIsDetailsOpen(false)}

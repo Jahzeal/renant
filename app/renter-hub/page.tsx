@@ -1,39 +1,55 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useRenterRequests } from "@/lib/renter-requests-context"
-import { Calendar, DollarSign, Trash2 } from "lucide-react"
-import PageHeader from "@/components/page-header"
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRenterRequests } from "@/lib/renter-requests-context";
+import { Calendar, Trash2 } from "lucide-react";
+import PageHeader from "@/components/page-header";
 
 export default function RenterHubPage() {
-  const { applyRequests, removeApplyRequest } = useRenterRequests()
+  const { applyRequests, getRequestsFromDb } = useRenterRequests();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch all apply requests from backend on mount
+    const fetchApplies = async () => {
+      const result = await getRequestsFromDb(); // "" = fetch all
+      console.log("Fetching apply requests from DB...", result);
+
+      setLoading(false);
+    };
+
+    fetchApplies();
+  }, [getRequestsFromDb]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
-    })
-  }
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       case "submitted":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800";
       case "approved":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       case "rejected":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader/>
+      <PageHeader />
+
+      {/* Top Nav */}
       <div className="border-b">
         <div className="w-full px-2 sm:px-4 md:px-6">
           <div className="flex items-center gap-2 sm:gap-4 h-14 sm:h-16">
@@ -44,7 +60,7 @@ export default function RenterHubPage() {
               >
                 Saved homes
               </Link>
-               <Link
+              <Link
                 href="/manage-tours"
                 className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
               >
@@ -56,7 +72,6 @@ export default function RenterHubPage() {
               >
                 Renter Hub
               </Link>
-             
               <Link
                 href="/account-settings"
                 className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
@@ -68,15 +83,29 @@ export default function RenterHubPage() {
         </div>
       </div>
 
+      {/* Page content */}
       <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-8">Renter Hub</h1>
+        <h1 className="text-2xl sm:text-3xl md:4xl font-bold mb-8">
+          Renter Hub
+        </h1>
 
-        {applyRequests.length === 0 ? (
+        {/* Loading state */}
+        {loading && (
+          <div className="text-center py-10 text-muted-foreground">
+            Loading your applications...
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && applyRequests.length === 0 && (
           <div className="flex flex-col items-center justify-center py-8 sm:py-12 md:py-16">
             <div className="text-center space-y-4">
-              <h2 className="text-xl sm:text-2xl font-semibold text-foreground">No application requests yet</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
+                No application requests yet
+              </h2>
               <p className="text-muted-foreground">
-                When you request to apply for homes, they'll appear here so you can track your applications.
+                When you request to apply for homes, they'll appear here so you
+                can track your applications.
               </p>
               <Link
                 href="/rentals"
@@ -86,53 +115,44 @@ export default function RenterHubPage() {
               </Link>
             </div>
           </div>
-        ) : (
+        )}
+
+        {/* Applications list */}
+        {!loading && applyRequests.length > 0 && (
           <div className="space-y-4">
             {applyRequests.map((request) => (
-              <div key={request.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+              <div
+                key={request.id}
+                className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+              >
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-foreground">{request.listingTitle}</h3>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {request.propertyTitle}
+                    </h3>
                     <div className="flex flex-wrap gap-3 mt-2 text-sm text-muted-foreground">
-                      {request.listingPrice && (
-                        <div className="flex items-center gap-1">
-                          <DollarSign size={16} />
-                          {request.listingPrice}
-                        </div>
-                      )}
+                      {request.propertyPrice !== undefined &&
+                        request.propertyPrice !== null && (
+                          <div className="flex items-center gap-1">
+                            <span>₦{request.propertyPrice}</span>
+                          </div>
+                        )}
                       <div className="flex items-center gap-1">
                         <Calendar size={16} />
                         {formatDate(request.createdAt)}
                       </div>
                     </div>
-                    <div className="mt-3 space-y-1 text-sm">
-                      <p>
-                        <span className="font-medium">Applicant:</span> {request.name}
-                      </p>
-                      <p>
-                        <span className="font-medium">Email:</span> {request.email}
-                      </p>
-                      <p>
-                        <span className="font-medium">Phone:</span> {request.phone}
-                      </p>
-                      {request.message && (
-                        <p>
-                          <span className="font-medium">Message:</span> {request.message}
-                        </p>
-                      )}
-                    </div>
                   </div>
+
                   <div className="flex flex-col items-end gap-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
-                      {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                    </span>
-                    <button
-                      onClick={() => removeApplyRequest(request.id)}
-                      className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                      aria-label="Delete application request"
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                        request.status
+                      )}`}
                     >
-                      <Trash2 size={18} />
-                    </button>
+                      {request.status.charAt(0).toUpperCase() +
+                        request.status.slice(1)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -141,5 +161,5 @@ export default function RenterHubPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

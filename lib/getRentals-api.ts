@@ -18,15 +18,15 @@ export async function getRentals() {
 
     if (!res.ok) {
       const errorText = await res.text()
-      console.error(" API error response:", errorText)
+      console.error("API error response:", errorText)
       throw new Error(`Failed to fetch rentals: ${res.status}`)
     }
 
     const data = await res.json()
-    console.log(" getRentals() success, returned:", data)
+    console.log("getRentals() success, returned:", data)
     return data
   } catch (error) {
-    console.error(" getRentals() error:", error)
+    console.error("getRentals() error:", error)
     return []
   }
 }

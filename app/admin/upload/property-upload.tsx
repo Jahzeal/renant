@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
+import { uploadProperty } from "@/lib/uploadProperty"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Upload, X } from "lucide-react"
 
@@ -18,9 +19,10 @@ interface PropertyFormData {
   longitude: string
   beds: string
   baths: string
+  offers: string
   amenities: string
   about: string
-  photos: File[]
+  images: File[] // Renamed from photos to images
 }
 
 export default function PropertyUpload() {
@@ -33,9 +35,10 @@ export default function PropertyUpload() {
     longitude: "",
     beds: "",
     baths: "",
+    offers: "",
     amenities: "",
     about: "",
-    photos: [],
+    images: [], 
   })
 
   const [photoPreview, setPhotoPreview] = useState<string[]>([])
@@ -52,10 +55,10 @@ export default function PropertyUpload() {
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    const newPhotos = [...formData.photos, ...files]
+    const newPhotos = [...formData.images, ...files]
     setFormData((prev) => ({
       ...prev,
-      photos: newPhotos,
+      images: newPhotos,
     }))
 
     // Create previews
@@ -71,7 +74,7 @@ export default function PropertyUpload() {
   const removePhoto = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index),
+      images: prev.images.filter((_, i) => i !== index), // Updated from photos to images
     }))
     setPhotoPreview((prev) => prev.filter((_, i) => i !== index))
   }
@@ -80,28 +83,34 @@ export default function PropertyUpload() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate upload delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const response = await uploadProperty(formData)
 
-    console.log("[v0] Property uploaded:", formData)
-    alert(`Property submitted! Type: ${formData.type}, Title: ${formData.title}, Price: ${formData.price}`)
+      console.log("Property uploaded successfully:", response)
+      alert(`Property uploaded! Title: ${response.title}, Type: ${response.type}`)
 
-    // Reset form
-    setFormData({
-      type: "homes",
-      title: "",
-      price: "",
-      address: "",
-      latitude: "",
-      longitude: "",
-      beds: "",
-      baths: "",
-      amenities: "",
-      about: "",
-      photos: [],
-    })
-    setPhotoPreview([])
-    setIsSubmitting(false)
+      // Reset form
+      setFormData({
+        type: "homes",
+        title: "",
+        price: "",
+        address: "",
+        latitude: "",
+        offers: "",
+        longitude: "",
+        beds: "",
+        baths: "",
+        amenities: "",
+        about: "",
+        images: [], // Renamed from photos to images
+      })
+      setPhotoPreview([])
+    } catch (error: any) {
+      console.error("Error uploading property:", error)
+      alert(error.message || "Failed to upload property")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -160,6 +169,18 @@ export default function PropertyUpload() {
                   value={formData.title}
                   onChange={handleInputChange}
                   placeholder="e.g., Luxury Beachfront Villa"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Offers</label>
+                <input
+                  type="text"
+                  name="offers"
+                  value={formData.offers}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Special discount available"
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
@@ -349,9 +370,10 @@ export default function PropertyUpload() {
                   longitude: "",
                   beds: "",
                   baths: "",
+                  offers: "",
                   amenities: "",
                   about: "",
-                  photos: [],
+                  images: [], // Renamed from photos to images
                 })
                 setPhotoPreview([])
               }}

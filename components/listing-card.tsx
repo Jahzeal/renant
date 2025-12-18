@@ -1,41 +1,33 @@
-"use client";
+"use client"
 
-import type React from "react";
-import { useState } from "react";
-import {
-  Heart,
-  ChevronLeft,
-  ChevronRight,
-  MapPin,
-  Bed,
-  Bath,
-  LayoutGrid,
-} from "lucide-react"; // Added MapPin, Bed, Bath, LayoutGrid for icons
+import type React from "react"
+import { useState } from "react"
+import { Heart, ChevronLeft, ChevronRight, MapPin, Bed, Bath, LayoutGrid } from "lucide-react" // Added MapPin, Bed, Bath, LayoutGrid for icons
 
 interface Listing {
-  id: string;
-  images?: string[];
-  image?: string;
-  title: string;
-  address: string;
-  price: number;
-  beds: number;
-  baths?: number;
-  style: string;
-  offers: string | null;
-  prices?: { beds: number; price: number }[];
-  location?: string;
-  type?: string;
-  description?: string;
-  amenities?: string[];
+  id: string
+  images?: string[]
+  image?: string
+  title: string
+  address: string
+  price: number
+  beds: number
+  baths?: number
+  style: string
+  offers: string | null
+  prices?: { beds: number; price: number }[]
+  location?: string
+  type?: string
+  description?: string
+  amenities?: string[]
 }
 
 interface ListingCardProps {
-  listing: Listing;
-  isFavorited?: boolean;
-  onFavoriteToggle?: () => void;
-  onViewDetails?: () => void;
-  onLocationClick?: () => void;
+  listing: Listing
+  isFavorited?: boolean
+  onFavoriteToggle?: () => void
+  onViewDetails?: () => void
+  onLocationClick?: () => void
 }
 
 export default function ListingCard({
@@ -45,42 +37,60 @@ export default function ListingCard({
   onViewDetails,
   onLocationClick,
 }: ListingCardProps) {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-  const images =
-    listing.images ||
-    (listing.image ? [listing.image] : ["/cozy-cabin-interior.png"]);
+  const images = (() => {
+    // Priority 1: images array
+    if (listing.images && Array.isArray(listing.images) && listing.images.length > 0) {
+      return listing.images
+    }
+    // Priority 2: single image field
+    if (listing.image) {
+      return [listing.image]
+    }
+    // Priority 3: placeholder with listing info
+    return [`/placeholder.svg?height=400&width=600&query=${encodeURIComponent(listing.title || "property")}`]
+  })()
 
-  const prices = listing.prices || [];
-  const amenities = listing.amenities || [];
+  console.log(" ListingCard rendering with images:", {
+    listingId: listing.id,
+    title: listing.title,
+    rawImages: listing.images,
+    rawImage: listing.image,
+    finalImages: images,
+    currentIndex: currentImageIndex,
+  })
+
+  const prices = listing.prices || []
+  const amenities = listing.amenities || []
 
   const handlePrevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-  };
+    e.stopPropagation()
+    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+  }
 
   const handleNextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  };
+    e.stopPropagation()
+    setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
+  }
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onFavoriteToggle?.();
-  };
+    e.stopPropagation()
+    onFavoriteToggle?.()
+  }
 
   const handleCardClick = () => {
-    onViewDetails?.();
-  };
+    onViewDetails?.()
+  }
 
   const handleLocationClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onLocationClick?.();
-  };
+    e.stopPropagation()
+    console.log("ListingCard location clicked for:", listing.id, listing.title)
+    onLocationClick?.()
+  }
 
   // Helper for formatting large numbers
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("en-US").format(price);
+  const formatPrice = (price: number) => new Intl.NumberFormat("en-US").format(price)
 
   return (
     <div
@@ -97,10 +107,7 @@ export default function ListingCard({
           {" "}
           {/* Added rounded-xl and shadow */}
           <img
-            src={
-              images[currentImageIndex] ||
-              "/placeholder.svg?height=300&width=400&query=home"
-            }
+            src={images[currentImageIndex] || "/placeholder.svg?height=300&width=400&query=home"}
             alt={listing.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -109,7 +116,7 @@ export default function ListingCard({
             {/* <span className="px-3 py-1 bg-white text-xs font-semibold rounded-full shadow-lg">
               {" "}
               {/* Pill shape for style */}
-              {listing.style}
+            {listing.style}
             {/* </span>  */}
             {listing.offers && (
               <span className="px-3 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full shadow-lg">
@@ -127,9 +134,7 @@ export default function ListingCard({
             <Heart
               size={20}
               className={
-                isFavorited
-                  ? "fill-red-500 text-red-500"
-                  : "text-gray-600 hover:text-red-500" // Subtle default color
+                isFavorited ? "fill-red-500 text-red-500" : "text-gray-600 hover:text-red-500" // Subtle default color
               }
             />
           </button>
@@ -160,15 +165,11 @@ export default function ListingCard({
           {/* Main Price and Bedrooms/Bathrooms - HIGHLIGHTED */}
           <h3 className="font-bold text-xl md:text-2xl text-primary mb-1 leading-snug">
             ₦{formatPrice(listing.price)}+
-            <span className="ml-3 text-lg font-semibold text-foreground/80">
-              • {listing.beds} bd
-            </span>
+            <span className="ml-3 text-lg font-semibold text-foreground/80">• {listing.beds} bd</span>
           </h3>
 
           {/* Listing Title - Sub-highlighted */}
-          <p className="text-foreground font-semibold text-base md:text-lg mb-2">
-            {listing.title}
-          </p>
+          <p className="text-foreground font-semibold text-base md:text-lg mb-2">{listing.title}</p>
 
           {/* Address (Location) - Styled with Icon */}
           <p
@@ -186,25 +187,19 @@ export default function ListingCard({
                 <div className="flex items-center text-muted-foreground">
                   <LayoutGrid size={16} className="mr-1.5 text-primary/70" />
                   <span className="font-normal mr-1">Type:</span>
-                  <span className="text-foreground font-medium">
-                    {listing.type}
-                  </span>
+                  <span className="text-foreground font-medium">{listing.type}</span>
                 </div>
               )}
               <div className="flex items-center text-muted-foreground">
                 <Bed size={16} className="mr-1.5 text-primary/70" />
                 <span className="font-normal mr-1">Beds:</span>
-                <span className="text-foreground font-medium">
-                  {listing.beds}
-                </span>
+                <span className="text-foreground font-medium">{listing.beds}</span>
               </div>
               {listing.baths && (
                 <div className="flex items-center text-muted-foreground">
                   <Bath size={16} className="mr-1.5 text-primary/70" />
                   <span className="font-normal mr-1">Baths:</span>
-                  <span className="text-foreground font-medium">
-                    {listing.baths}
-                  </span>
+                  <span className="text-foreground font-medium">{listing.baths}</span>
                 </div>
               )}
             </div>
@@ -228,12 +223,8 @@ export default function ListingCard({
                     key={p.beds}
                     className="px-3 py-1.5 border border-primary/20 bg-primary/5 rounded-lg text-center transition-colors hover:bg-primary/10"
                   >
-                    <div className="text-primary font-bold text-sm">
-                      ₦{formatPrice(p.price)}+
-                    </div>
-                    <div className="text-muted-foreground text-xs">
-                      {p.beds} bd
-                    </div>
+                    <div className="text-primary font-bold text-sm">₦{formatPrice(p.price)}+</div>
+                    <div className="text-muted-foreground text-xs">{p.beds} bd</div>
                   </div>
                 ))}
               </div>
@@ -242,9 +233,7 @@ export default function ListingCard({
             {/* Amenities - Distinctive pill styling */}
             {amenities.length > 0 && (
               <div className="pt-2">
-                <h4 className="text-sm font-semibold text-foreground mb-1.5">
-                  Key Amenities:
-                </h4>
+                <h4 className="text-sm font-semibold text-foreground mb-1.5">Key Amenities:</h4>
                 <div className="flex flex-wrap gap-2">
                   {amenities.map((a, idx) => (
                     <span
@@ -261,5 +250,5 @@ export default function ListingCard({
         </div>
       </div>
     </div>
-  );
+  )
 }

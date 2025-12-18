@@ -5,12 +5,12 @@ import { useState, useEffect } from "react";
 import { Search, Clock, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "@/components/header";
 import Link from "next/link";
-import { SAMPLE_LISTINGS } from "@/lib/sample-listing";
 import { useAuth } from "@/hooks/use-auth";
 import {
   useSearchHistory,
   type SearchHistory,
 } from "@/lib/search-history-contsxt";
+import { getRentals } from "@/lib/getRentals-api";
 
 interface Property {
   id: string;
@@ -36,6 +36,7 @@ export default function LandingPage() {
   >([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [isLoadingRentals, setIsLoadingRentals] = useState(true);
   const { user } = useAuth();
   const { searchHistory, addSearch } = useSearchHistory();
 
@@ -45,59 +46,82 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Update properties when search history changes
   useEffect(() => {
-    if (searchHistory.length > 0) {
-      fetchPropertiesForLocation(searchHistory[0]);
-    } else {
-      const allProperties = SAMPLE_LISTINGS.slice(0, 6).map((listing) => ({
-        id: listing.id,
-        image: listing.images[0],
-        price: listing.price,
-        beds: listing.bedrooms,
-        baths: listing.bathrooms,
-        sqft: 800 + Number.parseInt(listing.id) * 100,
-        status: "Active",
-        address: listing.address,
-        badge: listing.offer || undefined,
-        location: listing.location,
-        type: listing.type,
-      }));
-      setContinueSearchProperties(allProperties);
-    }
+    const fetchRentals = async () => {
+      setIsLoadingRentals(true);
+      try {
+        const rentalsData = await getRentals();
+
+        if (searchHistory.length > 0) {
+          fetchPropertiesForLocation(searchHistory[0], rentalsData);
+        } else {
+          // Map API data to Property format
+          const allProperties = rentalsData.slice(0, 6).map((rental: any) => ({
+            id: rental._id || rental.id,
+            image: rental.images?.[0] || rental.image || "/placeholder.svg",
+            price: rental.price || rental.rent,
+            beds: rental.bedrooms || rental.beds,
+            baths: rental.bathrooms || rental.baths,
+            sqft: rental.sqft || rental.squareFeet || 800,
+            status: rental.status || "Active",
+            address: rental.address,
+            badge: rental.offer || rental.badge || undefined,
+            location: rental.location || rental.city,
+            type: rental.type || rental.propertyType,
+          }));
+          setContinueSearchProperties(allProperties);
+        }
+      } catch (error) {
+        console.error("Error fetching rentals:", error);
+        setContinueSearchProperties([]);
+      } finally {
+        setIsLoadingRentals(false);
+      }
+    };
+
+    fetchRentals();
   }, [searchHistory]);
 
-  const fetchPropertiesForLocation = async (search: SearchHistory) => {
+  const fetchPropertiesForLocation = async (
+    search: SearchHistory,
+    rentalsData?: any[]
+  ) => {
     const searchTerm = search.location.toLowerCase().trim();
     const searchCity = searchTerm.split(",")[0].trim();
-    let filteredListings = SAMPLE_LISTINGS.filter(
-      (listing) =>
-        listing.location.toLowerCase().includes(searchCity) ||
-        listing.location.toLowerCase().includes(searchTerm) ||
-        listing.address.toLowerCase().includes(searchCity) ||
-        listing.address.toLowerCase().includes(searchTerm)
+
+    // Use passed data or fetch fresh data
+    const listings = rentalsData || (await getRentals());
+
+    let filteredListings = listings.filter(
+      (listing: any) =>
+        listing.location?.toLowerCase().includes(searchCity) ||
+        listing.location?.toLowerCase().includes(searchTerm) ||
+        listing.address?.toLowerCase().includes(searchCity) ||
+        listing.address?.toLowerCase().includes(searchTerm) ||
+        listing.city?.toLowerCase().includes(searchCity) ||
+        listing.city?.toLowerCase().includes(searchTerm)
     );
 
     let noMatches = false;
     if (filteredListings.length === 0) {
       noMatches = true;
-      filteredListings = SAMPLE_LISTINGS;
+      filteredListings = listings;
     }
 
     const properties: Property[] = filteredListings
       .slice(0, 6)
-      .map((listing) => ({
-        id: listing.id,
-        image: listing.images[0],
-        price: listing.price,
-        beds: listing.bedrooms,
-        baths: listing.bathrooms,
-        sqft: 675 + Number.parseInt(listing.id) * 100,
-        status: "Active",
+      .map((listing: any) => ({
+        id: listing._id || listing.id,
+        image: listing.images?.[0] || listing.image || "/placeholder.svg",
+        price: listing.price || listing.rent,
+        beds: listing.bedrooms || listing.beds,
+        baths: listing.bathrooms || listing.baths,
+        sqft: listing.sqft || listing.squareFeet || 675,
+        status: listing.status || "Active",
         address: listing.address,
-        badge: listing.offer || undefined,
-        location: listing.location,
-        type: listing.type,
+        badge: listing.offer || listing.badge || undefined,
+        location: listing.location || listing.city,
+        type: listing.type || listing.propertyType,
       }));
 
     setContinueSearchProperties(properties);
@@ -352,118 +376,135 @@ export default function LandingPage() {
         </div>
       )}
 
-      {continueSearchProperties.length > 0 && (
+      {isLoadingRentals ? (
         <div className="w-full bg-white px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-b">
           <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
-              <div className="flex-1 min-w-0">
-                <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground mb-2 text-balance leading-snug">
-                  {searchHistory.length > 0 && noMatchFound
-                    ? `No homes available in ${searchHistory[0].location}. But these are the homes available in other locations...`
-                    : searchHistory.length > 0
-                    ? `Continue searching in ${searchHistory[0].location} — ${
-                        continueSearchProperties.length
-                      } ${
-                        continueSearchProperties.length === 1
-                          ? "house"
-                          : "houses"
-                      } found`
-                    : "Available Rentals: Houses, Townhomes, Apartments, Condos"}
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-600">
-                  {continueSearchProperties.length}+ new listings
-                </p>
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading available rentals...</p>
               </div>
-              <div className="hidden sm:flex gap-2 flex-shrink-0">
-                <button
-                  onClick={() => scrollCarousel("left")}
-                  className="p-2 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
-                  aria-label="Scroll left"
-                >
-                  <ChevronLeft size={20} className="text-gray-600" />
-                </button>
-                <button
-                  onClick={() => scrollCarousel("right")}
-                  className="p-2 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
-                  aria-label="Scroll right"
-                >
-                  <ChevronRight size={20} className="text-gray-600" />
-                </button>
-              </div>
-            </div>
-
-            {/* Property Carousel */}
-            <div
-              id="property-carousel"
-              className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth pb-4"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              {continueSearchProperties.map((property) => (
-                <div
-                  key={property.id}
-                  className="flex-shrink-0 w-full sm:w-72 md:w-80 cursor-pointer group"
-                  onClick={() => {
-                    if (searchHistory.length > 0) {
-                      handleContinueSearch(searchHistory[0]);
-                    } else {
-                      const params = new URLSearchParams();
-                      params.set("location", property.location);
-                      window.location.href = `/rentals?${params.toString()}`;
-                    }
-                  }}
-                >
-                  {/* Property Image */}
-                  <div className="relative mb-3 overflow-hidden rounded-lg">
-                    <img
-                      src={property.image || "/placeholder.svg"}
-                      alt={property.address}
-                      className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    {property.badge && (
-                      <div
-                        className={`absolute top-2 sm:top-3 left-2 sm:left-3 px-2 sm:px-3 py-1 rounded-md text-xs font-semibold text-white ${
-                          property.badge.toLowerCase().includes("apply") ||
-                          property.badge.toLowerCase().includes("special")
-                            ? "bg-red-600"
-                            : "bg-gray-800"
-                        }`}
-                      >
-                        {property.badge}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Property Details */}
-                  <div>
-                    <div className="flex items-baseline gap-2 mb-2">
-                      <span className="text-xl sm:text-2xl font-bold text-foreground">
-                        ${property.price.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600 mb-2 flex-wrap">
-                      <span className="font-semibold">{property.beds} bd</span>
-                      <span className="hidden sm:inline">|</span>
-                      <span className="font-semibold">{property.baths} ba</span>
-                      <span className="hidden sm:inline">|</span>
-                      <span className="font-semibold">
-                        {property.sqft.toLocaleString()} sqft
-                      </span>
-                    </div>
-                    {property.address && (
-                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-1 mb-1">
-                        {property.address}
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-500">
-                      {property.type} • {property.location}
-                    </p>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </div>
+      ) : (
+        continueSearchProperties.length > 0 && (
+          <div className="w-full bg-white px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-b">
+            <div className="max-w-7xl mx-auto">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground mb-2 text-balance leading-snug">
+                    {searchHistory.length > 0 && noMatchFound
+                      ? `No homes available in ${searchHistory[0].location}. But these are the homes available in other locations...`
+                      : searchHistory.length > 0
+                      ? `Continue searching in ${searchHistory[0].location} — ${
+                          continueSearchProperties.length
+                        } ${
+                          continueSearchProperties.length === 1
+                            ? "house"
+                            : "houses"
+                        } found`
+                      : "Available Rentals: Houses, Townhomes, Apartments, Condos"}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    {continueSearchProperties.length}+ new listings
+                  </p>
+                </div>
+                <div className="hidden sm:flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => scrollCarousel("left")}
+                    className="p-2 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                    aria-label="Scroll left"
+                  >
+                    <ChevronLeft size={20} className="text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => scrollCarousel("right")}
+                    className="p-2 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                    aria-label="Scroll right"
+                  >
+                    <ChevronRight size={20} className="text-gray-600" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Property Carousel */}
+              <div
+                id="property-carousel"
+                className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth pb-4"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
+                {continueSearchProperties.map((property) => (
+                  <div
+                    key={property.id}
+                    className="flex-shrink-0 w-full sm:w-72 md:w-80 cursor-pointer group"
+                    onClick={() => {
+                      if (searchHistory.length > 0) {
+                        handleContinueSearch(searchHistory[0]);
+                      } else {
+                        const params = new URLSearchParams();
+                        params.set("location", property.location);
+                        window.location.href = `/rentals?${params.toString()}`;
+                      }
+                    }}
+                  >
+                    {/* Property Image */}
+                    <div className="relative mb-3 overflow-hidden rounded-lg">
+                      <img
+                        src={property.image || "/placeholder.svg"}
+                        alt={property.address}
+                        className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {property.badge && (
+                        <div
+                          className={`absolute top-2 sm:top-3 left-2 sm:left-3 px-2 sm:px-3 py-1 rounded-md text-xs font-semibold text-white ${
+                            property.badge.toLowerCase().includes("apply") ||
+                            property.badge.toLowerCase().includes("special")
+                              ? "bg-red-600"
+                              : "bg-gray-800"
+                          }`}
+                        >
+                          {property.badge}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Property Details */}
+                    <div>
+                      <div className="flex items-baseline gap-2 mb-2">
+                        <span className="text-xl sm:text-2xl font-bold text-foreground">
+                          ₦{property.price.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600 mb-2 flex-wrap">
+                        <span className="font-semibold">
+                          {property.beds} bd
+                        </span>
+                        <span className="hidden sm:inline">|</span>
+                        <span className="font-semibold">
+                          {property.baths} ba
+                        </span>
+                        <span className="hidden sm:inline">|</span>
+                        <span className="font-semibold">
+                          {property.sqft.toLocaleString()} sqft
+                        </span>
+                      </div>
+                      {property.address && (
+                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-1 mb-1">
+                          {property.address}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-500">
+                        {property.type} • {property.location}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
       )}
 
       {/* Quick Actions */}
@@ -475,21 +516,21 @@ export default function LandingPage() {
                 title: "Rent a home",
                 desc: "Browse verified rentals, compare neighborhoods, and discover a place that fits your lifestyle.",
                 btn: "Find a home",
-                image: "/rentahome.jpg", 
+                image: "/rentahome.jpg",
                 href: "/rentals?propertyType=Home",
               },
               {
                 title: "Book a Shortlet",
                 desc: "Explore premium short-term rentals with flexible stay options and instant availability.",
                 btn: "Find rentals",
-                image: "/shortlet.jpg", 
+                image: "/shortlet.jpg",
                 href: "/rentals?propertyType=Shortlet",
               },
               {
                 title: "Rent a Hostel",
                 desc: "Find affordable, comfortable hostel stays anywhere. Compare rooms, check availability, and reserve instantly.",
                 btn: "See your option",
-                image: "/hostel.jpg", 
+                image: "/hostel.jpg",
                 href: "/rentals?propertyType=Hostel",
               },
             ].map((action, i) => (
@@ -517,14 +558,13 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-
-      {/* About Zillow's Recommendations Section */}
       <div className="w-full bg-white px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 border-t border-gray-200">
         <div className="max-w-6xl mx-auto">
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4 sm:mb-6 text-balance">
               About Zillow's Recommendations
             </h2>
+
             <p className="text-sm sm:text-base text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Recommendations are based on your location and search activity,
               such as the homes you've viewed and saved and the filters you've

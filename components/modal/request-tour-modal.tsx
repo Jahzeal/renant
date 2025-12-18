@@ -12,10 +12,19 @@ interface RequestTourModalProps {
   onClose: () => void
   listingTitle: string
   listingId: string
+  propertyType: "apartment" | "hostel" | "shortlet"
+
   listingPrice?: number
 }
 
-export function RequestTourModal({ isOpen, onClose, listingTitle, listingId, listingPrice }: RequestTourModalProps) {
+export function RequestTourModal({
+  isOpen,
+  onClose,
+  listingTitle,
+  listingId,
+  listingPrice,
+  propertyType,
+}: RequestTourModalProps) {
   const router = useRouter()
   const [formData, setFormData] = useState({
     name: "",
@@ -32,18 +41,10 @@ export function RequestTourModal({ isOpen, onClose, listingTitle, listingId, lis
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    addTourRequest({
-      listingId,
-      listingTitle,
-      listingPrice,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      message: formData.message,
-      status: "pending",
-    })
+    await addTourRequest(listingId)
+
     onClose()
     router.push("/manage-tours")
     // Reset form
