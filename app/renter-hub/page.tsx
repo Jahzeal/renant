@@ -78,6 +78,12 @@ export default function RenterHubPage() {
               >
                 Account settings
               </Link>
+              <Link
+                href="/how-it-works"
+                className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+              >
+                How it works
+              </Link>
             </nav>
           </div>
         </div>
