@@ -36,7 +36,7 @@ export interface ApplyRequest {
 interface RenterRequestsContextType {
   tourRequests: TourRequest[]
   applyRequests: ApplyRequest[]
-  addTourRequest: (request: Omit<TourRequest, "id" | "createdAt">) => void
+  addTourRequest: (request: Omit<TourRequest, "id" | "createdAt" | "status">) => Promise<TourRequest | null>
   requestToApply: (propertyId: string) => Promise<ApplyRequest | null>
   getRequestsFromDb: () => Promise<ApplyRequest[] | null>
   getTourRequestsFromDb: () => Promise<TourRequest[] | null>
@@ -51,34 +51,69 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
   const [tourRequests, setTourRequests] = useState<TourRequest[]>([])
   const [applyRequests, setApplyRequests] = useState<ApplyRequest[]>([])
 
+  // Fetch tour requests from database on mount (just like apply requests)
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("renter_tour_requests")
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored)
-          setTourRequests(parsed)
-        } catch (err) {
-          console.error("Failed to parse tour requests from localStorage:", err)
-        }
-      }
-    }
+    getTourRequestsFromDb()
   }, [])
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && tourRequests.length >= 0) {
-      localStorage.setItem("renter_tour_requests", JSON.stringify(tourRequests))
-    }
-  }, [tourRequests])
-
   // ---------------------- TOUR ----------------------
-  const addTourRequest = (request: Omit<TourRequest, "id" | "createdAt">) => {
-    const newRequest: TourRequest = {
-      ...request,
-      id: `tour-${Date.now()}`,
-      createdAt: new Date().toISOString(),
+  const addTourRequest = async (
+    request: Omit<TourRequest, "id" | "createdAt" | "status">,
+  ): Promise<TourRequest | null> => {
+    const token = getAuthToken()
+    if (!token) {
+      console.error("No auth token available")
+      return null
     }
-    setTourRequests((prev) => [newRequest, ...prev])
+
+    try {
+      const response = await apiRequest(`${API_BASE_URL}/users/tour-request`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          propertyId: request.listingId,
+          name: request.name,
+          email: request.email,
+          phone: request.phone,
+          message: request.message,
+        }),
+      })
+
+      if (!response || !response.ok) {
+        const errText = await response?.text()
+        console.error("Failed to submit tour request:", errText)
+        return null
+      }
+
+      const data = await response.json()
+
+      // Format the response from backend
+      const newRequest: TourRequest = {
+        id: data.id,
+        listingId: data.property?.id || request.listingId,
+        listingTitle: data.property?.title || request.listingTitle,
+        listingPrice:
+          typeof data.property?.price === "object"
+            ? (data.property.price?.amount ?? request.listingPrice)
+            : (data.property?.price ?? request.listingPrice),
+        propertyType: data.property?.propertyType || request.propertyType,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        message: data.message || "",
+        createdAt: data.createdAt || new Date().toISOString(),
+        status: data.status || "pending",
+      }
+
+      setTourRequests((prev) => [newRequest, ...prev])
+      return newRequest
+    } catch (error) {
+      console.error("Failed to submit tour request:", error)
+      return null
+    }
   }
 
   const getTourRequestsFromDb = useCallback(async (): Promise<TourRequest[] | null> => {
@@ -89,9 +124,9 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      console.log("📅 Fetching tour requests...")
+      console.log("Fetching tour requests...")
 
-      const res = await apiRequest(`${API_BASE_URL}/users/tours`, {
+      const res = await apiRequest(`${API_BASE_URL}/users/tour-requests`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -99,7 +134,7 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
       })
 
       if (!res) {
-        console.error("❌ No response received from tour requests API")
+        console.error(" No response received from tour requests API")
         return null
       }
 
@@ -110,7 +145,7 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
 
         if (!response.ok) {
           const errText = await response.text()
-          console.error("❌ Tour request failed:", response.status, errText)
+          console.error(" Tour request failed:", response.status, errText)
           return null
         }
 
@@ -119,10 +154,10 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
         data = res
       }
 
-      console.log("🟢 Tour requests data:", data)
+      console.log("Tour requests data:", data)
 
       if (!Array.isArray(data)) {
-        console.error("❌ Expected array for tour requests, got:", data)
+        console.error(" Expected array for tour requests, got:", data)
         return null
       }
 
@@ -143,7 +178,7 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
         status: req.status ?? "pending",
       }))
 
-      console.log("✅ Formatted tour requests:", formatted)
+      console.log("Formatted tour requests:", formatted)
 
       setTourRequests(formatted)
       return formatted
@@ -205,7 +240,7 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
       })
 
       if (!res) {
-        console.error("❌ No response received from apiRequest")
+        console.error(" No response received from apiRequest")
         return null
       }
 
@@ -216,7 +251,7 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
 
         if (!response.ok) {
           const errText = await response.text()
-          console.error("❌ Request failed:", response.status, errText)
+          console.error(" Request failed:", response.status, errText)
           return null
         }
 
@@ -226,7 +261,7 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
       }
 
       if (!Array.isArray(data)) {
-        console.error("❌ Expected array, got:", data)
+        console.error("Expected array, got:", data)
         return null
       }
 
@@ -240,7 +275,7 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
         status: req.status ?? "submitted",
       }))
 
-      console.log("✅ Formatted data:", formatted)
+      console.log("Formatted data:", formatted)
 
       setApplyRequests(formatted)
       return formatted
@@ -260,28 +295,30 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
   }
 
   const removeTourRequest = async (id: string) => {
-    // First, try to delete from backend if it exists there
     try {
       const token = getAuthToken()
-      if (token && !id.startsWith("tour-")) {
-        // Only call backend if this is a backend-generated ID (not a local one)
-        const res = await apiRequest(`${API_BASE_URL}/users/cancel-tours/${id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (res && !res.ok) {
-          console.warn("Failed to delete tour from backend, but will remove from local state")
-        }
+      if (!token) {
+        console.error("No auth token for delete")
+        return
       }
-    } catch (err) {
-      console.warn("Backend delete failed, but will remove from local state:", err)
-    }
 
-    // Always remove from local state regardless of backend result
-    setTourRequests((prev) => prev.filter((req) => req.id !== id))
+      const res = await apiRequest(`${API_BASE_URL}/users/cancel-tours/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (res && !res.ok) {
+        console.error("Failed to delete tour from backend")
+        return
+      }
+
+      // Remove from local state after successful backend delete
+      setTourRequests((prev) => prev.filter((req) => req.id !== id))
+    } catch (err) {
+      console.error("Failed to remove tour request:", err)
+    }
   }
 
   return (
