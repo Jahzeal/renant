@@ -16,24 +16,29 @@ export default function SavedHomesPage() {
 
   // Fetch all listings from backend
   useEffect(() => {
-    let mounted = true;
-    const fetchListings = async () => {
-      setLoading(true);
-      try {
-        const data = await getRentals();
-        if (!mounted) return;
-        setAllListings(data);
-      } catch (e) {
-        console.error("Failed to fetch listings:", e);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    fetchListings();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  let mounted = true;
+
+  const fetchListings = async () => {
+    setLoading(true);
+    try {
+      const res = await getRentals();
+      if (!mounted) return;
+
+      const listings = Array.isArray(res) ? res : res.data ?? [];
+      setAllListings(listings);
+    } catch (e) {
+      console.error("Failed to fetch listings:", e);
+    } finally {
+      if (mounted) setLoading(false);
+    }
+  };
+
+  fetchListings();
+  return () => {
+    mounted = false;
+  };
+}, []);
+
 
   // Filter saved listings
   const savedListings = allListings.filter((listing) =>
