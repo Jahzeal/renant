@@ -25,6 +25,9 @@ interface Property {
   location: string;
   type: string;
 }
+function unwrapRentals(res: any): any[] {
+  return Array.isArray(res) ? res : res?.data ?? []
+}
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -50,7 +53,8 @@ export default function LandingPage() {
     const fetchRentals = async () => {
       setIsLoadingRentals(true);
       try {
-        const rentalsData = await getRentals();
+        const res = await getRentals()
+        const rentalsData = unwrapRentals(res)
 
         if (searchHistory.length > 0) {
           fetchPropertiesForLocation(searchHistory[0], rentalsData);
@@ -90,7 +94,8 @@ export default function LandingPage() {
     const searchCity = searchTerm.split(",")[0].trim();
 
     // Use passed data or fetch fresh data
-    const listings = rentalsData || (await getRentals());
+const res = rentalsData ?? (await getRentals())
+const listings = unwrapRentals(res)
 
     let filteredListings = listings.filter(
       (listing: any) =>
