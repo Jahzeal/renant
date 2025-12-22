@@ -496,7 +496,13 @@ export default function Header() {
                   >
                     Saved homes
                   </Link>
-
+                  <Link
+                    href="/manage-tours"
+                    className="block text-foreground hover:text-primary font-medium text-sm py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Manage Tours
+                  </Link>
                   <Link
                     href="/renter-hub"
                     className="block text-foreground hover:text-primary font-medium text-sm py-2"
@@ -512,7 +518,13 @@ export default function Header() {
                   >
                     Account settings
                   </Link>
-
+                  <Link
+                    href="/how-it-works"
+                    className="block text-foreground hover:text-primary font-medium text-sm py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    How it works
+                  </Link>
                   <hr className="border-border my-2" />
 
                   <button
