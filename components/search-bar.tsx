@@ -111,6 +111,7 @@ const FilterButton = ({ label, options = [], isPrice = false, onApply, onSelect 
 interface SearchBarProps {
   onSearch: (location: string, coords?: { lng: number; lat: number }) => void
   onFiltersChange?: (filters: AppliedFilters) => void
+  filters?: AppliedFilters
 }
 
 interface AppliedFilters {
@@ -122,7 +123,7 @@ interface AppliedFilters {
   moreOptions: MoreOptionsFilters | null
 }
 
-export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps) {
+export default function SearchBar({ onSearch, onFiltersChange, filters }: SearchBarProps) {
   const [mounted, setMounted] = useState(false)
   const [searchInput, setSearchInput] = useState("")
   const [isMoreOptionsOpen, setIsMoreOptionsOpen] = useState(false)
@@ -144,6 +145,12 @@ export default function SearchBar({ onSearch, onFiltersChange }: SearchBarProps)
   const [isSaved, setIsSaved] = useState(false)
 
   useEffect(() => setMounted(true), [])
+
+  useEffect(() => {
+    if (filters) {
+      setAppliedFilters(filters)
+    }
+  }, [filters])
 
   if (!mounted) return null
 
