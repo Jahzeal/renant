@@ -21,7 +21,7 @@ interface SidebarProps {
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
   { icon: Upload, label: "Upload Properties", href: "/admin/upload" },
-  { icon: Upload, label: "Rentals", href: "/admin/upload" },
+  { icon: Upload, label: "Rentals", href: "/admin/rentals" },
 ];
 
 export default function Sidebar({
