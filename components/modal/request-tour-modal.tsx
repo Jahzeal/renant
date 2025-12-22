@@ -26,6 +26,8 @@ export function RequestTourModal({
   propertyType,
 }: RequestTourModalProps) {
   const router = useRouter();
+  const { addTourRequest } = useRenterRequests();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -33,7 +35,9 @@ export function RequestTourModal({
     message:
       "I'm interested in your property and would like to move forward. Can you show me around ?",
   });
-  const { addTourRequest } = useRenterRequests();
+
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
@@ -44,20 +48,33 @@ export function RequestTourModal({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addTourRequest(listingId);
+    setLoading(true);
 
-    onClose();
-    router.push("/manage-tours");
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      message:
-        "I'm interested in your property and would like to move forward. Can you show me around ?",
-    });
+    const req = await addTourRequest(listingId);
+
+    setLoading(false);
+
+    if (req) {
+      setSuccess(true);
+
+      // Optional: reset form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        message:
+          "I'm interested in your property and would like to move forward. Can you show me around ?",
+      });
+
+      // Navigate after short delay
+      setTimeout(() => {
+        onClose();
+        router.push("/manage-tours");
+      }, 1500);
+    }
   };
 
   return (
@@ -72,6 +89,11 @@ export function RequestTourModal({
             <X size={24} />
           </button>
         </div>
+        {success && (
+          <div className="mx-8 mt-6 rounded-md bg-green-50 border border-green-200 p-4 text-green-700 font-medium">
+            Tour request sent successfully!
+          </div>
+        )}
 
         <form
           onSubmit={handleSubmit}
@@ -136,9 +158,10 @@ export function RequestTourModal({
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-md transition-colors text-lg"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-md transition-colors text-lg"
           >
-            Send tour request
+            {loading ? "Sending..." : "Send tour request"}
           </button>
         </form>
       </div>

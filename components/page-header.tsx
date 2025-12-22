@@ -1,338 +1,380 @@
-"use client"
-import { useState, useEffect, useRef } from "react"
-import type React from "react"
+"use client";
 
-import Link from "next/link"
-import { Menu, X, Search, LogOut } from "lucide-react"
-import { useAuth } from "@/hooks/use-auth"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { Menu, X, LogOut, ChevronDown } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
 
 export default function PageHeader() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-//   const [isScrolled, setIsScrolled] = useState(false)
-  const [searchInput, setSearchInput] = useState("")
-  const [showRentDropdown, setShowRentDropdown] = useState(false)
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false)
-  const [showManageRentalsDropdown, setShowManageRentalsDropdown] = useState(false)
-  const profileDropdownRef = useRef<HTMLDivElement>(null)
-  const manageRentalsDropdownRef = useRef<HTMLDivElement>(null)
-  const { user, signOut } = useAuth()
-  const router = useRouter()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showRentDropdown, setShowRentDropdown] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showManageRentalsDropdown, setShowManageRentalsDropdown] =
+    useState(false);
 
-  const navItems = [{ label: "Rent", href: "#" }]
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const manageRentalsDropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownTimer = useRef<NodeJS.Timeout | null>(null);
 
-//   useEffect(() => {
-//     const handleScroll = () => {
-//       setIsScrolled(window.scrollY > 200)
-//     }
+  const { user, signOut } = useAuth();
+  const router = useRouter();
 
-//     window.addEventListener("scroll", handleScroll)
-//     return () => window.removeEventListener("scroll", handleScroll)
-//   }, [])
+  const navItems = [{ label: "Rent", href: "/rentals" }];
 
+  // Close dropdowns on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target as Node)) {
-        setShowProfileDropdown(false)
+      const target = e.target as Node;
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(target)
+      ) {
+        setShowProfileDropdown(false);
       }
-      if (manageRentalsDropdownRef.current && !manageRentalsDropdownRef.current.contains(e.target as Node)) {
-        setShowManageRentalsDropdown(false)
+      if (
+        manageRentalsDropdownRef.current &&
+        !manageRentalsDropdownRef.current.contains(target)
+      ) {
+        setShowManageRentalsDropdown(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-//   const handleSearch = (e: React.FormEvent) => {
-//     e.preventDefault()
-//     if (searchInput.trim()) {
-//       window.location.href = `/rentals?location=${encodeURIComponent(searchInput)}`
-//     }
-//   }
+  // Prevent scrolling when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
-  const handleSignOut = () => {
-    signOut()
-    router.push("/")
-  }
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/");
+  };
 
-  let dropdownTimer: NodeJS.Timeout | null = null
+  // Hover logic for the "Rent" Mega Menu
+  const openRentMenu = () => {
+    if (dropdownTimer.current) clearTimeout(dropdownTimer.current);
+    setShowRentDropdown(true);
+  };
 
-  const handleRentMouseEnter = () => {
-    if (dropdownTimer) clearTimeout(dropdownTimer)
-    setShowRentDropdown(true)
-  }
-
-  const handleRentMouseLeave = () => {
-    dropdownTimer = setTimeout(() => {
-      setShowRentDropdown(false)
-    }, 100)
-  }
-
-  const handleDropdownMouseEnter = () => {
-    if (dropdownTimer) clearTimeout(dropdownTimer)
-    setShowRentDropdown(true)
-  }
-
-  const handleDropdownMouseLeave = () => {
-    setShowRentDropdown(false)
-  }
+  const closeRentMenu = () => {
+    dropdownTimer.current = setTimeout(() => {
+      setShowRentDropdown(false);
+    }, 150);
+  };
 
   return (
-    <>
-      <header className="border-b border-border bg-white relative z-30">
-        <div className="max-w-full px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Link href="/rentals" className="text-primary font-bold text-2xl hover:opacity-80 transition-opacity">
-                Z
-              </Link>
+    <header className="border-b border-slate-200 bg-white sticky top-0 z-50">
+      <div className="max-w-full px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo and Primary Nav */}
+          <div className="flex items-center gap-8">
+            <Link href="/rentals" className="text-blue-900 font-black text-3xl">
+              Z
+            </Link>
 
-              <span className="font-semibold hidden sm:inline text-lg"></span>
-            </div>
-
-            <nav className="hidden md:flex items-center gap-8 flex-1 ml-12">
+            <nav className="hidden md:flex items-center gap-6">
               {navItems.map((item) => (
                 <div
                   key={item.label}
-                  className="relative"
-                  onMouseEnter={() => item.label === "Rent" && handleRentMouseEnter()}
-                  onMouseLeave={() => item.label === "Rent" && handleRentMouseLeave()}
+                  className="relative py-5"
+                  onMouseEnter={openRentMenu}
+                  onMouseLeave={closeRentMenu}
                 >
-                  <a
+                  <Link
                     href={item.href}
-                    className="text-foreground hover:text-primary font-medium text-sm transition-colors whitespace-nowrap"
+                    className="text-slate-900 hover:text-blue-900 font-medium text-sm transition-colors"
                   >
                     {item.label}
-                  </a>
+                  </Link>
                 </div>
               ))}
             </nav>
+          </div>
 
-            {showRentDropdown && (
-              <div
-                className="fixed left-0 right-0 top-[60px] bg-white border-b border-border shadow-lg z-50"
-                onMouseEnter={handleDropdownMouseEnter}
-                onMouseLeave={handleDropdownMouseLeave}
-              >
-                <div className="max-w-7xl mx-auto px-8 py-12">
-                  <div className="grid grid-cols-4 gap-16">
-                    <div>
-                      <h3 className="font-semibold text-base mb-6 text-foreground">Lyons rentals</h3>
-                      <div className="space-y-4">
-                        <a href="/rentals" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Apartments for rent
-                        </a>
-                        <a href="/rentals" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Houses for rent
-                        </a>
-                        <a href="/rentals" className="block text-sm text-primary hover:underline leading-relaxed">
-                          All rental listings
-                        </a>
-                        <a href="/rentals" className="block text-sm text-primary hover:underline leading-relaxed">
-                          All rental buildings
-                        </a>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="font-semibold text-base mb-6 text-foreground">Your search</h3>
-                      <div className="space-y-4">
-                        <a href="#" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Saved searches
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Inbox
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Contacted rentals
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Applications
-                        </a>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="font-semibold text-base mb-6 text-foreground">Your rental</h3>
-                      <div className="space-y-4">
-                        <a href="#" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Overview
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Make a payment
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline leading-relaxed">
-                          Your lease
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="hidden sm:flex items-center gap-4 md:gap-6">
+          {/* Right Side Actions */}
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-6">
+              {/* Manage Rentals Dropdown */}
               <div className="relative" ref={manageRentalsDropdownRef}>
                 <button
-                  onClick={() => setShowManageRentalsDropdown(!showManageRentalsDropdown)}
-                  className="text-foreground hover:text-primary font-medium text-sm transition-colors"
+                  onClick={() =>
+                    setShowManageRentalsDropdown(!showManageRentalsDropdown)
+                  }
+                  className="flex items-center gap-1 text-slate-700 hover:text-blue-900 font-medium text-sm transition-colors"
                 >
                   Manage rentals
+                  <ChevronDown size={14} />
                 </button>
 
                 {showManageRentalsDropdown && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white border border-border rounded-lg shadow-lg p-6 z-50">
-                    <div>
-                      <h3 className="font-semibold text-base mb-4 text-foreground">Rental Management Tools</h3>
-                      <div className="space-y-3 mb-6">
-                        {/* <a href="#" className="block text-sm text-primary hover:underline">
-                          List a rental
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline">
-                          My Listings
-                        </a> */}
-                        <a href="#" className="block text-sm text-primary hover:underline">
-                          Inbox
-                        </a>
-                        <a href="/renter-hub" className="block text-sm text-primary hover:underline">
-                          Applications
-                        </a>
-                        {/* <a href="#" className="block text-sm text-primary hover:underline">
-                          Leases
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline">
-                          Payments
-                        </a> */}
-                      </div>
-
-                      <hr className="border-border my-4" />
-
-                      <h4 className="font-semibold text-sm mb-3 text-foreground">Learn More</h4>
-                      <div className="space-y-3">
-                        {/* <a href="#" className="block text-sm text-primary hover:underline">
-                          Follow Rental Manager
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline">
-                          Price My Rental
-                        </a>
-                        <a href="#" className="block text-sm text-primary hover:underline">
-                          Resource Center
-                        </a> */}
-                        <a href="#" className="block text-sm text-primary hover:underline">
-                          Help Center
-                        </a>
-                      </div>
+                  <div className="absolute right-0 mt-3 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-5 animate-in fade-in zoom-in-95 duration-100">
+                    <h3 className="font-bold text-slate-900 mb-3">
+                      Rental Manager
+                    </h3>
+                    <div className="space-y-3">
+                      <Link
+                        href="/renter-hub"
+                        className="block text-sm text-slate-600 hover:text-blue-600"
+                      >
+                        Applications
+                      </Link>
+                      <Link
+                        href="#"
+                        className="block text-sm text-slate-600 hover:text-blue-600"
+                      >
+                        Messages
+                      </Link>
+                      <hr className="border-slate-100" />
+                      <Link
+                        href="#"
+                        className="block text-sm text-slate-600 hover:text-blue-600"
+                      >
+                        Help Center
+                      </Link>
                     </div>
                   </div>
                 )}
               </div>
 
-              <button className="text-foreground hover:text-primary font-medium text-sm transition-colors">
+              <Link
+                href="#"
+                className="text-slate-700 hover:text-blue-900 font-medium text-sm"
+              >
                 Get help
-              </button>
+              </Link>
 
               {user ? (
-                <div className="flex items-center gap-4">
-                  <div className="relative" ref={profileDropdownRef}>
+                <div className="relative" ref={profileDropdownRef}>
+                  <button
+                    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                    className="flex items-center"
+                  >
                     <img
                       src={user.profileImage || "/placeholder.svg"}
-                      alt={user.firstName}
-                      className="w-8 h-8 rounded-full border-2 border-primary hover:border-primary/80 transition-colors cursor-pointer"
-                      title={user.firstName}
-                      onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                      alt="Profile"
+                      className="w-9 h-9 rounded-full border border-slate-200 hover:ring-2 hover:ring-blue-100 transition-all"
                     />
+                  </button>
 
-                    {showProfileDropdown && (
-                      <div className="absolute right-0 mt-2 w-64 bg-white border border-border rounded-lg shadow-lg p-6 z-50">
-                        <div className="space-y-4">
-                          <a href="/saved-homes" className="block text-sm text-foreground hover:text-primary font-medium">
-                            Saved homes
-                          </a>
-                          
-                           <a href="/manage-tours" className="block text-sm text-foreground hover:text-primary font-medium">
-                           Manage Tours
-                          </a>
-                          
-                          <a href="/renter-hub" className="block text-sm text-foreground hover:text-primary font-medium">
-                            Renter Hub
-                          </a> 
-
-                          <hr className="border-border my-2" />
-
-                          <a href="/account-settings" className="block text-sm text-foreground hover:text-primary font-medium">
-                            Account settings
-                          </a>
-
-                          <hr className="border-border my-2" />
-
-                          <button
-                            onClick={handleSignOut}
-                            className="w-full text-left text-sm text-foreground hover:text-primary font-medium flex items-center gap-2"
-                          >
-                            <LogOut size={16} />
-                            Sign out
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  {showProfileDropdown && (
+                    <div className="absolute right-0 mt-3 w-56 bg-white border border-slate-200 rounded-xl shadow-xl py-2 animate-in fade-in zoom-in-95 duration-100">
+                      <Link
+                        href="/saved-homes"
+                        className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      >
+                        Saved homes
+                      </Link>
+                      <Link
+                        href="/manage-tours"
+                        className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      >
+                        Manage Tours
+                      </Link>
+                      <Link
+                        href="/renter-hub"
+                        className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      >
+                        Renter Hub
+                      </Link>
+                      <hr className="my-2 border-slate-100" />
+                      <Link
+                        href="/account-settings"
+                        className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      >
+                        Settings
+                      </Link>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                      >
+                        <LogOut size={16} /> Sign out
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <Link href="/signin" className="text-black font-semibold text-sm hover:opacity-80 transition-opacity">
+                <Link
+                  href="/signin"
+                  className="text-blue-600 font-bold text-sm hover:text-blue-700"
+                >
                   Sign in
                 </Link>
               )}
             </div>
 
+            {/* Mobile Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 hover:bg-muted rounded-lg transition-colors"
-              aria-label="Toggle menu"
+              className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
             >
-              {mobileMenuOpen ? (
-                <X size={24} className="text-foreground" />
-              ) : (
-                <Menu size={24} className="text-foreground" />
-              )}
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* RENT MEGA MENU (Desktop) */}
+      {showRentDropdown && (
+        <div
+          className="hidden md:block absolute left-0 right-0 top-full bg-white border-b border-slate-200 shadow-2xl animate-in slide-in-from-top-2 duration-200"
+          onMouseEnter={openRentMenu}
+          onMouseLeave={closeRentMenu}
+        >
+          <div className="max-w-7xl mx-auto px-8 py-10 grid grid-cols-3 gap-12">
+            <div>
+              <h3 className="font-bold text-slate-900 mb-4 uppercase text-xs tracking-wider">
+                Discover Rentals
+              </h3>
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    href="/rentals"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Apartments for rent
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/rentals"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Houses for rent
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/rentals"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    All rental listings
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 mb-4 uppercase text-xs tracking-wider">
+                Your Search
+              </h3>
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    href="#"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Saved searches
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Contacted rentals
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 mb-4 uppercase text-xs tracking-wider">
+                Resources
+              </h3>
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    href="#"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Renter Hub
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="#"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Lease Agreements
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MOBILE MENU OVERLAY */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-[100] bg-white md:hidden flex flex-col animate-in slide-in-from-right duration-300">
+          <div className="flex items-center justify-between px-6 h-16 border-b">
+            <span className="text-blue-600 font-black text-2xl">Z</span>
+            <button onClick={() => setMobileMenuOpen(false)} className="p-2">
+              <X size={28} />
             </button>
           </div>
 
-          <div
-            className={`md:hidden transition-all duration-300 overflow-hidden ${
-              mobileMenuOpen ? "max-h-[500px] opacity-100 mt-4" : "max-h-0 opacity-0"
-            }`}
-          >
-            <div className="pb-4 border-t border-border pt-4 space-y-3">
-              {navItems.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className="block text-foreground hover:text-primary font-medium text-sm py-2 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </a>
-              ))}
-              <hr className="border-border" />
-              <button className="w-full text-left text-foreground hover:text-primary font-medium text-sm py-2 transition-colors">
+          <div className="flex-1 overflow-y-auto p-6 space-y-8">
+            <nav className="space-y-6">
+              <Link
+                href="/rentals"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-2xl font-bold text-slate-900"
+              >
+                Rent
+              </Link>
+              <Link
+                href="/manage-rentals"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-2xl font-bold text-slate-900"
+              >
                 Manage rentals
-              </button>
-              <button className="w-full text-left text-foreground hover:text-primary font-medium text-sm py-2 transition-colors">
+              </Link>
+              <Link
+                href="#"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-2xl font-bold text-slate-900"
+              >
                 Get help
-              </button>
+              </Link>
+            </nav>
+
+            <hr className="border-slate-100" />
+
+            <div className="space-y-6">
               {user ? (
-                <button
-                  onClick={handleSignOut}
-                  className="w-full text-left text-foreground hover:text-primary font-medium text-sm py-2 transition-colors flex items-center gap-2"
-                >
-                  <LogOut size={16} />
-                  Sign out
-                </button>
+                <>
+                  <Link
+                    href="/saved-homes"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block text-lg text-slate-600"
+                  >
+                    Saved homes
+                  </Link>
+                  <Link
+                    href="/renter-hub"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block text-lg text-slate-600"
+                  >
+                    Renter Hub
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-lg text-red-600 font-medium"
+                  >
+                    Sign out
+                  </button>
+                </>
               ) : (
                 <Link
                   href="/signin"
-                  className="text-black font-semibold text-sm hover:opacity-80 transition-opacity block py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-xl font-bold text-blue-600"
                 >
                   Sign in
                 </Link>
@@ -340,10 +382,7 @@ export default function PageHeader() {
             </div>
           </div>
         </div>
-      </header>
-
-          
-    </>
-  )
+      )}
+    </header>
+  );
 }
-;
