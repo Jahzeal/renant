@@ -1,65 +1,39 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function getRentals() {
-  try {
-    if (!API_BASE_URL) {
-      console.error("NEXT_PUBLIC_API_URL is not set")
-      return []
-    }
-
-    console.log("Fetching from:", `${API_BASE_URL}/rentals/allRentals`)
-    const res = await fetch(`${API_BASE_URL}/rentals/allRentals`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-    })
-
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.error("API error response:", errorText)
-      throw new Error(`Failed to fetch rentals: ${res.status}`)
-    }
-
-    const data = await res.json()
-    console.log("getRentals() success, returned:", data)
-    return data
-  } catch (error) {
-    console.error("getRentals() error:", error)
-    return []
-  }
+function buildQueryString(filters: Record<string, any>) {
+  const cleanFilters = Object.fromEntries(
+    Object.entries(filters).filter(([_, value]) => value !== undefined && value !== null)
+  );
+  return new URLSearchParams(cleanFilters).toString();
 }
 
-export async function filterRentals(filters: Record<string, any>) {
+export async function getRentals(filters: Record<string, any> = {}) {
   try {
-    // Handle "All types" for propertyType by converting it to undefined
-    if (filters.propertyType === "All types") {
-      filters.propertyType = undefined
+    if (!API_BASE_URL) {
+      console.error("NEXT_PUBLIC_API_URL is not set");
+      return [];
     }
 
-    // Remove undefined or null values
-    const cleanFilters = Object.fromEntries(
-      Object.entries(filters).filter(([_, value]) => value !== undefined && value !== null),
-    )
+    // Convert "All types" to undefined
+    if (filters.propertyType === "All types") filters.propertyType = undefined;
 
-    const res = await fetch(`${API_BASE_URL}/rentals/filterRentals`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(cleanFilters),
+    const queryString = buildQueryString(filters);
+    const url = `${API_BASE_URL}/rentals${queryString ? `?${queryString}` : ''}`;
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
       cache: "no-store",
-    })
+    });
 
     if (!res.ok) {
-      console.error("Filter API error:", await res.text())
-      throw new Error(`Failed to fetch filtered rentals: ${res.status}`)
+      console.error("API error response:", await res.text());
+      throw new Error(`Failed to fetch rentals: ${res.status}`);
     }
 
-    return await res.json()
+    return await res.json();
   } catch (error) {
-    console.error("filterRentals() error:", error)
-    return []
+    console.error("getRentals() error:", error);
+    return [];
   }
 }

@@ -23,12 +23,15 @@ interface ListingDetailsModalProps {
     amenities?: string[]
     type?: string
     coords?: { lng: number; lat: number }
+    propertyType?: string
   }
   isOpen: boolean
   onClose: () => void
   isFavorited?: boolean
   onFavoriteToggle?: () => void
 }
+
+
 
 export default function ListingDetailsModal({
   listing,
@@ -44,6 +47,13 @@ export default function ListingDetailsModal({
   const [imageIndex, setImageIndex] = useState(0)
   const [showTourModal, setShowTourModal] = useState(false)
   const [showApplyModal, setShowApplyModal] = useState(false)
+  const normalizedPropertyType: "apartment" | "hostel" | "shortlet" =
+  listing.type?.toLowerCase() === "shortlet"
+    ? "shortlet"
+    : listing.type?.toLowerCase() === "hostel"
+    ? "hostel"
+    : "apartment";
+
 
   if (!isOpen) return null
 
@@ -196,6 +206,7 @@ export default function ListingDetailsModal({
           </div>
         </div>
       </div>
+      
 
       {/* Modals */}
       <RequestTourModal
@@ -203,6 +214,7 @@ export default function ListingDetailsModal({
         onClose={() => setShowTourModal(false)}
         listingId={String(listing.id)}
         listingTitle={listing.title}
+        propertyType={normalizedPropertyType}
       />
 
       <RequestToApplyModal

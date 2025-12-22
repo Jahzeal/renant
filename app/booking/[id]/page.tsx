@@ -39,38 +39,34 @@ export default function BookingPage() {
 
   useEffect(() => {
     const fetchListing = async () => {
-      try {
-        setError(null)
-        console.log(" Fetching listings for ID:", listingId)
-        console.log(" API_BASE_URL:", process.env.NEXT_PUBLIC_API_URL)
-        const listings = await getRentals()
+  try {
+    setError(null)
 
-        if (!listings || listings.length === 0) {
-          setError("No listings available. Make sure NEXT_PUBLIC_API_URL is set correctly.")
-          setListing(null)
-          setLoading(false)
-          return
-        }
+    const res = await getRentals()
+    const listings = Array.isArray(res) ? res : res.data ?? []
 
-        console.log(" All listings fetched:", listings)
-        const found = listings.find((l: any) => String(l.id) === String(listingId))
-        console.log(" Found listing:", found)
-
-        if (!found) {
-          console.warn(" Listing not found with ID:", listingId)
-          setError("Listing not found")
-          setListing(null)
-        } else {
-          setListing(found)
-        }
-      } catch (err) {
-        console.error(" Failed to fetch listing:", err)
-        setError(err instanceof Error ? err.message : "Failed to load listing")
-        setListing(null)
-      } finally {
-        setLoading(false)
-      }
+    if (listings.length === 0) {
+      setError("No listings available. Make sure NEXT_PUBLIC_API_URL is set correctly.")
+      setListing(null)
+      return
     }
+
+    const found = listings.find((l: any) => String(l.id) === String(listingId))
+
+    if (!found) {
+      setError("Listing not found")
+      setListing(null)
+    } else {
+      setListing(found)
+    }
+  } catch (err) {
+    console.error("Failed to fetch listing:", err)
+    setError(err instanceof Error ? err.message : "Failed to load listing")
+    setListing(null)
+  } finally {
+    setLoading(false)
+  }
+}
 
     if (listingId) {
       fetchListing()

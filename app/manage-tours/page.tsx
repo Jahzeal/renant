@@ -1,53 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useRenterRequests } from "@/lib/renter-requests-context";
+import { useState } from "react";
 import { Calendar, XCircle } from "lucide-react";
 import PageHeader from "@/components/page-header";
+import { useRenterRequests } from "@/lib/renter-requests-context";
 import { CancelTourModal } from "@/components/modal/cancel-tours-modal";
-import { useState } from "react";
 
 export default function ManageToursPage() {
   const { tourRequests, cancelTourRequest } = useRenterRequests();
+
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [selectedTour, setSelectedTour] = useState<{
+    tourId: string;
     propertyId: string;
     title: string;
-    userId: string;
   } | null>(null);
 
   const handleCancelClick = (
+    tourId: string,
     propertyId: string,
-    title: string,
-    userId: string
+    title: string
   ) => {
-    setSelectedTour({ propertyId, title, userId });
+    setSelectedTour({ tourId, propertyId, title });
     setCancelModalOpen(true);
   };
 
-  const handleConfirmCancel = async (
-    propertyId: string,
-    userId: string,
-    reason: string
-  ) => {
-    // Additional logic if needed after cancel
-    console.log(
-      "Tour cancelled:",
-      propertyId,
-      "User:",
-      userId,
-      "Reason:",
-      reason
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     });
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -64,24 +48,28 @@ export default function ManageToursPage() {
               >
                 Saved homes
               </Link>
+
               <Link
                 href="/manage-tours"
                 className="pb-2 sm:pb-4 border-b-2 border-primary text-primary font-medium whitespace-nowrap"
               >
                 Manage tours
               </Link>
+
               <Link
                 href="/renter-hub"
                 className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
               >
                 Renter Hub
               </Link>
+
               <Link
                 href="/account-settings"
                 className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
               >
                 Account settings
               </Link>
+
               <Link
                 href="/how-it-works"
                 className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
@@ -104,7 +92,7 @@ export default function ManageToursPage() {
             {tourRequests.map((request) => (
               <div
                 key={request.id}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border rounded-lg p-4"
+                className="flex flex-col sm:flex-row justify-between gap-4 border rounded-lg p-4"
               >
                 {/* Info */}
                 <div>
@@ -112,13 +100,10 @@ export default function ManageToursPage() {
                     {request.propertyTitle}
                   </h3>
 
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mt-2">
+                  <div className="flex gap-4 text-sm text-muted-foreground mt-2">
                     {request.propertyPrice && (
-                      <span className="flex items-center gap-1">
-                        ₦{request.propertyPrice}
-                      </span>
+                      <span>₦{request.propertyPrice}</span>
                     )}
-
                     <span className="flex items-center gap-1">
                       <Calendar size={16} />
                       {formatDate(request.createdAt)}
@@ -126,16 +111,16 @@ export default function ManageToursPage() {
                   </div>
                 </div>
 
-                {/* Cancel button */}
+                {/* Cancel */}
                 <button
                   onClick={() =>
                     handleCancelClick(
+                      request.id, // tourId
                       request.propertyId,
-                      request.propertyTitle,
-                      "USER_ID_HERE"
+                      request.propertyTitle
                     )
                   }
-                  className="flex items-center gap-2 text-sm font-medium text-destructive hover:underline"
+                  className="flex items-center gap-2 text-sm text-destructive hover:underline"
                 >
                   <XCircle size={18} />
                   Cancel request
@@ -146,7 +131,7 @@ export default function ManageToursPage() {
         )}
       </div>
 
-      {/* CancelTourModal component */}
+      {/* Cancel Modal */}
       {selectedTour && (
         <CancelTourModal
           isOpen={cancelModalOpen}
@@ -154,10 +139,9 @@ export default function ManageToursPage() {
             setCancelModalOpen(false);
             setSelectedTour(null);
           }}
+          tourId={selectedTour.tourId}
           propertyId={selectedTour.propertyId}
-          userId={selectedTour.userId}
           propertyTitle={selectedTour.title}
-          onConfirmCancel={handleConfirmCancel}
           cancelTourRequest={cancelTourRequest}
         />
       )}

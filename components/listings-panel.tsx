@@ -4,14 +4,14 @@ import { useState, useEffect, useMemo } from "react"
 import { useFavorites } from "@/lib/favorites-context"
 import ListingCard from "./listing-card"
 import ListingDetailsModal from "./modal/listing-details-modal"
-import { filterRentals, getRentals } from "@/lib/getRentals-api"
+import { getRentals } from "@/lib/getRentals-api"
 import type { MoreOptionsFilters } from "./modal/more-options-modal"
 
 interface AppliedFilters {
-  category?: string // Added category to the interface
+  category?: string
   price: { min: number; max: number } | null
   beds: string
-  baths: string // Added baths to match search bar
+  baths: string
   propertyType: string
   moreOptions: MoreOptionsFilters | null
 }
@@ -43,7 +43,7 @@ interface Listing {
   location: string
   type: string
   description?: string
-  amenities?: Amenity[]
+  amenities?: string[]
   coords?: { lng: number; lat: number }
 }
 
@@ -55,157 +55,89 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [sortBy, setSortBy] = useState<"recommended" | "price-low" | "price-high" | "newest" | "lot-size">(
-    "recommended",
+    "recommended"
   )
   const [loading, setLoading] = useState(false)
 
-  // Fetch all rentals
+  // Normalize listing data
+  const normalizeListing = (listing: any): Listing => {
+    const coords =
+      listing.coords ||
+      (listing.latitude && listing.longitude
+        ? { lng: Number(listing.longitude), lat: Number(listing.latitude) }
+        : undefined)
+
+    let images = listing.images
+    if (!Array.isArray(images)) {
+      images = typeof images === "string" ? [images] : []
+    }
+
+    // Normalize price from backend array to number
+    const price =
+  typeof listing.price === "number"
+    ? listing.price
+    : 0
+    // Normalize amenities to array of strings
+    const amenities = listing.amenities?.map((a: Amenity) => a.name) || []
+
+    return {
+      ...listing,
+      coords,
+      images,
+      price,
+      amenities,
+    }
+  }
+
+  // Fetch rentals (all or filtered)
   useEffect(() => {
     let mounted = true
-    const fetchAll = async () => {
+    const fetchData = async () => {
+      setLoading(true)
       try {
-        const data = await getRentals()
+        const apiFilters: Record<string, any> = {}
+
+        // Map frontend filters to backend query parameters
+        if (filters?.category) apiFilters.category = filters.category
+        if (filters?.propertyType && filters.propertyType !== "All types")
+          apiFilters.propertyType = filters.propertyType
+        if (filters?.price) {
+          apiFilters.price = { min: filters.price.min, max: filters.price.max }
+        }
+        if (filters?.beds && filters.beds !== "Any") {
+          apiFilters.beds = Number(filters.beds.replace("+", ""))
+        }
+        if (filters?.baths && filters.baths !== "Any") {
+          apiFilters.baths = Number(filters.baths.replace("+", ""))
+        }
+        if (filters?.moreOptions) {
+          if (filters.moreOptions.selectedPets?.length) apiFilters.selectedPets = filters.moreOptions.selectedPets
+          if (filters.moreOptions.keywords) apiFilters.keywords = filters.moreOptions.keywords
+        }
+        if (searchLocation) apiFilters.searchLocation = searchLocation
+
+        console.log("Fetching rentals with filters:", apiFilters)
+
+        const response = await getRentals(apiFilters)
         if (!mounted) return
-        console.log("Fetched all rentals:", data) // Debug log
-        const normalizedData = data.map((listing: any) => {
-          const coords =
-            listing.coords ||
-            (listing.latitude && listing.longitude
-              ? { lng: Number(listing.longitude), lat: Number(listing.latitude) }
-              : undefined)
 
-          // Ensure images is an array
-          let images = listing.images
-          if (!Array.isArray(images)) {
-            if (typeof images === "string") {
-              images = [images]
-            } else {
-              images = []
-            }
-          }
+        const normalizedData = (Array.isArray(response.data) ? response.data : []).map(normalizeListing)
 
-          console.log("Normalized listing:", listing.id, { coords, images })
-
-          return {
-            ...listing,
-            coords,
-            images,
-          }
-        })
         setAllListings(normalizedData)
         setFilteredListings(normalizedData)
       } catch (e) {
-        console.error("Failed to load rentals:", e)
-        if (mounted) setAllListings([])
-      }
-    }
-    fetchAll()
-    return () => {
-      mounted = false
-    }
-  }, [])
-
-  useEffect(() => {
-    // If no filters and no search location, show all listings
-    if (!filters && !searchLocation) {
-      setFilteredListings(allListings)
-      return
-    }
-
-    let mounted = true
-    const fetchFiltered = async () => {
-      setLoading(true)
-      try {
-        const apiFilters: any = {}
-
-        // Category/Property Type
-        if (filters?.category) {
-          apiFilters.category = filters.category
-        }
-
-        // Property Type
-        if (filters?.propertyType && filters.propertyType !== "All types") {
-          apiFilters.propertyType = filters.propertyType
-        }
-
-        // Price Range
-        if (filters?.price) {
-          apiFilters.minPrice = filters.price.min
-          apiFilters.maxPrice = filters.price.max === Number.POSITIVE_INFINITY ? undefined : filters.price.max
-        }
-
-        // Beds - convert "Any" or "1+" format to numbers
-        if (filters?.beds && filters.beds !== "Any") {
-          const bedsNum = filters.beds.replace("+", "")
-          apiFilters.beds = Number(bedsNum)
-        }
-
-        // Baths
-        if (filters?.baths && filters.baths !== "Any") {
-          const bathsNum = filters.baths.replace("+", "")
-          apiFilters.baths = Number(bathsNum)
-        }
-
-        // Search Location
-        if (searchLocation) {
-          apiFilters.location = searchLocation
-        }
-
-        // More Options
-        if (filters?.moreOptions) {
-          if (filters.moreOptions.moveInDate) {
-            apiFilters.moveInDate = filters.moreOptions.moveInDate
-          }
-          if (filters.moreOptions.selectedPets?.length > 0) {
-            apiFilters.pets = filters.moreOptions.selectedPets
-          }
-          if (filters.moreOptions.keywords) {
-            apiFilters.keywords = filters.moreOptions.keywords
-          }
-        }
-
-        console.log(" Applying filters:", apiFilters) // Debug log
-
-        const data = await filterRentals(apiFilters)
-        if (!mounted) return
-        console.log(" Filtered results:", data) // Debug log
-        const normalizedData = (Array.isArray(data) ? data : []).map((listing: any) => {
-          const coords =
-            listing.coords ||
-            (listing.latitude && listing.longitude
-              ? { lng: Number(listing.longitude), lat: Number(listing.latitude) }
-              : undefined)
-
-          // Ensure images is an array
-          let images = listing.images
-          if (!Array.isArray(images)) {
-            if (typeof images === "string") {
-              images = [images]
-            } else {
-              images = []
-            }
-          }
-
-          return {
-            ...listing,
-            coords,
-            images,
-          }
-        })
-        setFilteredListings(normalizedData)
-      } catch (e) {
-        console.error("Failed to fetch filtered rentals:", e)
+        console.error("Failed to fetch rentals:", e)
         if (mounted) setFilteredListings([])
       } finally {
         if (mounted) setLoading(false)
       }
     }
 
-    fetchFiltered()
+    fetchData()
     return () => {
       mounted = false
     }
-  }, [filters, searchLocation, allListings])
+  }, [filters, searchLocation])
 
   // Sort filtered listings
   const sortedListings = useMemo(() => {
@@ -270,35 +202,13 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
           sortedListings.map((listing) => (
             <ListingCard
               key={listing.id}
-              listing={{
-                ...listing,
-                amenities: listing.amenities?.map((a) => a.name) || [],
-              }}
+              listing={listing}
               isFavorited={isFavorited(listing.id)}
               onFavoriteToggle={() => toggleFavorite(listing.id)}
               onViewDetails={() => handleViewDetails(listing)}
               onLocationClick={() => {
-                console.log("Location click handler called for listing:", {
-                  id: listing.id,
-                  title: listing.title,
-                  address: listing.address,
-                  coords: listing.coords,
-                })
-
                 if (listing.coords?.lng && listing.coords?.lat) {
-                  const lng = Number(listing.coords.lng)
-                  const lat = Number(listing.coords.lat)
-
-                  console.log(" Parsed coordinates:", { lng, lat })
-
-                  if (isFinite(lng) && isFinite(lat)) {
-                    console.log(" Calling onLocationClick with valid coords")
-                    onLocationClick?.({ lng, lat }, listing.address)
-                  } else {
-                    console.warn(" Invalid coordinate values after parsing:", { lng, lat })
-                  }
-                } else {
-                  console.warn(" Missing or invalid coordinates:", listing.coords)
+                  onLocationClick?.({ lng: Number(listing.coords.lng), lat: Number(listing.coords.lat) }, listing.address)
                 }
               }}
             />
@@ -313,19 +223,7 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
 
       {selectedListing && (
         <ListingDetailsModal
-          listing={{
-            id: selectedListing.id,
-            title: selectedListing.title,
-            location: selectedListing.location,
-            price: `₦${selectedListing.price}`,
-            beds: selectedListing.beds,
-            baths: selectedListing.baths,
-            images: selectedListing.images,
-            description: selectedListing.description,
-            amenities: selectedListing.amenities?.map((a) => a.name) || [],
-            type: selectedListing.type,
-            coords: selectedListing.coords,
-          }}
+          listing={selectedListing}
           isOpen={isDetailsOpen}
           onClose={() => setIsDetailsOpen(false)}
           isFavorited={isFavorited(selectedListing.id)}

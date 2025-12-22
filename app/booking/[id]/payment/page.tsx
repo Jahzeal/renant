@@ -30,23 +30,28 @@ export default function PaymentPage() {
   const nights = Number(searchParams.get("nights")) || 0
   const total = Number(searchParams.get("total")) || 0
 
-  useEffect(() => {
-    const fetchListing = async () => {
-      try {
-        const listings = await getRentals()
-        const found = listings.find((l: any) => String(l.id) === String(listingId))
-        console.log("Payment page - Looking for listing ID:", listingId)
-        console.log("Payment page - Found listing:", found)
-        setListing(found || null)
-      } catch (error) {
-        console.error("Failed to fetch listing:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
+ useEffect(() => {
+  const fetchListing = async () => {
+    try {
+      const res = await getRentals()
+      const listings = Array.isArray(res) ? res : res.data ?? []
 
-    fetchListing()
-  }, [listingId])
+      const found = listings.find((l: any) => String(l.id) === String(listingId))
+
+      // console.log("Payment page - Looking for listing ID:", listingId)
+      // console.log("Payment page - Found listing:", found)
+
+      setListing(found || null)
+    } catch (error) {
+      console.error("Failed to fetch listing:", error)
+      setListing(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  fetchListing()
+}, [listingId])
 
   const [formData, setFormData] = useState({
     fullName: "",
