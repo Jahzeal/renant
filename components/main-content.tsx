@@ -30,6 +30,10 @@ export default function MainContent({ location, locationName, filters }: MainCon
     setSelectedLocation(location)
   }, [location])
 
+  useEffect(() => {
+    setAppliedFilters(filters)
+  }, [filters])
+
   const handleLocationClick = (coords: { lng: number; lat: number }, address: string) => {
     console.log("MainContent handleLocationClick called with:", { coords, address })
     setSelectedLocation(coords)

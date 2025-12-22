@@ -7,8 +7,10 @@ import SearchBar from "@/components/search-bar";
 import MainContent from "@/components/main-content";
 
 interface AppliedFilters {
+  category?: string;
   price: { min: number; max: number } | null;
   beds: string;
+  baths: string;
   propertyType: string;
   moreOptions: any;
 }
@@ -26,6 +28,7 @@ const parseUrlParams = (
   const priceMin = params.get("priceMin");
   const priceMax = params.get("priceMax");
   const beds = params.get("beds") || "Any";
+  const baths = params.get("baths") || "Any";
   const propertyType = params.get("propertyType") || "All types";
 
   const coords =
@@ -41,6 +44,7 @@ const parseUrlParams = (
   const filters: AppliedFilters = {
     price,
     beds,
+    baths,
     propertyType,
     moreOptions: null,
   };
@@ -59,6 +63,7 @@ export default function Rentals() {
   const [filters, setFilters] = useState<AppliedFilters>({
     price: null,
     beds: "Any",
+    baths: "Any",
     propertyType: "All types",
     moreOptions: null,
   });
@@ -91,6 +96,7 @@ export default function Rentals() {
         params.set("priceMax", filters.price.max.toString());
       }
       if (filters.beds !== "Any") params.set("beds", filters.beds);
+      if (filters.baths !== "Any") params.set("baths", filters.baths);
       if (filters.propertyType !== "All types")
         params.set("propertyType", filters.propertyType);
 
@@ -114,6 +120,7 @@ export default function Rentals() {
         params.set("priceMax", newFilters.price.max.toString());
       }
       if (newFilters.beds !== "Any") params.set("beds", newFilters.beds);
+      if (newFilters.baths !== "Any") params.set("baths", newFilters.baths);
       if (newFilters.propertyType !== "All types")
         params.set("propertyType", newFilters.propertyType);
 
@@ -141,6 +148,7 @@ export default function Rentals() {
       <SearchBar
         onSearch={handleSearch}
         onFiltersChange={handleFiltersChange}
+        filters={filters}
       />
 
       {/* Map + Listings */}
