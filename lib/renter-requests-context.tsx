@@ -247,32 +247,6 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
     setApplyRequests((prev) => prev.map((req) => (req.id === id ? { ...req, status } : req)))
   }
 
-  // const removeTourRequest = async (id: string) => {
-  //   try {
-  //     const token = getAuthToken()
-  //     if (!token) {
-  //       console.error("No auth token for delete")
-  //       return
-  //     }
-
-  //     const res = await apiRequest(`${API_BASE_URL}/users/cancel-tours/${id}`, {
-  //       method: "DELETE",
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     })
-
-  //     if (res && !res.ok) {
-  //       console.error("Failed to delete tour from backend")
-  //       return
-  //     }
-
-  //     // Remove from local state after successful backend delete
-  //     setTourRequests((prev) => prev.filter((req) => req.id !== id))
-  //   } catch (err) {
-  //     console.error("Failed to remove tour request:", err)
-  //   }
-  // }
 
  const cancelTourRequest = async (tourId: string, propertyId: string) => {
   try {
@@ -323,7 +297,6 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
         getTourRequestsFromDb,
         updateTourRequestStatus,
         updateApplyRequestStatus,
-        // removeTourRequest,
         cancelTourRequest,
       }}
     >
