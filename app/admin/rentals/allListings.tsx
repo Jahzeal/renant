@@ -8,6 +8,8 @@ import EditListingModal from "@/components/modal/edit-listing-modal";
 import ConfirmationModal from "@/components/modal/confirmation-modal";
 import { getRentals } from "@/lib/getRentals-api";
 import { editProperty } from "@/lib/edit-property";
+import { deleteProperty } from "@/lib/delete-property";
+
 import { useSearchParams, useRouter } from "next/navigation";
 
 interface AppliedFilters {
@@ -295,14 +297,28 @@ export default function AdminRentals({
         <ConfirmationModal
           isOpen={!!deletingListing}
           onCancel={() => setDeletingListing(null)}
-          onConfirm={() => {
-            setAllListings((prev) =>
-              prev.filter((item) => item.id !== deletingListing.id)
-            );
-            setDeletingListing(null);
+          onConfirm={async () => {
+            if (!deletingListing?.id) return;
+
+            try {
+              const success = await deleteProperty(deletingListing.id);
+              if (success) {
+                // Remove the listing locally only if API call succeeded
+                setAllListings((prev) =>
+                  prev.filter((item) => item.id !== deletingListing.id)
+                );
+                console.log("Property deleted successfully");
+              } else {
+                console.error("Failed to delete property");
+              }
+            } catch (err) {
+              console.error("Error deleting property:", err);
+            } finally {
+              setDeletingListing(null); 
+            }
           }}
-          title={""}
-          message={""}
+          title="Confirm Deletion"
+          message="Are you sure you want to delete this property? This action cannot be undone."
         />
       )}
     </div>
