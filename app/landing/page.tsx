@@ -94,6 +94,7 @@ export default function LandingPage() {
     const searchCity = searchTerm.split(",")[0].trim();
 
     // Use passed data or fetch fresh data
+
 const res = rentalsData ?? (await getRentals())
 const listings = unwrapRentals(res)
 
