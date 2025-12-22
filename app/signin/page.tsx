@@ -191,7 +191,7 @@ export default function SigninPage() {
           {!emailSubmitted && (
             <>
               <p className="pt-3 text-xs sm:text-sm text-gray-700">
-                New to Zillow?{" "}
+                New to Rennant?{" "}
                 <Link
                   href="/signup"
                   className="text-blue-600 font-semibold hover:text-blue-700"
@@ -216,7 +216,7 @@ export default function SigninPage() {
               </div>
 
               <p className="pt-2 text-xs text-gray-500">
-                By submitting, I accept Zillow's{" "}
+                By submitting, I accept Rennat's{" "}
                 <a href="#" className="text-blue-600 hover:underline">
                   terms of use
                 </a>

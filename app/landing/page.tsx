@@ -568,7 +568,7 @@ const listings = unwrapRentals(res)
         <div className="max-w-6xl mx-auto">
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4 sm:mb-6 text-balance">
-              About Zillow's Recommendations
+              About Rennant's Recommendations
             </h2>
 
             <p className="text-sm sm:text-base text-gray-600 max-w-3xl mx-auto leading-relaxed">
