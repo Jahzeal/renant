@@ -38,7 +38,7 @@ interface RenterRequestsContextType {
   updateTourRequestStatus: (id: string, status: TourRequest["status"]) => void
   updateApplyRequestStatus: (id: string, status: ApplyRequest["status"]) => void
   // removeTourRequest: (id: string) => void
-  cancelTourRequest: (propertyId: string, userId: string) => Promise<void>
+  cancelTourRequest: (propertyId: string, userId: string) => Promise<boolean>
 }
 
 const RenterRequestsContext = createContext<RenterRequestsContextType | undefined>(undefined)
@@ -274,45 +274,43 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
   //   }
   // }
 
-  const cancelTourRequest = async (propertyId: string, userId: string) => {
-    try {
-      const token = getAuthToken()
-      if (!token) {
-        console.error("No auth token for cancel")
-        throw new Error("Not authenticated")
-      }
-
-      const res = await apiRequest(`${API_BASE_URL}/users/cancel-tours`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ propertyId, userId }),
-      })
-
-      // Handle both Response objects and null returns
-      if (!res) {
-        console.error("No response from cancel tour API")
-        throw new Error("No response from server")
-      }
-
-      if (typeof (res as any)?.json === "function") {
-        const response = res as Response
-        if (!response.ok) {
-          const errText = await response.text()
-          console.error("Cancel tour failed:", response.status, errText)
-          throw new Error(`Failed to cancel tour: ${response.status}`)
-        }
-      }
-
-      // Remove from local state after successful backend cancel
-      setTourRequests((prev) => prev.filter((req) => req.propertyId !== propertyId))
-    } catch (err) {
-      console.error("Failed to cancel tour request:", err)
-      throw err
+ const cancelTourRequest = async (tourId: string, propertyId: string) => {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error("Not authenticated");
     }
+
+    // 1. Send the request
+    const res = await apiRequest(`${API_BASE_URL}/users/cancel-tours`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      // The backend 'dto' expects tourId and propertyId
+      body: JSON.stringify({ tourId, propertyId }),
+    });
+
+    // 2. Error Handling
+    if (!res) throw new Error("No response from server");
+
+    // If apiRequest returns a standard Response object, check if it's OK
+    if (res instanceof Response && !res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || `Error: ${res.status}`);
+    }
+
+    // 3. Update Local UI State
+    // We filter by tourId because it is the unique primary key
+    setTourRequests((prev) => prev.filter((req) => req.id !== tourId));
+
+    return true; 
+  } catch (err) {
+    console.error("Failed to cancel tour request:", err);
+    throw err;
   }
+};
 
   return (
     <RenterRequestsContext.Provider
