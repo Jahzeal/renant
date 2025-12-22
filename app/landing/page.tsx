@@ -523,21 +523,21 @@ const listings = unwrapRentals(res)
                 desc: "Browse verified rentals, compare neighborhoods, and discover a place that fits your lifestyle.",
                 btn: "Find a home",
                 image: "/rentahome.jpg",
-                href: "/rentals?propertyType=Home",
+                href: "/rentals?propertyType=APARTMENT",
               },
               {
                 title: "Book a Shortlet",
                 desc: "Explore premium short-term rentals with flexible stay options and instant availability.",
                 btn: "Find rentals",
                 image: "/shortlet.jpg",
-                href: "/rentals?propertyType=Shortlet",
+                href: "/rentals?propertyType=ShortLET",
               },
               {
                 title: "Rent a Hostel",
                 desc: "Find affordable, comfortable hostel stays anywhere. Compare rooms, check availability, and reserve instantly.",
                 btn: "See your option",
                 image: "/hostel.jpg",
-                href: "/rentals?propertyType=Hostel",
+                href: "/rentals?propertyType=Hostels",
               },
             ].map((action, i) => (
               <Link href={action.href} key={i}>
@@ -568,7 +568,7 @@ const listings = unwrapRentals(res)
         <div className="max-w-6xl mx-auto">
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4 sm:mb-6 text-balance">
-              About Zillow's Recommendations
+              About Rennant's Recommendations
             </h2>
 
             <p className="text-sm sm:text-base text-gray-600 max-w-3xl mx-auto leading-relaxed">

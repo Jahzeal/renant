@@ -50,37 +50,49 @@ export default function RenterHubPage() {
       <PageHeader />
 
       {/* Top Nav */}
-      <div className="border-b">
-        <div className="w-full px-2 sm:px-4 md:px-6">
-          <div className="flex items-center gap-2 sm:gap-4 h-14 sm:h-16">
-            <nav className="flex gap-3 sm:gap-6 overflow-x-auto text-xs sm:text-sm flex-1">
+      <div className="border-b bg-white">
+        <div className="w-full px-3 sm:px-6">
+          <div className="h-14 sm:h-16 flex items-center">
+            <nav
+              className="
+          flex flex-nowrap gap-4 sm:gap-6
+          overflow-x-auto
+          scrollbar-hide
+          text-xs sm:text-sm
+          flex-1
+        "
+            >
               <Link
                 href="/saved-homes"
-                className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+                className="pb-3 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
               >
                 Saved homes
               </Link>
+
               <Link
                 href="/manage-tours"
-                className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+                className="pb-3 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
               >
                 Manage tours
               </Link>
+
               <Link
                 href="/renter-hub"
-                className="pb-2 sm:pb-4 border-b-2 border-primary text-primary font-medium whitespace-nowrap"
+                className="pb-3 sm:pb-4 border-b-2 border-primary text-primary font-medium whitespace-nowrap"
               >
                 Renter Hub
               </Link>
+
               <Link
                 href="/account-settings"
-                className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+                className="pb-3 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
               >
                 Account settings
               </Link>
+
               <Link
                 href="/how-it-works"
-                className="pb-2 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+                className="pb-3 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
               >
                 How it works
               </Link>

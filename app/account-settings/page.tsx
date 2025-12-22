@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { ChevronRight, User, Mail, FileText } from "lucide-react"
+import Link from "next/link";
+import { ChevronRight, User, Mail, FileText } from "lucide-react";
 // import Header from "@/components/header"
-import PageHeader from "@/components/page-header"
+import PageHeader from "@/components/page-header";
 
 export default function AccountSettingsPage() {
   const settingsItems = [
@@ -11,7 +11,8 @@ export default function AccountSettingsPage() {
       id: "profile",
       icon: User,
       title: "Profile",
-      description: "Personalize your account and update your sign in preferences.",
+      description:
+        "Personalize your account and update your sign in preferences.",
       href: "/account-settings/profile",
     },
     {
@@ -25,53 +26,67 @@ export default function AccountSettingsPage() {
       id: "documents",
       icon: FileText,
       title: "Document Preferences",
-      description: "View your legal documents, and manage your preferences for receiving and signing documents.",
+      description:
+        "View your legal documents, and manage your preferences for receiving and signing documents.",
       href: "/account-settings/document-preferences",
     },
-  ]
+  ];
 
   return (
     <>
-      <PageHeader/>
+      <PageHeader />
       <div className="flex flex-col bg-white min-h-[calc(100vh-64px)]">
         {/* Navigation Tabs */}
-        <nav className="border-b border-border bg-white sticky top-0 z-20 flex-shrink-0">
-          <div className="w-full px-2 sm:px-4 md:px-6">
-            <div className="flex items-center gap-2 sm:gap-4 md:gap-6 overflow-x-auto">
-              <Link
-                href="/saved-homes"
-                className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium text-foreground/70 hover:text-foreground border-b-2 border-transparent transition-colors whitespace-nowrap"
+        <div className="border-b bg-white">
+          <div className="w-full px-3 sm:px-6">
+            <div className="h-14 sm:h-16 flex items-center">
+              <nav
+                className="
+          flex flex-nowrap gap-4 sm:gap-6
+          overflow-x-auto
+          scrollbar-hide
+          text-xs sm:text-sm
+          flex-1
+        "
               >
-                Saved homes
-              </Link>
-             
-              <Link
-                href="/manage-tours"
-                className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium text-foreground/70 hover:text-foreground border-b-2 border-transparent transition-colors whitespace-nowrap"
-              >
-                Manage tours
-              </Link>
-               <Link
-                href="/renter-hub"
-                className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium text-foreground/70 hover:text-foreground border-b-2 border-transparent transition-colors whitespace-nowrap"
-              >
-                Renter Hub
-              </Link>
-               <button className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 border-primary text-primary transition-colors whitespace-nowrap">
-                Account settings
-              </button>
-               <Link
-                href="/how-it-works"
-                className="px-0 py-3 sm:py-4 text-xs sm:text-sm font-medium text-foreground/70 hover:text-foreground border-b-2 border-transparent transition-colors whitespace-nowrap"
-              >
-                How it works
-              </Link>
-              
+                <Link
+                  href="/saved-homes"
+                  className="pb-3 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+                >
+                  Saved homes
+                </Link>
 
-              
+                <Link
+                  href="/manage-tours"
+                  className="pb-3 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+                >
+                  Manage tours
+                </Link>
+
+                <Link
+                  href="/renter-hub"
+                  className="pb-3 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+                >
+                  Renter Hub
+                </Link>
+
+                <Link
+                  href="/account-settings"
+                  className="pb-3 sm:pb-4 border-b-2 border-primary text-primary font-medium whitespace-nowrap"
+                >
+                  Account settings
+                </Link>
+
+                <Link
+                  href="/how-it-works"
+                  className="pb-3 sm:pb-4 border-b-2 border-transparent text-muted-foreground hover:text-foreground whitespace-nowrap"
+                >
+                  How it works
+                </Link>
+              </nav>
             </div>
           </div>
-        </nav>
+        </div>
 
         <main className="flex-1 overflow-y-auto">
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
@@ -82,17 +97,22 @@ export default function AccountSettingsPage() {
             {/* Settings Items */}
             <div className="space-y-0">
               {settingsItems.map((item, index) => {
-                const IconComponent = item.icon
+                const IconComponent = item.icon;
                 return (
                   <div key={item.id}>
                     <Link href={item.href}>
                       <button className="w-full flex items-center justify-between py-4 sm:py-6 px-3 sm:px-6 hover:bg-muted/50 transition-colors group">
                         <div className="flex items-center gap-3 sm:gap-6 text-left flex-1 min-w-0">
                           <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-muted">
-                            <IconComponent size={20} className="sm:w-6 sm:h-6 text-primary" />
+                            <IconComponent
+                              size={20}
+                              className="sm:w-6 sm:h-6 text-primary"
+                            />
                           </div>
                           <div className="min-w-0">
-                            <h3 className="font-semibold text-foreground text-base sm:text-lg">{item.title}</h3>
+                            <h3 className="font-semibold text-foreground text-base sm:text-lg">
+                              {item.title}
+                            </h3>
                             <p className="text-xs sm:text-sm text-foreground/60 mt-1 line-clamp-2">
                               {item.description}
                             </p>
@@ -104,14 +124,16 @@ export default function AccountSettingsPage() {
                         />
                       </button>
                     </Link>
-                    {index < settingsItems.length - 1 && <div className="border-t border-border" />}
+                    {index < settingsItems.length - 1 && (
+                      <div className="border-t border-border" />
+                    )}
                   </div>
-                )
+                );
               })}
             </div>
           </div>
         </main>
       </div>
     </>
-  )
+  );
 }
