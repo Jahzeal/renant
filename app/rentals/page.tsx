@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Header from "@/components/header";
 import SearchBar from "@/components/search-bar";
@@ -42,9 +42,8 @@ export default function Rentals() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [location, setLocation] = useState<{ lng: number; lat: number } | null>(
-    null
-  );
+  // State
+  const [location, setLocation] = useState<{ lng: number; lat: number } | null>(null);
   const [locationName, setLocationName] = useState("");
   const [filters, setFilters] = useState<AppliedFilters>({
     price: null,
@@ -53,8 +52,10 @@ export default function Rentals() {
     moreOptions: null,
   });
 
-  const [showHeader, setShowHeader] = useState(false);
+  const [showHeader, setShowHeader] = useState(true);
+  const headerRef = useRef<HTMLDivElement>(null);
 
+  // Sync state with URL on load
   useEffect(() => {
     const initialData = parseUrlParams(searchParams);
     setLocation(initialData.coords);
@@ -62,9 +63,15 @@ export default function Rentals() {
     setFilters(initialData.filters);
   }, [searchParams]);
 
+  // Handle mobile scroll behavior
+  // This logic ensures that when the header hides, it doesn't leave a "hole"
   const handleScrollAction = useCallback((direction: "up" | "down") => {
     if (window.innerWidth < 1024) {
-      setShowHeader(direction === "up");
+      if (direction === "down") {
+        setShowHeader(false);
+      } else {
+        setShowHeader(true);
+      }
     }
   }, []);
 
@@ -86,24 +93,34 @@ export default function Rentals() {
   const handleFiltersChange = useCallback(
     (newFilters: AppliedFilters) => {
       setFilters(newFilters);
-      const params = new URLSearchParams();
+      const params = new URLSearchParams(searchParams.toString());
       if (locationName) params.set("location", locationName);
-      if (newFilters.beds !== "Any") params.set("beds", newFilters.beds);
+      if (newFilters.beds !== "Any") {
+        params.set("beds", newFilters.beds);
+      } else {
+        params.delete("beds");
+      }
       router.push(`?${params.toString()}`);
     },
-    [locationName, router]
+    [locationName, router, searchParams]
   );
 
   return (
-    <main className="h-screen bg-background flex flex-col overflow-hidden relative">
+    <main className="h-screen bg-white flex flex-col overflow-hidden relative">
+      {/* MOBILE HEADER WRAPPER 
+          - On mobile: It is part of the flex flow when visible.
+          - It uses 'margin-top' animation to smoothly slide out of view.
+      */}
       <div
+        ref={headerRef}
         className={`
-    fixed top-0 left-0 right-0 z-[100] bg-white
-    transition-transform duration-300 ease-in-out border-b
-    ${showHeader ? "translate-y-0" : "-translate-y-full"}
-    lg:relative lg:translate-y-0
-  `}
-        id="mobile-header"
+          flex flex-col bg-white z-[100] border-b transition-all duration-300 ease-in-out
+          ${showHeader 
+            ? "translate-y-0 opacity-100" 
+            : "-translate-y-full opacity-0 pointer-events-none absolute w-full"
+          }
+          lg:relative lg:translate-y-0 lg:opacity-100 lg:pointer-events-auto
+        `}
       >
         <Header />
         <SearchBar
@@ -112,7 +129,11 @@ export default function Rentals() {
         />
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      {/* MAIN CONTENT AREA
+          - 'flex-1' allows this div to fill the remaining screen height.
+          - 'overflow-hidden' ensures only the internal list scrolls.
+      */}
+      <div className="flex-1 relative overflow-hidden flex flex-col">
         <MainContent
           location={location}
           locationName={locationName}
