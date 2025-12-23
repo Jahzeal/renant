@@ -13,13 +13,7 @@ interface AppliedFilters {
   moreOptions: any;
 }
 
-const parseUrlParams = (
-  params: URLSearchParams
-): {
-  name: string;
-  coords: { lng: number; lat: number } | null;
-  filters: AppliedFilters;
-} => {
+const parseUrlParams = (params: URLSearchParams) => {
   const name = params.get("location") || "";
   const lat = params.get("lat");
   const lng = params.get("lng");
@@ -32,20 +26,16 @@ const parseUrlParams = (
     lat && lng
       ? { lng: Number.parseFloat(lng), lat: Number.parseFloat(lat) }
       : null;
-
   const price =
     priceMin && priceMax
       ? { min: Number.parseFloat(priceMin), max: Number.parseFloat(priceMax) }
       : null;
 
-  const filters: AppliedFilters = {
-    price,
-    beds,
-    propertyType,
-    moreOptions: null,
+  return {
+    name,
+    coords,
+    filters: { price, beds, propertyType, moreOptions: null },
   };
-
-  return { name, coords, filters };
 };
 
 export default function Rentals() {
@@ -62,93 +52,72 @@ export default function Rentals() {
     propertyType: "All types",
     moreOptions: null,
   });
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize URL params
+  const [showHeader, setShowHeader] = useState(false);
+
   useEffect(() => {
     const initialData = parseUrlParams(searchParams);
     setLocation(initialData.coords);
     setLocationName(initialData.name);
     setFilters(initialData.filters);
-    setIsInitialized(true);
   }, [searchParams]);
+
+  const handleScrollAction = useCallback((direction: "up" | "down") => {
+    if (window.innerWidth < 1024) {
+      setShowHeader(direction === "up");
+    }
+  }, []);
 
   const handleSearch = useCallback(
     (name: string, coords?: { lng: number; lat: number }) => {
       setLocationName(name || "");
       setLocation(coords || null);
-
       const params = new URLSearchParams();
       if (name) params.set("location", name);
       if (coords) {
         params.set("lat", coords.lat.toString());
         params.set("lng", coords.lng.toString());
       }
-
-      // Preserve filters
-      if (filters.price) {
-        params.set("priceMin", filters.price.min.toString());
-        params.set("priceMax", filters.price.max.toString());
-      }
-      if (filters.beds !== "Any") params.set("beds", filters.beds);
-      if (filters.propertyType !== "All types")
-        params.set("propertyType", filters.propertyType);
-
       router.push(`?${params.toString()}`);
     },
-    [filters, router]
+    [router]
   );
 
   const handleFiltersChange = useCallback(
     (newFilters: AppliedFilters) => {
       setFilters(newFilters);
-
       const params = new URLSearchParams();
       if (locationName) params.set("location", locationName);
-      if (location) {
-        params.set("lat", location.lat.toString());
-        params.set("lng", location.lng.toString());
-      }
-      if (newFilters.price) {
-        params.set("priceMin", newFilters.price.min.toString());
-        params.set("priceMax", newFilters.price.max.toString());
-      }
       if (newFilters.beds !== "Any") params.set("beds", newFilters.beds);
-      if (newFilters.propertyType !== "All types")
-        params.set("propertyType", newFilters.propertyType);
-
       router.push(`?${params.toString()}`);
     },
-    [locationName, location, router]
+    [locationName, router]
   );
 
-  // Log state when ready
-  useEffect(() => {
-    if (isInitialized) {
-      console.log("Current Location/Filters state:", {
-        locationName,
-        location,
-        filters,
-      });
-    }
-  }, [locationName, location, filters, isInitialized]);
-
   return (
-    <main className="h-screen bg-background flex flex-col overflow-hidden">
-      <Header />
+    <main className="h-screen bg-background flex flex-col overflow-hidden relative">
+      <div
+        className={`
+    fixed top-0 left-0 right-0 z-[100] bg-white
+    transition-transform duration-300 ease-in-out border-b
+    ${showHeader ? "translate-y-0" : "-translate-y-full"}
+    lg:relative lg:translate-y-0
+  `}
+        id="mobile-header"
+      >
+        <Header />
+        <SearchBar
+          onSearch={handleSearch}
+          onFiltersChange={handleFiltersChange}
+        />
+      </div>
 
-      {/* Search Bar and Filters */}
-      <SearchBar
-        onSearch={handleSearch}
-        onFiltersChange={handleFiltersChange}
-      />
-
-      {/* Map + Listings */}
-      <div className="h-full overflow-hidden">
+      <div className="flex-1 overflow-hidden">
         <MainContent
           location={location}
           locationName={locationName}
           filters={filters}
+          onScrollAction={handleScrollAction}
         />
       </div>
     </main>

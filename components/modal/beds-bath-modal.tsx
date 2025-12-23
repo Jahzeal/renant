@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { X } from "lucide-react"
+import { createPortal } from "react-dom"
 
 interface BedsBathsModalProps {
   isOpen: boolean
@@ -28,78 +29,94 @@ export default function BedsBathsModal({ isOpen, onClose, onApply }: BedsBathsMo
     setSelectedBedrooms("Any")
     setSelectedBathrooms("Any")
   }
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
-  if (!isOpen) return null
 
-  return (
-    <>
-      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
+ if (!mounted || !isOpen) return null
 
-      <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 w-full">
-        <div className="w-full md:max-w-md bg-white rounded-t-2xl md:rounded-lg shadow-xl p-0 mx-auto">
-          <div className="flex items-center justify-between p-6 border-b border-border">
-            <h2 className="text-lg font-semibold text-foreground">Beds & Bathrooms</h2>
-            <button onClick={onClose} className="p-1 hover:bg-muted rounded-lg transition-colors">
-              <X size={24} className="text-foreground" />
-            </button>
-          </div>
+return createPortal(
+  <>
+    {/* Overlay */}
+    <div className="fixed inset-0 bg-black/50 z-[9998]" onClick={onClose} />
 
-          <div className="p-6 space-y-8">
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold">Bedrooms</h3>
-              <div className="flex flex-wrap gap-2">
-                {bedrooms.map((bedroom) => (
-                  <button
-                    key={bedroom}
-                    onClick={() => setSelectedBedrooms(bedroom)}
-                    className={`px-4 py-2 rounded-lg font-medium text-sm ${
-                      selectedBedrooms === bedroom
-                        ? "bg-primary text-primary-foreground border border-primary"
-                        : "border border-border bg-white hover:border-primary"
-                    }`}
-                  >
-                    {bedroom}
-                  </button>
-                ))}
-              </div>
-            </div>
+    {/* Modal content */}
+    <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center p-0 md:p-4 w-full">
+      <div className="w-full md:max-w-md bg-white rounded-t-2xl md:rounded-lg shadow-xl p-0 mx-auto">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h2 className="text-lg font-semibold text-foreground">Beds & Bathrooms</h2>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-muted rounded-lg transition-colors"
+          >
+            <X size={24} className="text-foreground" />
+          </button>
+        </div>
 
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold">Bathrooms</h3>
-              <div className="flex flex-wrap gap-2">
-                {bathrooms.map((bathroom) => (
-                  <button
-                    key={bathroom}
-                    onClick={() => setSelectedBathrooms(bathroom)}
-                    className={`px-4 py-2 rounded-lg font-medium text-sm ${
-                      selectedBathrooms === bathroom
-                        ? "bg-primary text-primary-foreground border border-primary"
-                        : "border border-border bg-white hover:border-primary"
-                    }`}
-                  >
-                    {bathroom}
-                  </button>
-                ))}
-              </div>
+        {/* Body */}
+        <div className="p-6 space-y-8">
+          {/* Bedrooms */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold">Bedrooms</h3>
+            <div className="flex flex-wrap gap-2">
+              {bedrooms.map((bedroom) => (
+                <button
+                  key={bedroom}
+                  onClick={() => setSelectedBedrooms(bedroom)}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm ${
+                    selectedBedrooms === bedroom
+                      ? "bg-primary text-primary-foreground border border-primary"
+                      : "border border-border bg-white hover:border-primary"
+                  }`}
+                >
+                  {bedroom}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="flex gap-3 p-6 border-t border-border">
-            <button
-              onClick={handleReset}
-              className="flex-1 px-4 py-3 text-primary font-semibold rounded-lg hover:bg-muted"
-            >
-              Reset
-            </button>
-            <button
-              onClick={handleApply}
-              className="flex-1 px-4 py-3 bg-primary text-primary-foreground font-semibold rounded-lg"
-            >
-              Apply
-            </button>
+          {/* Bathrooms */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold">Bathrooms</h3>
+            <div className="flex flex-wrap gap-2">
+              {bathrooms.map((bathroom) => (
+                <button
+                  key={bathroom}
+                  onClick={() => setSelectedBathrooms(bathroom)}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm ${
+                    selectedBathrooms === bathroom
+                      ? "bg-primary text-primary-foreground border border-primary"
+                      : "border border-border bg-white hover:border-primary"
+                  }`}
+                >
+                  {bathroom}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* Footer */}
+        <div className="flex gap-3 p-6 border-t border-border">
+          <button
+            onClick={handleReset}
+            className="flex-1 px-4 py-3 text-primary font-semibold rounded-lg hover:bg-muted"
+          >
+            Reset
+          </button>
+          <button
+            onClick={handleApply}
+            className="flex-1 px-4 py-3 bg-primary text-primary-foreground font-semibold rounded-lg"
+          >
+            Apply
+          </button>
+        </div>
       </div>
-    </>
-  )
+    </div>
+  </>,
+  document.getElementById("modal-root")!
+)
 }
