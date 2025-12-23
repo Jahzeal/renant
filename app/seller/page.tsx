@@ -79,7 +79,7 @@ export default function Seller() {
               </button>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-                  Enscroll
+                  Escrow
                 </h1>
                 <p className="text-xs text-muted-foreground">Sell Properties</p>
               </div>
