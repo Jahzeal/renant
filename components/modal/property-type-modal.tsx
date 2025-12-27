@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 interface PropertyTypeModalProps {
@@ -15,6 +16,12 @@ export default function PropertyTypeModal({
   onApply,
 }: PropertyTypeModalProps) {
   const [selectedType, setSelectedType] = useState("All types");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   const propertyTypes = ["All types", "Home", "Shortlet", "Hostel"];
 
@@ -23,16 +30,20 @@ export default function PropertyTypeModal({
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!mounted || !isOpen) return null;
 
-  return (
+  return createPortal(
     <>
+      {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-40 md:hidden"
+        className="fixed inset-0 bg-black/50 z-[9998]"
         onClick={onClose}
       />
-      <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 w-full">
+
+      {/* Modal */}
+      <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center p-4 w-full">
         <div className="w-full md:max-w-md bg-white rounded-t-2xl md:rounded-lg shadow-xl">
+          {/* Header */}
           <div className="flex items-center justify-between p-4 md:p-6 border-b border-border">
             <h2 className="text-lg md:text-xl font-semibold text-foreground">
               Property Type
@@ -46,24 +57,24 @@ export default function PropertyTypeModal({
             </button>
           </div>
 
-          <div className="p-4 md:p-6">
-            <div className="space-y-2">
-              {propertyTypes.map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setSelectedType(type)}
-                  className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all text-left ${
-                    selectedType === type
-                      ? "bg-primary text-primary-foreground"
-                      : "border border-border text-foreground hover:border-primary hover:bg-muted"
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
+          {/* Body */}
+          <div className="p-4 md:p-6 space-y-2">
+            {propertyTypes.map((type) => (
+              <button
+                key={type}
+                onClick={() => setSelectedType(type)}
+                className={`w-full px-4 py-3 rounded-lg text-sm font-medium text-left transition-all ${
+                  selectedType === type
+                    ? "bg-primary text-primary-foreground"
+                    : "border border-border text-foreground hover:border-primary hover:bg-muted"
+                }`}
+              >
+                {type}
+              </button>
+            ))}
           </div>
 
+          {/* Footer */}
           <div className="flex gap-3 p-4 md:p-6 border-t border-border">
             <button
               onClick={onClose}
@@ -80,6 +91,7 @@ export default function PropertyTypeModal({
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.getElementById("modal-root")!
   );
 }
