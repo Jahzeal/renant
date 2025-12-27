@@ -166,7 +166,7 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
   const listingCount = sortedListings.length
 
   return (
-    <div className="bg-white w-full h-full flex flex-col">
+    <div className="bg-white w-full lg:h-full flex flex-col">
       {/* Header */}
       <div className="sticky top-0 bg-white border-b p-4 sm:p-6 z-20">
         <div className="flex flex-col sm:flex-row sm:items-center">
@@ -195,7 +195,7 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       </div>
 
       {/* Listings */}
-      <div className="flex-1 divide-y overflow-y-auto">
+      <div className="lg:flex-1 divide-y lg:overflow-y-auto">
         {loading ? (
           <p className="p-6 text-center text-muted-foreground">Loading...</p>
         ) : sortedListings.length > 0 ? (

@@ -141,7 +141,7 @@ export default function Rentals() {
   }, [locationName, location, filters, isInitialized]);
 
   return (
-    <main className="h-screen bg-background flex flex-col overflow-hidden">
+    <main className="min-h-screen bg-background flex flex-col">
       <Header />
 
       {/* Search Bar and Filters */}
@@ -151,8 +151,8 @@ export default function Rentals() {
         filters={filters}
       />
 
-      {/* Map + Listings */}
-      <div className="h-full overflow-hidden">
+      {/* Map + Listings - Sticky on Desktop, Normal flow on Mobile */}
+      <div className="lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden">
         <MainContent
           location={location}
           locationName={locationName}
