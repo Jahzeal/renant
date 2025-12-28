@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { useFavorites } from "@/lib/favorites-context"
 import ListingCard from "./listing-card"
 import ListingDetailsModal from "./modal/listing-details-modal"
 import { getRentals } from "@/lib/getRentals-api"
 import type { MoreOptionsFilters } from "./modal/more-options-modal"
+import { Loader2 } from "lucide-react"
 
 interface AppliedFilters {
   category?: string
@@ -51,16 +52,24 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
   const { toggleFavorite, isFavorited } = useFavorites()
 
   const [allListings, setAllListings] = useState<Listing[]>([])
-  const [filteredListings, setFilteredListings] = useState<Listing[]>([])
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [sortBy, setSortBy] = useState<"recommended" | "price-low" | "price-high" | "newest" | "lot-size">(
     "recommended"
   )
   const [loading, setLoading] = useState(false)
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 12,
+    hasNextPage: false,
+    total: 0
+  })
+
+  // To prevent race conditions
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   // Normalize listing data
-  const normalizeListing = (listing: any): Listing => {
+  const normalizeListing = useCallback((listing: any): Listing => {
     const coords =
       listing.coords ||
       (listing.latitude && listing.longitude
@@ -73,10 +82,8 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
     }
 
     // Normalize price from backend array to number
-    const price =
-  typeof listing.price === "number"
-    ? listing.price
-    : 0
+    const price = typeof listing.price === "number" ? listing.price : 0
+
     // Normalize amenities to array of strings
     const amenities = listing.amenities?.map((a: Amenity) => a.name) || []
 
@@ -87,61 +94,121 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       price,
       amenities,
     }
-  }
+  }, [])
 
-  // Fetch rentals (all or filtered)
-  useEffect(() => {
-    let mounted = true
-    const fetchData = async () => {
-      setLoading(true)
-      try {
-        const apiFilters: Record<string, any> = {}
+  // Function to fetch listings
+  const fetchListings = async (pageToFetch: number, shouldAppend: boolean) => {
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    const controller = new AbortController()
+    abortControllerRef.current = controller
 
-        // Map frontend filters to backend query parameters
-        if (filters?.category) apiFilters.category = filters.category
-        if (filters?.propertyType && filters.propertyType !== "All types")
-          apiFilters.propertyType = filters.propertyType
-        if (filters?.price) {
-          apiFilters.price = { min: filters.price.min, max: filters.price.max }
+    setLoading(true)
+    try {
+      const apiFilters: Record<string, any> = {
+        page: pageToFetch,
+        limit: 12, // Default limit
+      }
+
+      // Map frontend filters to backend query parameters
+      if (filters?.category) apiFilters.category = filters.category
+      if (filters?.propertyType && filters.propertyType !== "All types")
+        apiFilters.propertyType = filters.propertyType
+      if (filters?.price) {
+        apiFilters.price = { min: filters.price.min, max: filters.price.max }
+      }
+      if (filters?.beds && filters.beds !== "Any") {
+        apiFilters.beds = Number(filters.beds.replace("+", ""))
+      }
+      if (filters?.baths && filters.baths !== "Any") {
+        apiFilters.baths = Number(filters.baths.replace("+", ""))
+      }
+      if (filters?.moreOptions) {
+        if (filters.moreOptions.selectedPets?.length) apiFilters.selectedPets = filters.moreOptions.selectedPets
+        if (filters.moreOptions.keywords) apiFilters.keywords = filters.moreOptions.keywords
+      }
+      if (searchLocation) apiFilters.searchLocation = searchLocation
+
+      console.log(`Fetching rentals (page ${pageToFetch}) with filters:`, apiFilters)
+
+      // Note: The original getRentals doesn't explicitly accept signal,
+      // but we rely on sequential calls + state management here.
+      // Ideally, getRentals should accept { signal } to cancel the fetch request.
+      // Since we can't easily modify the API signature everywhere without checking deps,
+      // we'll use a "mounted" check style logic via the AbortController pattern for the effect.
+      // But fetchListings is called by both effect and button.
+
+      const response = await getRentals(apiFilters)
+
+      // If aborted, do nothing
+      if (controller.signal.aborted) return
+
+      let rawData = []
+      let meta = { page: pageToFetch, limit: 12, total: 0, hasNextPage: false }
+
+      // Handle response structure ( { data: [], meta: {} } vs [] )
+      if (response && Array.isArray(response.data)) {
+        rawData = response.data
+        if (response.meta) {
+          meta = response.meta
         }
-        if (filters?.beds && filters.beds !== "Any") {
-          apiFilters.beds = Number(filters.beds.replace("+", ""))
-        }
-        if (filters?.baths && filters.baths !== "Any") {
-          apiFilters.baths = Number(filters.baths.replace("+", ""))
-        }
-        if (filters?.moreOptions) {
-          if (filters.moreOptions.selectedPets?.length) apiFilters.selectedPets = filters.moreOptions.selectedPets
-          if (filters.moreOptions.keywords) apiFilters.keywords = filters.moreOptions.keywords
-        }
-        if (searchLocation) apiFilters.searchLocation = searchLocation
+      } else if (Array.isArray(response)) {
+        rawData = response
+      }
 
-        console.log("Fetching rentals with filters:", apiFilters)
+      const normalizedData = rawData.map(normalizeListing)
 
-        const response = await getRentals(apiFilters)
-        if (!mounted) return
-
-        const normalizedData = (Array.isArray(response.data) ? response.data : []).map(normalizeListing)
-
+      if (shouldAppend) {
+        setAllListings((prev) => [...prev, ...normalizedData])
+      } else {
         setAllListings(normalizedData)
-        setFilteredListings(normalizedData)
-      } catch (e) {
-        console.error("Failed to fetch rentals:", e)
-        if (mounted) setFilteredListings([])
-      } finally {
-        if (mounted) setLoading(false)
+      }
+
+      setPagination({
+        page: meta.page,
+        limit: meta.limit,
+        hasNextPage: meta.hasNextPage,
+        total: meta.total
+      })
+
+    } catch (e) {
+      if (controller.signal.aborted) return
+      console.error("Failed to fetch rentals:", e)
+      if (!shouldAppend) setAllListings([])
+    } finally {
+      if (!controller.signal.aborted) {
+        setLoading(false)
       }
     }
+  }
 
-    fetchData()
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
-      mounted = false
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
     }
+  }, [])
+
+  // Initial fetch or filter change
+  useEffect(() => {
+    // Reset to page 1
+    fetchListings(1, false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, searchLocation])
 
-  // Sort filtered listings
+  const handleLoadMore = () => {
+    if (!loading && pagination.hasNextPage) {
+      fetchListings(pagination.page + 1, true)
+    }
+  }
+
+  // Sort listings (Client-side sorting of the *fetched* listings)
   const sortedListings = useMemo(() => {
-    const results = [...filteredListings]
+    const results = [...allListings]
     switch (sortBy) {
       case "price-low":
         results.sort((a, b) => a.price - b.price)
@@ -156,14 +223,15 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
         break
     }
     return results
-  }, [filteredListings, sortBy])
+  }, [allListings, sortBy])
 
   const handleViewDetails = (listing: Listing) => {
     setSelectedListing(listing)
     setIsDetailsOpen(true)
   }
 
-  const listingCount = sortedListings.length
+  // Calculate total count to display (use meta.total if available, else loaded count)
+  const displayCount = pagination.total || sortedListings.length
 
   return (
     <div className="bg-white w-full lg:h-full flex flex-col">
@@ -174,8 +242,8 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
             <h1 className="text-xl sm:text-4xl font-bold">Rental Listings</h1>
             <p className="text-sm text-muted-foreground mt-1">
               {searchLocation
-                ? `${listingCount} rental${listingCount === 1 ? "" : "s"} found in ${searchLocation}`
-                : `${listingCount} rentals available`}
+                ? `${displayCount} rental${displayCount === 1 ? "" : "s"} found in ${searchLocation}`
+                : `${displayCount} rentals available`}
             </p>
           </div>
           <div className="w-full sm:w-auto">
@@ -196,23 +264,47 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
 
       {/* Listings */}
       <div className="lg:flex-1 divide-y lg:overflow-y-auto">
-        {loading ? (
-          <p className="p-6 text-center text-muted-foreground">Loading...</p>
+        {loading && pagination.page === 1 ? (
+          <div className="p-12 flex justify-center items-center">
+             <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
         ) : sortedListings.length > 0 ? (
-          sortedListings.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              isFavorited={isFavorited(listing.id)}
-              onFavoriteToggle={() => toggleFavorite(listing.id)}
-              onViewDetails={() => handleViewDetails(listing)}
-              onLocationClick={() => {
-                if (listing.coords?.lng && listing.coords?.lat) {
-                  onLocationClick?.({ lng: Number(listing.coords.lng), lat: Number(listing.coords.lat) }, listing.address)
-                }
-              }}
-            />
-          ))
+          <>
+            {sortedListings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                isFavorited={isFavorited(listing.id)}
+                onFavoriteToggle={() => toggleFavorite(listing.id)}
+                onViewDetails={() => handleViewDetails(listing)}
+                onLocationClick={() => {
+                  if (listing.coords?.lng && listing.coords?.lat) {
+                    onLocationClick?.({ lng: Number(listing.coords.lng), lat: Number(listing.coords.lat) }, listing.address)
+                  }
+                }}
+              />
+            ))}
+
+            {/* Load More Button */}
+            {pagination.hasNextPage && (
+              <div className="p-6 flex justify-center">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loading}
+                  className="px-6 py-3 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load More Listings"
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="p-6 text-center text-muted-foreground">
             <p>No listings found {searchLocation ? `for "${searchLocation}"` : ""}</p>

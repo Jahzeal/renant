@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Header from "@/components/header";
 import SearchBar from "@/components/search-bar";
@@ -68,6 +68,8 @@ export default function Rentals() {
     moreOptions: null,
   });
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showHeader, setShowHeader] = useState(true);
+  const lastScrollY = useRef(0);
 
   // Initialize URL params
   useEffect(() => {
@@ -77,6 +79,31 @@ export default function Rentals() {
     setFilters(initialData.filters);
     setIsInitialized(true);
   }, [searchParams]);
+
+  // Scroll handler for showing/hiding header on mobile
+  useEffect(() => {
+    const handleScroll = () => {
+      // Only apply on mobile where window scrolls
+      if (window.innerWidth >= 1024) return;
+
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY < 100) {
+        setShowHeader(true);
+      } else if (currentScrollY > lastScrollY.current + 10) {
+        // Scrolling down
+        setShowHeader(false);
+      } else if (currentScrollY < lastScrollY.current - 10) {
+        // Scrolling up
+        setShowHeader(true);
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleSearch = useCallback(
     (name: string, coords?: { lng: number; lat: number }) => {
@@ -142,14 +169,15 @@ export default function Rentals() {
 
   return (
     <main className="min-h-screen bg-background flex flex-col">
-      <Header />
-
-      {/* Search Bar and Filters */}
-      <SearchBar
-        onSearch={handleSearch}
-        onFiltersChange={handleFiltersChange}
-        filters={filters}
-      />
+      <div className={`sticky lg:relative top-0 z-40 transition-transform duration-300 lg:translate-y-0 ${showHeader ? 'translate-y-0' : '-translate-y-full'}`}>
+        <Header />
+        {/* Search Bar and Filters */}
+        <SearchBar
+          onSearch={handleSearch}
+          onFiltersChange={handleFiltersChange}
+          filters={filters}
+        />
+      </div>
 
       {/* Map + Listings - Sticky on Desktop, Normal flow on Mobile */}
       <div className="lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden">
