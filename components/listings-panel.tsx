@@ -134,19 +134,8 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
         apiFilters.baths = Number(filters.baths.replace("+", ""))
       }
       if (filters?.moreOptions) {
-        // Ensure moreOptions structure matches what backend likely expects (nested object)
-        const moreOptionsPayload: any = {}
-
-        if (filters.moreOptions.selectedPets?.length) {
-           moreOptionsPayload.selectedPets = filters.moreOptions.selectedPets
-        }
-        if (filters.moreOptions.keywords) {
-           moreOptionsPayload.keywords = filters.moreOptions.keywords
-        }
-
-        if (Object.keys(moreOptionsPayload).length > 0) {
-          apiFilters.moreOptions = moreOptionsPayload
-        }
+        if (filters.moreOptions.selectedPets?.length) apiFilters.selectedPets = filters.moreOptions.selectedPets
+        if (filters.moreOptions.keywords) apiFilters.keywords = filters.moreOptions.keywords
       }
       if (searchLocation) apiFilters.searchLocation = searchLocation
 
