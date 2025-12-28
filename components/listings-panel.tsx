@@ -111,9 +111,14 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
 
     try {
       const apiFilters: Record<string, any> = {
-        page: pageToFetch,
-        limit: 12, // Default limit
+        // Only send page/limit if strictly necessary to avoid potential string/number parsing issues on backend defaults
       }
+
+      // If page > 1, we must send it. If page == 1, backend default is 1, so safe to omit.
+      if (pageToFetch > 1) {
+        apiFilters.page = pageToFetch
+      }
+      // Rely on backend default limit of 12 for initial load
 
       // Map frontend filters to backend query parameters
       if (filters?.category) apiFilters.category = filters.category
