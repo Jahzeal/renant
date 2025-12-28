@@ -94,16 +94,16 @@ export default function ListingCard({
 
   return (
     <div
-      className="p-3 sm:p-4 md:p-6 hover:bg-muted/30 transition-colors rounded-lg cursor-pointer border-b"
+      className="p-3 sm:p-4 lg:p-4 xl:p-6 hover:bg-muted/30 transition-colors rounded-lg cursor-pointer border-b"
       onClick={handleCardClick}
       // *** FIX: Added style to hide horizontal overflow within the card container itself ***
       style={{ overflowX: "hidden" }}
     >
-      <div className="flex flex-col sm:flex-row gap-6">
+      <div className="flex flex-col sm:flex-row gap-6 lg:gap-4 xl:gap-6">
         {" "}
         {/* Increased gap for separation */}
         {/* IMAGE SECTION (Kept the same) */}
-        <div className="relative w-full sm:w-64 h-56 sm:h-48 rounded-xl overflow-hidden bg-gray-200 group flex-shrink-0 shadow-md">
+        <div className="relative w-full sm:w-64 lg:w-48 xl:w-64 h-56 sm:h-48 rounded-xl overflow-hidden bg-gray-200 group flex-shrink-0 shadow-md">
           {" "}
           {/* Added rounded-xl and shadow */}
           <img

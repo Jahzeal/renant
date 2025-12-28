@@ -168,7 +168,7 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
   return (
     <div className="bg-white w-full lg:h-full flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b p-4 sm:p-6 z-20">
+      <div className="relative lg:sticky lg:top-0 bg-white border-b p-4 sm:p-6 z-20">
         <div className="flex flex-col sm:flex-row sm:items-center">
           <div className="flex-1">
             <h1 className="text-xl sm:text-4xl font-bold">Rental Listings</h1>
