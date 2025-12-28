@@ -6,7 +6,7 @@ import ListingCard from "./listing-card"
 import ListingDetailsModal from "./modal/listing-details-modal"
 import { getRentals } from "@/lib/getRentals-api"
 import type { MoreOptionsFilters } from "./modal/more-options-modal"
-import { Loader2 } from "lucide-react"
+import { Loader2, AlertCircle } from "lucide-react"
 
 interface AppliedFilters {
   category?: string
@@ -58,6 +58,7 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
     "recommended"
   )
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
@@ -106,6 +107,8 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
     abortControllerRef.current = controller
 
     setLoading(true)
+    setError(null)
+
     try {
       const apiFilters: Record<string, any> = {
         page: pageToFetch,
@@ -133,13 +136,6 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
 
       console.log(`Fetching rentals (page ${pageToFetch}) with filters:`, apiFilters)
 
-      // Note: The original getRentals doesn't explicitly accept signal,
-      // but we rely on sequential calls + state management here.
-      // Ideally, getRentals should accept { signal } to cancel the fetch request.
-      // Since we can't easily modify the API signature everywhere without checking deps,
-      // we'll use a "mounted" check style logic via the AbortController pattern for the effect.
-      // But fetchListings is called by both effect and button.
-
       const response = await getRentals(apiFilters)
 
       // If aborted, do nothing
@@ -156,6 +152,9 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
         }
       } else if (Array.isArray(response)) {
         rawData = response
+      } else if (response === undefined || response === null) {
+        // This likely means getRentals returned nothing due to error
+         throw new Error("No response from server")
       }
 
       const normalizedData = rawData.map(normalizeListing)
@@ -173,9 +172,10 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
         total: meta.total
       })
 
-    } catch (e) {
+    } catch (e: any) {
       if (controller.signal.aborted) return
       console.error("Failed to fetch rentals:", e)
+      setError(e.message || "Failed to load listings")
       if (!shouldAppend) setAllListings([])
     } finally {
       if (!controller.signal.aborted) {
@@ -204,6 +204,10 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
     if (!loading && pagination.hasNextPage) {
       fetchListings(pagination.page + 1, true)
     }
+  }
+
+  const handleRetry = () => {
+    fetchListings(1, false)
   }
 
   // Sort listings (Client-side sorting of the *fetched* listings)
@@ -268,6 +272,18 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
           <div className="p-12 flex justify-center items-center">
              <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
+        ) : error ? (
+           <div className="p-12 flex flex-col justify-center items-center text-center">
+             <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+             <h3 className="text-lg font-semibold text-foreground mb-2">Something went wrong</h3>
+             <p className="text-muted-foreground mb-6">{error}</p>
+             <button
+               onClick={handleRetry}
+               className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90"
+             >
+               Try Again
+             </button>
+           </div>
         ) : sortedListings.length > 0 ? (
           <>
             {sortedListings.map((listing) => (
