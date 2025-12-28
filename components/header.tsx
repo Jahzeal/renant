@@ -91,6 +91,9 @@ export default function Header() {
   const pathname = usePathname();
   const logoHref = pathname.startsWith("/rentals") ? "/" : "/rentals";
 
+  // Check if we are on the rentals page
+  const isRentalsPage = pathname.startsWith("/rentals");
+
   return (
     <>
       <header className="border-b border-border bg-white relative z-30">
@@ -554,7 +557,9 @@ export default function Header() {
 
       <div
         className={`fixed top-0 left-0 right-0 bg-white border-b border-border shadow-md z-50 transition-transform duration-300 ${
-          isScrolled ? "translate-y-0" : "-translate-y-full"
+          isScrolled && !isRentalsPage
+            ? "translate-y-0"
+            : "-translate-y-full"
         }`}
       >
         <div className="max-w-full px-4 sm:px-6 lg:px-8 py-3">
