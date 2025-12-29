@@ -30,6 +30,9 @@ export function RequestToApplyModal({
     phone: "",
     message: `I'm interested in your property and would like to move forward.`,
   });
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
 
   if (!isOpen) return null;
 
@@ -61,7 +64,15 @@ export function RequestToApplyModal({
         "YOUR_PUBLIC_KEY"
       );
       */
+      if (!isValidEmail(formData.email)) {
+        alert("Please enter a valid email address");
+        return;
+      }
 
+      if (!/^\d{10,15}$/.test(formData.phone)) {
+        alert("Phone number must contain only digits (10–15)");
+        return;
+      }
       router.push("/renter-hub");
       onClose();
 
@@ -115,7 +126,9 @@ export function RequestToApplyModal({
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full border px-3 py-2 rounded"
+                pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
+                title="Please enter a valid email address"
+                className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-md ..."
               />
             </div>
             <div>
@@ -124,9 +137,15 @@ export function RequestToApplyModal({
                 type="tel"
                 name="phone"
                 value={formData.phone}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  setFormData((prev) => ({ ...prev, phone: value }));
+                }}
+                pattern="[0-9]{10,15}"
+                title="Phone number should contain only digits (10–15)"
                 required
-                className="w-full border px-3 py-2 rounded"
+                placeholder="Enter Phone Number"
+                className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-md ..."
               />
             </div>
           </div>

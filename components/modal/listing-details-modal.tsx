@@ -1,37 +1,36 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { X, Heart, ChevronLeft, ChevronRight } from "lucide-react"
-import { useAuth } from "@/hooks/use-auth"
-import { RequestTourModal } from "./request-tour-modal"
-import { RequestToApplyModal } from "./request-to-apply-modal"
-import Map from "@/components/map"
-import { useIsMobile } from "@/hooks/use-mobile"
+import { useState,useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
+import { X, Heart, ChevronLeft, ChevronRight } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { RequestTourModal } from "./request-tour-modal";
+import { RequestToApplyModal } from "./request-to-apply-modal";
+import Map from "@/components/map";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ListingDetailsModalProps {
   listing: {
-    id: string | number
-    title: string
-    location: string
-    price: string | number
-    beds: number
-    baths?: number
-    roomType?: string
-    images: string[]
-    description?: string
-    amenities?: string[]
-    type?: string
-    coords?: { lng: number; lat: number }
-    propertyType?: string
-  }
-  isOpen: boolean
-  onClose: () => void
-  isFavorited?: boolean
-  onFavoriteToggle?: () => void
+    id: string | number;
+    title: string;
+    location: string;
+    price: string | number;
+    beds: number;
+    baths?: number;
+    roomType?: string;
+    images: string[];
+    description?: string;
+    amenities?: string[];
+    type?: string;
+    coords?: { lng: number; lat: number };
+    propertyType?: string;
+  };
+  isOpen: boolean;
+  onClose: () => void;
+  isFavorited?: boolean;
+  onFavoriteToggle?: () => void;
 }
-
-
 
 export default function ListingDetailsModal({
   listing,
@@ -40,55 +39,59 @@ export default function ListingDetailsModal({
   isFavorited = false,
   onFavoriteToggle,
 }: ListingDetailsModalProps) {
-  const router = useRouter()
-  const user = useAuth((state) => state.user)
-  const isMobile = useIsMobile()
-
-  const [imageIndex, setImageIndex] = useState(0)
-  const [showTourModal, setShowTourModal] = useState(false)
-  const [showApplyModal, setShowApplyModal] = useState(false)
+  const router = useRouter();
+  const user = useAuth((state) => state.user);
+  const isMobile = useIsMobile();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+  setMounted(true);
+}, []);
+  const [imageIndex, setImageIndex] = useState(0);
+  const [showTourModal, setShowTourModal] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(false);
   const normalizedPropertyType: "apartment" | "hostel" | "shortlet" =
-  listing.type?.toLowerCase() === "shortlet"
-    ? "shortlet"
-    : listing.type?.toLowerCase() === "hostel"
-    ? "hostel"
-    : "apartment";
+    listing.type?.toLowerCase() === "shortlet"
+      ? "shortlet"
+      : listing.type?.toLowerCase() === "hostel"
+      ? "hostel"
+      : "apartment";
 
+  if (!mounted || !isOpen) return null;
 
-  if (!isOpen) return null
 
   const requireAuth = (openModal: () => void) => {
     if (!user) {
-      router.push("/signin")
-      return
+      router.push("/signin");
+      return;
     }
-    openModal()
-  }
+    openModal();
+  };
 
-  const nextImage = () => setImageIndex((i) => (i + 1) % listing.images.length)
+  const nextImage = () => setImageIndex((i) => (i + 1) % listing.images.length);
 
-  const prevImage = () => setImageIndex((i) => (i === 0 ? listing.images.length - 1 : i - 1))
+  const prevImage = () =>
+    setImageIndex((i) => (i === 0 ? listing.images.length - 1 : i - 1));
 
   const handleFavorite = () => {
     if (!user) {
-      router.push("/signin")
-      return
+      router.push("/signin");
+      return;
     }
-    onFavoriteToggle?.()
-  }
+    onFavoriteToggle?.();
+  };
 
   const handleBookNow = () => {
     if (!user) {
-      router.push("/signin")
-      return
+      router.push("/signin");
+      return;
     }
-    onClose()
-    router.push(`/booking/${listing.id}`)
-  }
+    onClose();
+    router.push(`/booking/${listing.id}`);
+  };
 
-  const isShortlet = listing.type === "ShortLET"
+  const isShortlet = listing.type === "ShortLET";
 
-  return (
+  return createPortal(
     <>
       {/* Overlay */}
       <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
@@ -124,8 +127,14 @@ export default function ListingDetailsModal({
                 <ChevronRight size={20} />
               </button>
 
-              <button onClick={handleFavorite} className="absolute top-4 right-4 bg-white p-2 rounded-full">
-                <Heart size={20} className={isFavorited ? "fill-red-500 text-red-500" : ""} />
+              <button
+                onClick={handleFavorite}
+                className="absolute top-4 right-4 bg-white p-2 rounded-full"
+              >
+                <Heart
+                  size={20}
+                  className={isFavorited ? "fill-red-500 text-red-500" : ""}
+                />
               </button>
             </div>
 
@@ -144,7 +153,9 @@ export default function ListingDetailsModal({
             {listing.description && (
               <div>
                 <h4 className="font-semibold mb-2">About</h4>
-                <p className="text-sm text-muted-foreground">{listing.description}</p>
+                <p className="text-sm text-muted-foreground">
+                  {listing.description}
+                </p>
               </div>
             )}
 
@@ -165,7 +176,12 @@ export default function ListingDetailsModal({
             {isMobile && listing.coords && (
               <div>
                 <h4 className="font-semibold mb-2">Location</h4>
-                <Map coords={listing.coords} locationName={listing.location} height="250px" zoom={15} />
+                <Map
+                  coords={listing.coords}
+                  locationName={listing.location}
+                  height="250px"
+                  zoom={15}
+                />
               </div>
             )}
 
@@ -206,7 +222,6 @@ export default function ListingDetailsModal({
           </div>
         </div>
       </div>
-      
 
       {/* Modals */}
       <RequestTourModal
@@ -224,6 +239,8 @@ export default function ListingDetailsModal({
         listingTitle={listing.title}
         listingPrice={Number(listing.price)}
       />
-    </>
-  )
+    </>,
+    document.getElementById("modal-root")!
+
+  );
 }
