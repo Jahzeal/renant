@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { X } from "lucide-react";
+import { createPortal } from "react-dom";
 
 interface PropertyTypeModalProps {
   isOpen: boolean;
@@ -17,15 +18,19 @@ export default function PropertyTypeModal({
   const [selectedType, setSelectedType] = useState("All types");
 
   const propertyTypes = ["All types", "Home", "Shortlet", "Hostel"];
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleApply = () => {
     onApply(selectedType);
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!mounted || !isOpen) return null;
 
-  return (
+  return createPortal (
     <>
       <div
         className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -80,6 +85,7 @@ export default function PropertyTypeModal({
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.getElementById("modal-root")!
   );
 }

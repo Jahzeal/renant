@@ -38,6 +38,9 @@ export function RequestTourModal({
 
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
 
   if (!isOpen) return null;
 
@@ -48,28 +51,25 @@ export function RequestTourModal({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isValidEmail(formData.email)) {
+      alert("Please enter a valid email address");
+      return;
+    }
+
+    if (!/^\d{10,15}$/.test(formData.phone)) {
+      alert("Phone number must contain only digits (10–15)");
+      return;
+    }
+
     setLoading(true);
-
     const req = await addTourRequest(listingId);
-
     setLoading(false);
 
     if (req) {
       setSuccess(true);
-
-      // Optional: reset form
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        message:
-          "I'm interested in your property and would like to move forward. Can you show me around ?",
-      });
-
-      // Navigate after short delay
       setTimeout(() => {
         onClose();
         router.push("/manage-tours");
@@ -124,7 +124,9 @@ export function RequestTourModal({
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
+                title="Please enter a valid email address"
+                className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-md ..."
               />
             </div>
             <div>
@@ -135,10 +137,15 @@ export function RequestTourModal({
                 type="tel"
                 name="phone"
                 value={formData.phone}
-                onChange={handleChange}
-                placeholder="Enter Phone Number"
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  setFormData((prev) => ({ ...prev, phone: value }));
+                }}
+                pattern="[0-9]{10,15}"
+                title="Phone number should contain only digits (10–15)"
                 required
-                className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                placeholder="Enter Phone Number"
+                className="w-full mt-2 px-4 py-3 border border-gray-300 rounded-md ..."
               />
             </div>
           </div>
