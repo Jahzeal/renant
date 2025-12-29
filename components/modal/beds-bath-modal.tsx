@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { X } from "lucide-react"
+import { createPortal } from "react-dom"
 
 interface BedsBathsModalProps {
   isOpen: boolean
@@ -15,6 +16,10 @@ export default function BedsBathsModal({ isOpen, onClose, onApply }: BedsBathsMo
 
   const bedrooms = ["Any", "1+", "2+", "3+", "4+", "5+"]
   const bathrooms = ["Any", "1+", "1.5+", "2+", "3+", "4+"]
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleApply = () => {
     onApply({
@@ -29,9 +34,9 @@ export default function BedsBathsModal({ isOpen, onClose, onApply }: BedsBathsMo
     setSelectedBathrooms("Any")
   }
 
-  if (!isOpen) return null
+  if (!mounted || !isOpen) return null;
 
-  return (
+  return createPortal (
     <>
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
@@ -100,6 +105,7 @@ export default function BedsBathsModal({ isOpen, onClose, onApply }: BedsBathsMo
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.getElementById("modal-root")!
   )
 }
