@@ -73,7 +73,16 @@ export async function uploadProperty(formData: PropertyFormData): Promise<any> {
         const imageData = await imageRes.json()
         console.log(" Image upload response:", imageData)
         // Try multiple possible response formats
-        const imageUrl = imageData.url || imageData.path || imageData.filePath || imageData.location || photo.name
+        let imageUrl = imageData.url || imageData.path || imageData.filePath || imageData.location || photo.name
+
+        // Ensure the URL is absolute
+        if (imageUrl && !imageUrl.startsWith("http") && API_BASE_URL) {
+          // Remove leading slash if present to avoid double slashes
+          const cleanPath = imageUrl.startsWith("/") ? imageUrl.slice(1) : imageUrl
+          const cleanBase = API_BASE_URL.endsWith("/") ? API_BASE_URL : `${API_BASE_URL}/`
+          imageUrl = `${cleanBase}${cleanPath}`
+        }
+
         uploadedImageUrls.push(imageUrl)
         console.log(" Added image URL:", imageUrl)
       } else {
