@@ -40,16 +40,50 @@ export default function ListingCard({
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   const images = (() => {
+    // Helper to ensure absolute URLs
+    const getAbsoluteUrl = (url: string) => {
+      if (!url) return url
+
+      // 1. If it's already an absolute URL, return it
+      if (url.startsWith("http://") || url.startsWith("https://")) {
+        return url
+      }
+
+      // 2. If it's the placeholder or a local asset (starts with / but NOT /uploads), return it as is
+      if (url.startsWith("/")) {
+        // Exception: If it explicitly starts with /uploads, it's likely a backend path that needs the host
+        if (!url.startsWith("/uploads")) {
+             return url
+        }
+      }
+
+      // 3. Otherwise, prepend the API URL (handles 'uploads/file.jpg' or '/uploads/file.jpg')
+      const apiBase = process.env.NEXT_PUBLIC_API_URL
+      if (apiBase) {
+        const cleanBase = apiBase.endsWith("/") ? apiBase : `${apiBase}/`
+        const cleanPath = url.startsWith("/") ? url.slice(1) : url
+        return `${cleanBase}${cleanPath}`
+      }
+
+      return url
+    }
+
+    let rawImages: string[] = []
+
     // Priority 1: images array
     if (listing.images && Array.isArray(listing.images) && listing.images.length > 0) {
-      return listing.images
+      rawImages = listing.images
     }
     // Priority 2: single image field
-    if (listing.image) {
-      return [listing.image]
+    else if (listing.image) {
+      rawImages = [listing.image]
     }
     // Priority 3: placeholder with listing info
-    return [`/placeholder.svg?height=400&width=600&query=${encodeURIComponent(listing.title || "property")}`]
+    else {
+      rawImages = [`/placeholder.svg?height=400&width=600&query=${encodeURIComponent(listing.title || "property")}`]
+    }
+
+    return rawImages.map(getAbsoluteUrl)
   })()
 
   console.log(" ListingCard rendering with images:", {
