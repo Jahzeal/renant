@@ -1,6 +1,6 @@
 "use client";
 
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { createPortal } from "react-dom";
 
@@ -15,22 +15,31 @@ export default function PropertyTypeModal({
   onClose,
   onApply,
 }: PropertyTypeModalProps) {
+  // We use the label for internal state to show selected UI, but we'll map to values for the callback
   const [selectedType, setSelectedType] = useState("All types");
 
-  const propertyTypes = ["All types", "Home", "Shortlet", "Hostel"];
+  const propertyTypes = [
+    { label: "All types", value: "All types" },
+    { label: "Home", value: "APARTMENT" },
+    { label: "Shortlet", value: "ShortLET" },
+    { label: "Hostel", value: "Hostels" },
+  ];
+
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleApply = () => {
-    onApply(selectedType);
+    // Find the corresponding value for the selected label
+    const selectedOption = propertyTypes.find(type => type.label === selectedType);
+    onApply(selectedOption ? selectedOption.value : "All types");
     onClose();
   };
 
   if (!mounted || !isOpen) return null;
 
-  return createPortal (
+  return createPortal(
     <>
       <div
         className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -55,15 +64,15 @@ export default function PropertyTypeModal({
             <div className="space-y-2">
               {propertyTypes.map((type) => (
                 <button
-                  key={type}
-                  onClick={() => setSelectedType(type)}
+                  key={type.label}
+                  onClick={() => setSelectedType(type.label)}
                   className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all text-left ${
-                    selectedType === type
+                    selectedType === type.label
                       ? "bg-primary text-primary-foreground"
                       : "border border-border text-foreground hover:border-primary hover:bg-muted"
                   }`}
                 >
-                  {type}
+                  {type.label}
                 </button>
               ))}
             </div>
