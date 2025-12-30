@@ -82,8 +82,14 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       images = typeof images === "string" ? [images] : []
     }
 
-    // Normalize price from backend array to number
-    const price = typeof listing.price === "number" ? listing.price : 0
+    // Normalize price from backend (price or rent)
+    // The backend might return 'price' or 'rent'
+    const rawPrice = listing.price !== undefined ? listing.price : listing.rent
+    const price = typeof rawPrice === "number" ? rawPrice : 0
+
+    // Normalize beds/baths (bedrooms/bathrooms or beds/baths)
+    const beds = listing.bedrooms !== undefined ? listing.bedrooms : (listing.beds || 0)
+    const baths = listing.bathrooms !== undefined ? listing.bathrooms : (listing.baths || 0)
 
     // Normalize amenities to array of strings
     const amenities = listing.amenities?.map((a: Amenity) => a.name) || []
@@ -93,6 +99,8 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       coords,
       images,
       price,
+      beds,
+      baths,
       amenities,
     }
   }, [])
@@ -124,15 +132,25 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       if (filters?.category) apiFilters.category = filters.category
       if (filters?.propertyType && filters.propertyType !== "All types")
         apiFilters.propertyType = filters.propertyType
+
       if (filters?.price) {
+        // Some backends expect 'price', some 'minPrice'/'maxPrice'
+        // Keeping nested object structure as per getRentals-api
         apiFilters.price = { min: filters.price.min, max: filters.price.max }
       }
+
       if (filters?.beds && filters.beds !== "Any") {
-        apiFilters.beds = Number(filters.beds.replace("+", ""))
+        // Map 'beds' to 'bedrooms' which is likely what the backend expects
+        const bedsVal = Number(filters.beds.replace("+", ""))
+        apiFilters.bedrooms = bedsVal
       }
+
       if (filters?.baths && filters.baths !== "Any") {
-        apiFilters.baths = Number(filters.baths.replace("+", ""))
+        // Map 'baths' to 'bathrooms'
+        const bathsVal = Number(filters.baths.replace("+", ""))
+        apiFilters.bathrooms = bathsVal
       }
+
       if (filters?.moreOptions) {
         if (filters.moreOptions.selectedPets?.length) apiFilters.selectedPets = filters.moreOptions.selectedPets
         if (filters.moreOptions.keywords) apiFilters.keywords = filters.moreOptions.keywords
