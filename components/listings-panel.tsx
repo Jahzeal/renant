@@ -84,7 +84,17 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
 
     // Normalize price from backend (price or rent)
     // The backend might return 'price' or 'rent'
-    const rawPrice = listing.price !== undefined ? listing.price : listing.rent
+    let rawPrice = listing.price !== undefined ? listing.price : listing.rent
+
+    // Handle price being a JSON array (from backend filtering logic)
+    if (Array.isArray(rawPrice) && rawPrice.length > 0) {
+      // Find the first price entry
+      const priceEntry = rawPrice.find((item: any) => item && typeof item.price === "number");
+      if (priceEntry) {
+        rawPrice = priceEntry.price;
+      }
+    }
+
     const price = typeof rawPrice === "number" ? rawPrice : 0
 
     // Normalize beds/baths (bedrooms/bathrooms or beds/baths)
@@ -151,10 +161,23 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
         apiFilters.bathrooms = bathsVal
       }
 
+      // Use nested moreOptions object to match backend DTO structure
+      const moreOptions: Record<string, any> = {}
       if (filters?.moreOptions) {
-        if (filters.moreOptions.selectedPets?.length) apiFilters.selectedPets = filters.moreOptions.selectedPets
-        if (filters.moreOptions.keywords) apiFilters.keywords = filters.moreOptions.keywords
+        if (filters.moreOptions.selectedPets?.length) moreOptions.selectedPets = filters.moreOptions.selectedPets
+        if (filters.moreOptions.keywords) moreOptions.keywords = filters.moreOptions.keywords
       }
+
+      // "Strip search": If searchLocation exists, use it for keywords too (if not already set)
+      // This enables finding listings by title/description matching the search term
+      if (searchLocation && !moreOptions.keywords) {
+        moreOptions.keywords = searchLocation
+      }
+
+      if (Object.keys(moreOptions).length > 0) {
+        apiFilters.moreOptions = moreOptions
+      }
+
       if (searchLocation) apiFilters.searchLocation = searchLocation
 
       console.log(`Fetching rentals (page ${pageToFetch}) with filters:`, apiFilters)
@@ -180,7 +203,17 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
          throw new Error("No response from server")
       }
 
-      const normalizedData = rawData.map(normalizeListing)
+      let normalizedData = rawData.map(normalizeListing)
+
+      // Client-side price filtering (strict fallback)
+      if (filters?.price) {
+        const { min, max } = filters.price;
+        normalizedData = normalizedData.filter((listing: Listing) => {
+          // If max is effectively infinite, treat it as such
+          const effectiveMax = max === Number.POSITIVE_INFINITY ? Number.MAX_SAFE_INTEGER : max;
+          return listing.price >= min && listing.price <= effectiveMax;
+        });
+      }
 
       if (shouldAppend) {
         setAllListings((prev) => [...prev, ...normalizedData])

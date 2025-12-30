@@ -183,8 +183,8 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
 
       if (data.features && data.features.length > 0) {
         const [lng, lat] = data.features[0].geometry.coordinates
-        const placeName = data.features[0].place_name
-        onSearch(placeName, { lng, lat })
+        // Use user input 'location' for search, but pass coordinates for map
+        onSearch(location, { lng, lat })
       } else {
         console.warn("No geocoding results found for:", location)
         onSearch(location)
