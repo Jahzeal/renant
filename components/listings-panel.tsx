@@ -161,17 +161,21 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
         apiFilters.bathrooms = bathsVal
       }
 
-      // Flatten moreOptions properties to top-level query parameters (legacy support)
-      // This ensures compatibility if the backend expects keywords=... instead of moreOptions[keywords]=...
+      // Use nested moreOptions object to match backend DTO structure
+      const moreOptions: Record<string, any> = {}
       if (filters?.moreOptions) {
-        if (filters.moreOptions.selectedPets?.length) apiFilters.selectedPets = filters.moreOptions.selectedPets
-        if (filters.moreOptions.keywords) apiFilters.keywords = filters.moreOptions.keywords
+        if (filters.moreOptions.selectedPets?.length) moreOptions.selectedPets = filters.moreOptions.selectedPets
+        if (filters.moreOptions.keywords) moreOptions.keywords = filters.moreOptions.keywords
       }
 
       // "Strip search": If searchLocation exists, use it for keywords too (if not already set)
       // This enables finding listings by title/description matching the search term
-      if (searchLocation && !apiFilters.keywords) {
-        apiFilters.keywords = searchLocation
+      if (searchLocation && !moreOptions.keywords) {
+        moreOptions.keywords = searchLocation
+      }
+
+      if (Object.keys(moreOptions).length > 0) {
+        apiFilters.moreOptions = moreOptions
       }
 
       if (searchLocation) apiFilters.searchLocation = searchLocation

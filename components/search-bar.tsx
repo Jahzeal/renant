@@ -153,56 +153,14 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
 
   if (!mounted) return null
 
-  const geocodeLocation = async (location: string) => {
-    if (!location.trim()) {
-      onSearch("")
-      return
-    }
-
-    try {
-      setIsSearching(true)
-      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
-
-      if (!token) {
-        console.error("Mapbox token is missing")
-        onSearch(location)
-        return
-      }
-
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(location)}.json?access_token=${token}`,
-      )
-
-      if (!response.ok) {
-        console.error(`Mapbox API error: ${response.status} ${response.statusText}`)
-        onSearch(location)
-        return
-      }
-
-      const data = await response.json()
-
-      if (data.features && data.features.length > 0) {
-        const [lng, lat] = data.features[0].geometry.coordinates
-        // Use user input 'location' for search, but pass coordinates for map
-        onSearch(location, { lng, lat })
-      } else {
-        console.warn("No geocoding results found for:", location)
-        onSearch(location)
-      }
-    } catch (error) {
-      console.error("Geocoding error:", error)
-      onSearch(location)
-    } finally {
-      setIsSearching(false)
-    }
-  }
-
   const handleSearch = () => {
     if (!searchInput.trim()) {
       onSearch("")
       return
     }
-    geocodeLocation(searchInput)
+    // Perform a text-only search to ensure we hit title/desc/amenities keywords
+    // We explicitly do NOT send coordinates so the backend isn't restricted by location
+    onSearch(searchInput)
   }
 
   const handlePriceApply = (min: number, max: number) => {
