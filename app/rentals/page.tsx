@@ -22,7 +22,8 @@ const parseUrlParams = (
   coords: { lng: number; lat: number } | null;
   filters: AppliedFilters;
 } => {
-  const name = params.get("location") || "";
+  // Support both "location" (legacy/map) and "keywords" (text search) params for the name
+  const name = params.get("keywords") || params.get("location") || "";
   const lat = params.get("lat");
   const lng = params.get("lng");
   const priceMin = params.get("priceMin");
@@ -111,10 +112,17 @@ export default function Rentals() {
       setLocation(coords || null);
 
       const params = new URLSearchParams();
-      if (name) params.set("location", name);
-      if (coords) {
-        params.set("lat", coords.lat.toString());
-        params.set("lng", coords.lng.toString());
+
+      if (name) {
+        if (coords) {
+          // If coordinates exist, it's likely a specific location/address search
+          params.set("location", name);
+          params.set("lat", coords.lat.toString());
+          params.set("lng", coords.lng.toString());
+        } else {
+          // If no coordinates, it's a keyword/text search -> use 'keywords' param
+          params.set("keywords", name);
+        }
       }
 
       // Preserve filters
@@ -137,11 +145,18 @@ export default function Rentals() {
       setFilters(newFilters);
 
       const params = new URLSearchParams();
-      if (locationName) params.set("location", locationName);
-      if (location) {
-        params.set("lat", location.lat.toString());
-        params.set("lng", location.lng.toString());
+
+      if (locationName) {
+        if (location) {
+          params.set("location", locationName);
+          params.set("lat", location.lat.toString());
+          params.set("lng", location.lng.toString());
+        } else {
+           // Persist as keywords if no location data matches
+           params.set("keywords", locationName);
+        }
       }
+
       if (newFilters.price) {
         params.set("priceMin", newFilters.price.min.toString());
         params.set("priceMax", newFilters.price.max.toString());
