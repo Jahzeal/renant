@@ -130,7 +130,6 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
   const [isPriceModalOpen, setIsPriceModalOpen] = useState(false)
   const [isBedsBathsModalOpen, setIsBedsBathsModalOpen] = useState(false)
   const [isPropertyTypeModalOpen, setIsPropertyTypeModalOpen] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<string>("houses") // Default to houses
   const [isSearching, setIsSearching] = useState(false)
 
   const [appliedFilters, setAppliedFilters] = useState<AppliedFilters>({
@@ -237,6 +236,17 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
     setTimeout(() => setIsSaved(false), 2000)
   }
 
+  // Determine which main button is active based on propertyType
+  const isHousesActive = appliedFilters.propertyType === "APARTMENT"
+  const isShortletsActive = appliedFilters.propertyType === "ShortLET"
+
+  const getDisplayPropertyType = (type: string) => {
+    if (type === "APARTMENT") return "Home"
+    if (type === "ShortLET") return "Shortlet"
+    if (type === "Hostels") return "Hostel"
+    return type
+  }
+
   return (
     <>
       <div className="bg-white border-b border-border">
@@ -273,10 +283,9 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
 
           <div className="hidden sm:flex items-center gap-2 lg:gap-3 flex-wrap mt-3 w-full">
             <Button
-              variant={selectedCategory === "houses" ? "default" : "outline"}
+              variant={isHousesActive ? "default" : "outline"}
               onClick={() => {
-                setSelectedCategory("houses")
-                const updated = { ...appliedFilters, category: "houses" }
+                const updated = { ...appliedFilters, propertyType: "APARTMENT" }
                 setAppliedFilters(updated)
               }}
             >
@@ -284,10 +293,9 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
             </Button>
 
             <Button
-              variant={selectedCategory === "shortlets" ? "default" : "outline"}
+              variant={isShortletsActive ? "default" : "outline"}
               onClick={() => {
-                setSelectedCategory("shortlets")
-                const updated = { ...appliedFilters, category: "shortlets" }
+                const updated = { ...appliedFilters, propertyType: "ShortLET" }
                 setAppliedFilters(updated)
               }}
             >
@@ -306,7 +314,8 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
               className="flex items-center gap-2 px-3 md:px-4 py-2 bg-white border border-border rounded-lg text-foreground hover:bg-muted text-xs sm:text-sm font-medium whitespace-nowrap z-20"
             >
               Beds & baths
-              {appliedFilters.beds !== "Any" && `: ${appliedFilters.beds}`}
+              {(appliedFilters.beds !== "Any" || appliedFilters.baths !== "Any") &&
+                `: ${appliedFilters.beds !== "Any" ? appliedFilters.beds + " bds" : ""} ${appliedFilters.baths !== "Any" ? appliedFilters.baths + " ba" : ""}`}
               <ChevronDown size={16} />
             </button>
             <button
@@ -314,7 +323,7 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
               className="flex items-center gap-2 px-3 md:px-4 py-2 bg-white border border-border rounded-lg text-foreground hover:bg-muted text-xs sm:text-sm font-medium whitespace-nowrap z-20"
             >
               Property type
-              {appliedFilters.propertyType !== "All types" && `: ${appliedFilters.propertyType}`}
+              {appliedFilters.propertyType !== "All types" && `: ${getDisplayPropertyType(appliedFilters.propertyType)}`}
               <ChevronDown size={16} />
             </button>
             <button
@@ -334,6 +343,7 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
 
           {(appliedFilters.price ||
             appliedFilters.beds !== "Any" ||
+            appliedFilters.baths !== "Any" ||
             appliedFilters.propertyType !== "All types" ||
             appliedFilters.moreOptions) && (
             <div className="mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground space-y-1">
@@ -350,8 +360,11 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
                 {appliedFilters.beds !== "Any" && (
                   <span className="bg-muted px-2 py-1 rounded">Beds: {appliedFilters.beds}</span>
                 )}
+                {appliedFilters.baths !== "Any" && (
+                  <span className="bg-muted px-2 py-1 rounded">Baths: {appliedFilters.baths}</span>
+                )}
                 {appliedFilters.propertyType !== "All types" && (
-                  <span className="bg-muted px-2 py-1 rounded">Type: {appliedFilters.propertyType}</span>
+                  <span className="bg-muted px-2 py-1 rounded">Type: {getDisplayPropertyType(appliedFilters.propertyType)}</span>
                 )}
               </div>
               {appliedFilters.moreOptions && (
