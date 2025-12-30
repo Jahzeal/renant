@@ -237,9 +237,6 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
   }
 
   // Determine which main button is active based on propertyType
-  // If propertyType is "APARTMENT" (Rent a home) -> Houses button active
-  // If propertyType is "ShortLET" -> Shortlets button active
-  // Otherwise neither
   const isHousesActive = appliedFilters.propertyType === "APARTMENT"
   const isShortletsActive = appliedFilters.propertyType === "ShortLET"
 
@@ -288,7 +285,6 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
             <Button
               variant={isHousesActive ? "default" : "outline"}
               onClick={() => {
-                // "Houses" implies finding a home (APARTMENT)
                 const updated = { ...appliedFilters, propertyType: "APARTMENT" }
                 setAppliedFilters(updated)
               }}
@@ -318,7 +314,8 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
               className="flex items-center gap-2 px-3 md:px-4 py-2 bg-white border border-border rounded-lg text-foreground hover:bg-muted text-xs sm:text-sm font-medium whitespace-nowrap z-20"
             >
               Beds & baths
-              {appliedFilters.beds !== "Any" && `: ${appliedFilters.beds}`}
+              {(appliedFilters.beds !== "Any" || appliedFilters.baths !== "Any") &&
+                `: ${appliedFilters.beds !== "Any" ? appliedFilters.beds + " bds" : ""} ${appliedFilters.baths !== "Any" ? appliedFilters.baths + " ba" : ""}`}
               <ChevronDown size={16} />
             </button>
             <button
@@ -346,6 +343,7 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
 
           {(appliedFilters.price ||
             appliedFilters.beds !== "Any" ||
+            appliedFilters.baths !== "Any" ||
             appliedFilters.propertyType !== "All types" ||
             appliedFilters.moreOptions) && (
             <div className="mt-2 sm:mt-3 text-xs sm:text-sm text-muted-foreground space-y-1">
@@ -361,6 +359,9 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
 
                 {appliedFilters.beds !== "Any" && (
                   <span className="bg-muted px-2 py-1 rounded">Beds: {appliedFilters.beds}</span>
+                )}
+                {appliedFilters.baths !== "Any" && (
+                  <span className="bg-muted px-2 py-1 rounded">Baths: {appliedFilters.baths}</span>
                 )}
                 {appliedFilters.propertyType !== "All types" && (
                   <span className="bg-muted px-2 py-1 rounded">Type: {getDisplayPropertyType(appliedFilters.propertyType)}</span>
