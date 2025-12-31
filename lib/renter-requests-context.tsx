@@ -69,6 +69,20 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
   ): Promise<TourRequest | null> => {
     const token = getAuthToken();
     if (!token) return null;
+
+    // Optimistic Update: Add placeholder
+    const tempId = `temp-${Date.now()}`;
+    const optimisticReq: TourRequest = {
+      id: tempId,
+      propertyId,
+      propertyTitle: "Loading...", // Will be updated
+      propertyPrice: 0,
+      createdAt: new Date().toISOString(),
+      status: "pending",
+    };
+
+    setTourRequests((prev) => [optimisticReq, ...prev]);
+
     try {
       const response = await apiRequest(`${API_BASE_URL}/users/tour-request`, {
         method: "POST",
@@ -79,9 +93,13 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ propertyId }),
       }).then((res) => res?.json());
 
-      if (!response || !response.request || !response.property) return null;
+      if (!response || !response.request || !response.property) {
+        // Revert optimistic update if API response is invalid
+        setTourRequests((prev) => prev.filter((r) => r.id !== tempId));
+        return null;
+      }
 
-      const newReq: TourRequest = {
+      const realReq: TourRequest = {
         id: response.request.id,
         propertyId: response.property.id,
         propertyTitle: response.property.title,
@@ -89,10 +107,14 @@ export function RenterRequestsProvider({ children }: { children: ReactNode }) {
         createdAt: response.request.requestedAt || new Date().toISOString(),
         status: "pending",
       };
-      setTourRequests((prev) => [newReq, ...prev]);
-      return newReq;
+
+      // Replace placeholder with real data
+      setTourRequests((prev) => prev.map((r) => r.id === tempId ? realReq : r));
+      return realReq;
     } catch (error) {
       console.error("Failed to submit tour request:", error);
+      // Revert optimistic update on error
+      setTourRequests((prev) => prev.filter((r) => r.id !== tempId));
       return null;
     }
   };

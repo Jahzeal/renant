@@ -58,6 +58,14 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleFavorite = async (id: string) => {
+    // Auth Check: Redirect immediately if not logged in
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    if (!token) {
+      // Using window.location instead of router to ensure hard redirect
+      window.location.href = "/signin";
+      return;
+    }
+
     const exists = favorites.some((f) => f.id === id);
 
     if (exists) {
