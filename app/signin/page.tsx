@@ -18,18 +18,30 @@ export default function SigninPage() {
   const [localError, setLocalError] = useState("");
   const router = useRouter();
 
-  // 1. 🟢 FIX: Call the base hook at the top level
+  // 1.  FIX: Call the base hook at the top level
   const store = useAuth();
 
-  // 2. 🟢 FIX: Use useMemo to select and stabilize only the required values/actions
-  const { signIn, isLoading, authError } = React.useMemo(
+  // 2.  FIX: Use useMemo to select and stabilize only the required values/actions
+  const { signIn, isLoading, authError, user } = React.useMemo(
     () => ({
       signIn: store.signIn,
       isLoading: store.isLoading,
       authError: store.error,
+      user: store.user,
     }),
-    [store.signIn, store.isLoading, store.error] // Depend on the specific values from the store
+    [store.signIn, store.isLoading, store.error, store.user] // Depend on the specific values from the store
   );
+
+  React.useEffect(() => {
+  if (isLoading) return;
+  if (!user) return;
+
+  if (user.role === "ADMIN") {
+    router.replace("/admin");
+  } else {
+    router.replace("/");
+  }
+}, [user,isLoading, router]);
 
   const handleEmailContinue = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +57,7 @@ export default function SigninPage() {
 
     try {
       await signIn(email, password);
-      router.push("/");
+      // router.push("/");
     } catch (err) {
       setLocalError("Login failed. Please check the error message.");
     }

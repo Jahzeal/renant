@@ -10,6 +10,7 @@ export interface User {
     firstName: string;
     lastName: string;
     profileImage?: string;
+    role: 'ADMIN' | 'USER';
 }
 
 export interface ProfileUpdateDto {
@@ -33,6 +34,7 @@ interface AuthStore {
 const createUserObject = (data: any, email: string): User => ({
     id: data.id || data.userId || 'unknown-id',
     email: email,
+    role: data.role || 'USER',
     // Assuming API response might use Firstname/Lastname or firstName/lastName
     firstName: data.firstName || data.Firstname || 'User', 
     lastName: data.lastName || data.Lastname || '',
