@@ -168,19 +168,41 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
         if (filters.moreOptions.keywords) moreOptions.keywords = filters.moreOptions.keywords
       }
 
-      // "Strip search": If searchLocation exists, use it for keywords too (if not already set)
-      // This enables finding listings by title/description matching the search term
-      // We also strictly pass it to searchLocation to ensure fallback coverage
-      if (searchLocation && !moreOptions.keywords) {
-        moreOptions.keywords = searchLocation
+      // "Strip search" & Smart Type Detection
+      if (searchLocation) {
+        let cleanedSearch = searchLocation
+
+        // Smart Type Detection: automatically set propertyType if user searches for categories
+        if (!apiFilters.propertyType) {
+          const lowerSearch = searchLocation.toLowerCase()
+          if (lowerSearch.includes("shortlet")) {
+            apiFilters.propertyType = "ShortLET"
+            // Remove "shortlet" or "shortlets" from search text to allow broad category search
+            cleanedSearch = cleanedSearch.replace(/shortlets?/gi, "").trim()
+          } else if (lowerSearch.includes("house") || lowerSearch.includes("apartment") || lowerSearch.includes("home")) {
+            apiFilters.propertyType = "APARTMENT"
+            cleanedSearch = cleanedSearch.replace(/(houses?|apartments?|homes?)/gi, "").trim()
+          } else if (lowerSearch.includes("hostel")) {
+            apiFilters.propertyType = "Hostels"
+            cleanedSearch = cleanedSearch.replace(/hostels?/gi, "").trim()
+          }
+        }
+
+        // If after cleaning there is still text (e.g. "Lekki shortlet" -> "Lekki"), use it for keywords
+        // Or if no type was detected, use the original search text
+        if (cleanedSearch) {
+           if (!moreOptions.keywords) {
+             moreOptions.keywords = cleanedSearch
+           }
+           apiFilters.searchLocation = cleanedSearch
+        } else if (apiFilters.propertyType) {
+           // If we detected a type and the text is now empty (e.g. user just typed "shortlet"),
+           // we don't send empty keywords/searchLocation, ensuring we get ALL items of that type.
+        }
       }
 
       if (Object.keys(moreOptions).length > 0) {
         apiFilters.moreOptions = moreOptions
-      }
-
-      if (searchLocation) {
-        apiFilters.searchLocation = searchLocation
       }
 
       console.log(`Fetching rentals (page ${pageToFetch}) with filters:`, apiFilters)
