@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { fetchUserFavorites, saveUserFavorites, deleteFavorite } from "@/lib/favourite-api";
+import { toast } from "@/components/ui/use-toast";
 
 interface Property {
   id: string;
@@ -60,24 +61,41 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     const exists = favorites.some((f) => f.id === id);
 
     if (exists) {
-      // remove locally
+      // Optimistic removal: Remove immediately
+      const previousFavorites = [...favorites];
       setFavorites((prev) => prev.filter((f) => f.id !== id));
+      toast({ title: "Removed from favorites" });
 
       try {
         await deleteFavorite(id);
       } catch (e) {
         console.error("Delete favorite failed", e);
+        // Revert on failure
+        setFavorites(previousFavorites);
+        toast({ title: "Failed to remove favorite", variant: "destructive" });
       }
     } else {
+      // Optimistic addition: Add a temporary placeholder immediately
+      const tempProperty: Property = { id, title: "", price: 0, images: [] };
+      const previousFavorites = [...favorites];
+      setFavorites((prev) => [...prev, tempProperty]);
+      toast({ title: "Added to favorites" });
+
       try {
         const propertyObj = await saveUserFavorites(id);
 
         const cleaned = sanitize(propertyObj);
-        if (!cleaned) return;
-
-        setFavorites((prev) => [...prev, cleaned]);
+        if (cleaned) {
+           // If backend returned valid data, update the placeholder
+           setFavorites((prev) => prev.map((f) => (f.id === id ? cleaned : f)));
+        }
+        // If !cleaned, we KEEP the placeholder (assume success), effectively trusting the optimistic update.
+        // We only revert in the catch block (network/server error).
       } catch (e) {
         console.error("Save favorite failed", e);
+        // Revert on failure
+        setFavorites(previousFavorites);
+        toast({ title: "Failed to add favorite", variant: "destructive" });
       }
     }
   };

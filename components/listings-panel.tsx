@@ -84,7 +84,17 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
 
     // Normalize price from backend (price or rent)
     // The backend might return 'price' or 'rent'
-    const rawPrice = listing.price !== undefined ? listing.price : listing.rent
+    let rawPrice = listing.price !== undefined ? listing.price : listing.rent
+
+    // Handle price being a JSON array (from backend filtering logic)
+    if (Array.isArray(rawPrice) && rawPrice.length > 0) {
+      // Find the first price entry
+      const priceEntry = rawPrice.find((item: any) => item && typeof item.price === "number");
+      if (priceEntry) {
+        rawPrice = priceEntry.price;
+      }
+    }
+
     const price = typeof rawPrice === "number" ? rawPrice : 0
 
     // Normalize beds/baths (bedrooms/bathrooms or beds/baths)
@@ -140,22 +150,62 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       }
 
       if (filters?.beds && filters.beds !== "Any") {
-        // Map 'beds' to 'bedrooms' which is likely what the backend expects
         const bedsVal = Number(filters.beds.replace("+", ""))
+        // Defensive: Send BOTH keys to handle backend ambiguity
+        apiFilters.beds = bedsVal
         apiFilters.bedrooms = bedsVal
       }
 
       if (filters?.baths && filters.baths !== "Any") {
-        // Map 'baths' to 'bathrooms'
         const bathsVal = Number(filters.baths.replace("+", ""))
+        // Defensive: Send BOTH keys to handle backend ambiguity
+        apiFilters.baths = bathsVal
         apiFilters.bathrooms = bathsVal
       }
 
+      // Use nested moreOptions object to match backend DTO structure
+      const moreOptions: Record<string, any> = {}
       if (filters?.moreOptions) {
-        if (filters.moreOptions.selectedPets?.length) apiFilters.selectedPets = filters.moreOptions.selectedPets
-        if (filters.moreOptions.keywords) apiFilters.keywords = filters.moreOptions.keywords
+        if (filters.moreOptions.selectedPets?.length) moreOptions.selectedPets = filters.moreOptions.selectedPets
+        if (filters.moreOptions.keywords) moreOptions.keywords = filters.moreOptions.keywords
       }
-      if (searchLocation) apiFilters.searchLocation = searchLocation
+
+      // "Strip search" & Smart Type Detection
+      if (searchLocation) {
+        let cleanedSearch = searchLocation
+
+        // Smart Type Detection: automatically set propertyType if user searches for categories
+        if (!apiFilters.propertyType) {
+          const lowerSearch = searchLocation.toLowerCase()
+          if (lowerSearch.includes("shortlet")) {
+            apiFilters.propertyType = "ShortLET"
+            // Remove "shortlet" or "shortlets" from search text to allow broad category search
+            cleanedSearch = cleanedSearch.replace(/shortlets?/gi, "").trim()
+          } else if (lowerSearch.includes("house") || lowerSearch.includes("apartment") || lowerSearch.includes("home")) {
+            apiFilters.propertyType = "APARTMENT"
+            cleanedSearch = cleanedSearch.replace(/(houses?|apartments?|homes?)/gi, "").trim()
+          } else if (lowerSearch.includes("hostel")) {
+            apiFilters.propertyType = "Hostels"
+            cleanedSearch = cleanedSearch.replace(/hostels?/gi, "").trim()
+          }
+        }
+
+        // If after cleaning there is still text (e.g. "Lekki shortlet" -> "Lekki"), use it for keywords
+        // Or if no type was detected, use the original search text
+        if (cleanedSearch) {
+           if (!moreOptions.keywords) {
+             moreOptions.keywords = cleanedSearch
+           }
+           apiFilters.searchLocation = cleanedSearch
+        } else if (apiFilters.propertyType) {
+           // If we detected a type and the text is now empty (e.g. user just typed "shortlet"),
+           // we don't send empty keywords/searchLocation, ensuring we get ALL items of that type.
+        }
+      }
+
+      if (Object.keys(moreOptions).length > 0) {
+        apiFilters.moreOptions = moreOptions
+      }
 
       console.log(`Fetching rentals (page ${pageToFetch}) with filters:`, apiFilters)
 
@@ -180,7 +230,38 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
          throw new Error("No response from server")
       }
 
-      const normalizedData = rawData.map(normalizeListing)
+      let normalizedData = rawData.map(normalizeListing)
+
+      // Strict Client-Side Filtering
+      // We apply these filters on the fetched page of data to ensure the UI is consistent
+      // regardless of backend filtering anomalies.
+
+      if (filters?.price) {
+        const { min, max } = filters.price;
+        normalizedData = normalizedData.filter((listing: Listing) => {
+          const effectiveMax = max === Number.POSITIVE_INFINITY ? Number.MAX_SAFE_INTEGER : max;
+          return listing.price >= min && listing.price <= effectiveMax;
+        });
+      }
+
+      if (filters?.beds && filters.beds !== "Any") {
+        const minBeds = Number(filters.beds.replace("+", ""));
+        normalizedData = normalizedData.filter((listing: Listing) => listing.beds >= minBeds);
+      }
+
+      if (filters?.baths && filters.baths !== "Any") {
+        const minBaths = Number(filters.baths.replace("+", ""));
+        normalizedData = normalizedData.filter((listing: Listing) => listing.baths >= minBaths);
+      }
+
+      if (filters?.propertyType && filters.propertyType !== "All types") {
+        // Strict property type check
+        normalizedData = normalizedData.filter((listing: Listing) => {
+             // Handle case sensitivity or slight naming diffs if necessary
+             // Assuming strict equality for now based on backend enums "APARTMENT", "ShortLET", "Hostels"
+             return listing.type === filters.propertyType
+        });
+      }
 
       if (shouldAppend) {
         setAllListings((prev) => [...prev, ...normalizedData])
