@@ -60,24 +60,39 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     const exists = favorites.some((f) => f.id === id);
 
     if (exists) {
-      // remove locally
+      // Optimistic removal: Remove immediately
+      const previousFavorites = [...favorites];
       setFavorites((prev) => prev.filter((f) => f.id !== id));
 
       try {
         await deleteFavorite(id);
       } catch (e) {
         console.error("Delete favorite failed", e);
+        // Revert on failure
+        setFavorites(previousFavorites);
       }
     } else {
+      // Optimistic addition: Add a temporary placeholder immediately
+      const tempProperty: Property = { id, title: "", price: 0, images: [] };
+      const previousFavorites = [...favorites];
+      setFavorites((prev) => [...prev, tempProperty]);
+
       try {
         const propertyObj = await saveUserFavorites(id);
 
         const cleaned = sanitize(propertyObj);
-        if (!cleaned) return;
+        if (!cleaned) {
+           // If backend response is invalid, revert
+           setFavorites(previousFavorites);
+           return;
+        }
 
-        setFavorites((prev) => [...prev, cleaned]);
+        // Replace placeholder with real data
+        setFavorites((prev) => prev.map((f) => (f.id === id ? cleaned : f)));
       } catch (e) {
         console.error("Save favorite failed", e);
+        // Revert on failure
+        setFavorites(previousFavorites);
       }
     }
   };
