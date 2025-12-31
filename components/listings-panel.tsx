@@ -170,6 +170,7 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
 
       // "Strip search": If searchLocation exists, use it for keywords too (if not already set)
       // This enables finding listings by title/description matching the search term
+      // We also strictly pass it to searchLocation to ensure fallback coverage
       if (searchLocation && !moreOptions.keywords) {
         moreOptions.keywords = searchLocation
       }
@@ -178,7 +179,9 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
         apiFilters.moreOptions = moreOptions
       }
 
-      if (searchLocation) apiFilters.searchLocation = searchLocation
+      if (searchLocation) {
+        apiFilters.searchLocation = searchLocation
+      }
 
       console.log(`Fetching rentals (page ${pageToFetch}) with filters:`, apiFilters)
 
