@@ -109,7 +109,7 @@ const FilterButton = ({ label, options = [], isPrice = false, onApply, onSelect 
 }
 
 interface SearchBarProps {
-  onSearch: (location: string, coords?: { lng: number; lat: number }) => void
+  onSearch: (location: string, coords?: { lng: number; lat: number }, filters?: AppliedFilters) => void
   onFiltersChange?: (filters: AppliedFilters) => void
   filters?: AppliedFilters
 }
@@ -154,13 +154,14 @@ export default function SearchBar({ onSearch, onFiltersChange, filters }: Search
   if (!mounted) return null
 
   const handleSearch = () => {
-    if (!searchInput.trim()) {
-      onSearch("")
-      return
-    }
     // Perform a text-only search to ensure we hit title/desc/amenities keywords
     // We explicitly do NOT send coordinates so the backend isn't restricted by location
-    onSearch(searchInput)
+    // Pass the pending/current filters along with the search to ensure they are applied immediately
+    if (!searchInput.trim()) {
+      onSearch("", undefined, appliedFilters)
+      return
+    }
+    onSearch(searchInput, undefined, appliedFilters)
   }
 
   const handlePriceApply = (min: number, max: number) => {

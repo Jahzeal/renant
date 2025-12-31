@@ -150,15 +150,15 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       }
 
       if (filters?.beds && filters.beds !== "Any") {
-        // Map 'beds' to 'bedrooms' which is likely what the backend expects
+        // Map to 'beds' as requested (user clarified backend expects this key)
         const bedsVal = Number(filters.beds.replace("+", ""))
-        apiFilters.bedrooms = bedsVal
+        apiFilters.beds = bedsVal
       }
 
       if (filters?.baths && filters.baths !== "Any") {
-        // Map 'baths' to 'bathrooms'
+        // Map to 'baths' as requested (user clarified backend expects this key)
         const bathsVal = Number(filters.baths.replace("+", ""))
-        apiFilters.bathrooms = bathsVal
+        apiFilters.baths = bathsVal
       }
 
       // Use nested moreOptions object to match backend DTO structure

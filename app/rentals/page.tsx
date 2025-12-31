@@ -107,9 +107,12 @@ export default function Rentals() {
   }, []);
 
   const handleSearch = useCallback(
-    (name: string, coords?: { lng: number; lat: number }) => {
+    (name: string, coords?: { lng: number; lat: number }, newFilters?: AppliedFilters) => {
       setLocationName(name || "");
       setLocation(coords || null);
+
+      // Use newly provided filters (from SearchBar state) or fall back to current filters
+      const currentFilters = newFilters || filters;
 
       const params = new URLSearchParams();
 
@@ -125,15 +128,15 @@ export default function Rentals() {
         }
       }
 
-      // Preserve filters
-      if (filters.price) {
-        params.set("priceMin", filters.price.min.toString());
-        params.set("priceMax", filters.price.max.toString());
+      // Apply filters (using the latest state)
+      if (currentFilters.price) {
+        params.set("priceMin", currentFilters.price.min.toString());
+        params.set("priceMax", currentFilters.price.max.toString());
       }
-      if (filters.beds !== "Any") params.set("beds", filters.beds);
-      if (filters.baths !== "Any") params.set("baths", filters.baths);
-      if (filters.propertyType !== "All types")
-        params.set("propertyType", filters.propertyType);
+      if (currentFilters.beds !== "Any") params.set("beds", currentFilters.beds);
+      if (currentFilters.baths !== "Any") params.set("baths", currentFilters.baths);
+      if (currentFilters.propertyType !== "All types")
+        params.set("propertyType", currentFilters.propertyType);
 
       router.push(`?${params.toString()}`);
     },
