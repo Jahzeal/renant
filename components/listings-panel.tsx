@@ -150,15 +150,17 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
       }
 
       if (filters?.beds && filters.beds !== "Any") {
-        // Map to 'beds' as requested (user clarified backend expects this key)
         const bedsVal = Number(filters.beds.replace("+", ""))
+        // Defensive: Send BOTH keys to handle backend ambiguity
         apiFilters.beds = bedsVal
+        apiFilters.bedrooms = bedsVal
       }
 
       if (filters?.baths && filters.baths !== "Any") {
-        // Map to 'baths' as requested (user clarified backend expects this key)
         const bathsVal = Number(filters.baths.replace("+", ""))
+        // Defensive: Send BOTH keys to handle backend ambiguity
         apiFilters.baths = bathsVal
+        apiFilters.bathrooms = bathsVal
       }
 
       // Use nested moreOptions object to match backend DTO structure
@@ -230,13 +232,34 @@ export default function ListingsPanel({ searchLocation = "", filters, onLocation
 
       let normalizedData = rawData.map(normalizeListing)
 
-      // Client-side price filtering (strict fallback)
+      // Strict Client-Side Filtering
+      // We apply these filters on the fetched page of data to ensure the UI is consistent
+      // regardless of backend filtering anomalies.
+
       if (filters?.price) {
         const { min, max } = filters.price;
         normalizedData = normalizedData.filter((listing: Listing) => {
-          // If max is effectively infinite, treat it as such
           const effectiveMax = max === Number.POSITIVE_INFINITY ? Number.MAX_SAFE_INTEGER : max;
           return listing.price >= min && listing.price <= effectiveMax;
+        });
+      }
+
+      if (filters?.beds && filters.beds !== "Any") {
+        const minBeds = Number(filters.beds.replace("+", ""));
+        normalizedData = normalizedData.filter((listing: Listing) => listing.beds >= minBeds);
+      }
+
+      if (filters?.baths && filters.baths !== "Any") {
+        const minBaths = Number(filters.baths.replace("+", ""));
+        normalizedData = normalizedData.filter((listing: Listing) => listing.baths >= minBaths);
+      }
+
+      if (filters?.propertyType && filters.propertyType !== "All types") {
+        // Strict property type check
+        normalizedData = normalizedData.filter((listing: Listing) => {
+             // Handle case sensitivity or slight naming diffs if necessary
+             // Assuming strict equality for now based on backend enums "APARTMENT", "ShortLET", "Hostels"
+             return listing.type === filters.propertyType
         });
       }
 
