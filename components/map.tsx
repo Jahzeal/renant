@@ -7,24 +7,29 @@ import "mapbox-gl/dist/mapbox-gl.css"
 interface MapProps {
   coords?: { lng: number; lat: number } | null
   locationName?: string
-  height?: string
   zoom?: number
 }
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ""
 
-export default function Map({ coords, locationName, height = "500px", zoom = 12 }: MapProps) {
-  const mapContainer = useRef<HTMLDivElement | null>(null)
-  const mapInstance = useRef<mapboxgl.Map | null>(null)
+export default function Map({
+  coords,
+  locationName,
+  zoom = 12,
+}: MapProps) {
+  const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const mapRef = useRef<mapboxgl.Map | null>(null)
   const markerRef = useRef<mapboxgl.Marker | null>(null)
+
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
 
+  // Initialize map
   useEffect(() => {
-    if (!mapContainer.current || mapInstance.current) return
+    if (!mapContainerRef.current || mapRef.current) return
 
     if (!mapboxgl.accessToken) {
-      console.error("[v0] Mapbox token is missing. Add NEXT_PUBLIC_MAPBOX_TOKEN to environment variables")
+      console.error("Mapbox token missing")
       setHasError(true)
       setIsLoading(false)
       return
@@ -32,7 +37,7 @@ export default function Map({ coords, locationName, height = "500px", zoom = 12 
 
     try {
       const map = new mapboxgl.Map({
-        container: mapContainer.current,
+        container: mapContainerRef.current,
         style: "mapbox://styles/mapbox/streets-v11",
         center: coords ? [coords.lng, coords.lat] : [0, 0],
         zoom: coords ? zoom : 2,
@@ -41,85 +46,82 @@ export default function Map({ coords, locationName, height = "500px", zoom = 12 
       map.addControl(new mapboxgl.NavigationControl(), "bottom-right")
 
       map.on("load", () => {
+        map.resize()
         setIsLoading(false)
       })
 
-      map.on("error", (e) => {
-        console.error("[v0] Map error:", e)
+      map.on("error", () => {
         setHasError(true)
         setIsLoading(false)
       })
 
-      mapInstance.current = map
+      mapRef.current = map
 
       return () => {
         map.remove()
-        mapInstance.current = null
+        mapRef.current = null
       }
-    } catch (error) {
-      console.error("[v0] Error initializing map:", error)
+    } catch (err) {
+      console.error("Map init error:", err)
       setHasError(true)
       setIsLoading(false)
     }
   }, [])
 
+  // Update location + marker
   useEffect(() => {
-    if (!mapInstance.current || !coords) return
+    if (!mapRef.current || !coords) return
 
-    // Validate that coordinates are valid numbers
-    const lng = typeof coords.lng === "number" && isFinite(coords.lng) ? coords.lng : null
-    const lat = typeof coords.lat === "number" && isFinite(coords.lat) ? coords.lat : null
+    const { lng, lat } = coords
+    if (!isFinite(lng) || !isFinite(lat)) return
 
-    if (lng === null || lat === null) {
-      console.warn("[v0] Invalid coordinates received:", coords)
-      return
+    mapRef.current.flyTo({
+      center: [lng, lat],
+      zoom,
+      essential: true,
+    })
+
+    if (markerRef.current) {
+      markerRef.current.remove()
     }
 
-    try {
-      mapInstance.current.flyTo({
-        center: [lng, lat],
-        zoom,
-        essential: true,
-      })
+    const marker = new mapboxgl.Marker({ color: "#2563eb" })
+      .setLngLat([lng, lat])
 
-      if (markerRef.current) {
-        markerRef.current.remove()
-      }
-
-      const marker = new mapboxgl.Marker({ color: "#3b82f6" }).setLngLat([lng, lat])
-
-      if (locationName) {
-        marker.setPopup(
-          new mapboxgl.Popup({ offset: 25 }).setHTML(`<div class="text-sm font-semibold">${locationName}</div>`),
+    if (locationName) {
+      marker.setPopup(
+        new mapboxgl.Popup({ offset: 25 }).setHTML(
+          `<div style="font-size:14px;font-weight:600">${locationName}</div>`
         )
-      }
-
-      marker.addTo(mapInstance.current)
-      markerRef.current = marker
-    } catch (error) {
-      console.error("[v0] Error updating marker:", error)
+      )
     }
+
+    marker.addTo(mapRef.current)
+    markerRef.current = marker
   }, [coords, locationName, zoom])
 
   return (
-    <div className="relative w-full rounded-lg overflow-hidden border border-gray-200" style={{ height }}>
-      <div ref={mapContainer} className="w-full h-full" style={{ minHeight: height }} />
+    <div className="relative w-full h-full">
+      {/* MAP CONTAINER */}
+      <div
+        ref={mapContainerRef}
+        className="w-full h-full"
+      />
 
+      {/* LOADING OVERLAY */}
       {isLoading && !hasError && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-            <p className="mt-2 text-sm text-gray-600">Loading map...</p>
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-r-transparent mx-auto" />
+            <p className="mt-2 text-sm text-gray-600">Loading map…</p>
           </div>
         </div>
       )}
 
+      {/* ERROR STATE */}
       {hasError && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-          <div className="text-center p-4">
-            <p className="text-sm text-gray-600">Unable to load map</p>
-            {locationName && <p className="text-xs text-gray-500 mt-1">{locationName}</p>}
-          </div>
+          <p className="text-sm text-gray-600">Unable to load map</p>
         </div>
       )}
     </div>
