@@ -124,6 +124,7 @@ export default function SigninPage() {
                 Email Address <span className="text-red-500">*</span>
               </label>
               <input
+                suppressHydrationWarning
                 id="email"
                 name="email"
                 type="email"
@@ -148,6 +149,7 @@ export default function SigninPage() {
                 </label>
                 <div className="relative mt-1">
                   <input
+                    suppressHydrationWarning
                     id="password"
                     name="password"
                     placeholder="Enter your password"
@@ -155,9 +157,10 @@ export default function SigninPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 text-sm"
                     autoFocus
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 text-sm"
                   />
+
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
