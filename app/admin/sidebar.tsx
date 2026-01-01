@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SidebarProps {
   open: boolean;
@@ -36,6 +37,12 @@ export default function Sidebar({
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const router = useRouter();
+  const signOut = useAuth((state) => state.signOut);
+
+  const handleLogout = () => {
+    signOut();
+    router.push("/signin");
+  };
 
   return (
     <>
@@ -139,7 +146,7 @@ export default function Sidebar({
             </Link>
 
             <button
-              onClick={() => router.push("/signin")}
+              onClick={handleLogout}
               className="w-full flex items-center gap-4 px-3 py-3 text-slate-500 hover:bg-slate-50 rounded-2xl transition-colors"
             >
               <LogOut size={22} />
