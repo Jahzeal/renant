@@ -10,6 +10,7 @@ export interface User {
     firstName: string;
     lastName: string;
     profileImage?: string;
+    role: 'ADMIN' | 'USER';
 }
 
 export interface ProfileUpdateDto {
@@ -29,15 +30,41 @@ interface AuthStore {
     updateProfileData: (data: ProfileUpdateDto) => Promise<void>;
 }
 
+// Helper to decode JWT payload safely
+const parseJwt = (token: string) => {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
+            '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+        ).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        return null;
+    }
+};
+
 // Helper function to create a base User object from API data (used on SIGN IN/UP)
-const createUserObject = (data: any, email: string): User => ({
-    id: data.id || data.userId || 'unknown-id',
-    email: email,
-    // Assuming API response might use Firstname/Lastname or firstName/lastName
-    firstName: data.firstName || data.Firstname || 'User', 
-    lastName: data.lastName || data.Lastname || '',
-    profileImage: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-});
+const createUserObject = (data: any, email: string, token?: string): User => {
+    // Try to extract role from Token if available
+    let extractedRole = data.role;
+    if (token) {
+        const decoded = parseJwt(token);
+        if (decoded?.role) {
+            extractedRole = decoded.role;
+        }
+    }
+
+    return {
+        id: data.id || data.userId || 'unknown-id',
+        email: email,
+        role: extractedRole || 'USER',
+        // Assuming API response might use Firstname/Lastname or firstName/lastName
+        firstName: data.firstName || data.Firstname || 'User',
+        lastName: data.lastName || data.Lastname || '',
+        profileImage: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+    };
+};
 
 // 💡 NEW HELPER: Normalizes API response (PascalCase) into the frontend User interface (camelCase).
 const normalizeProfileResponse = (apiData: any, existingUser: User): Partial<User> => {
@@ -86,7 +113,7 @@ export const useAuth = create<AuthStore>()(
                     
                     localStorage.setItem("access_token", data.access_token);
                     
-                    set({ user: createUserObject(data, email) }); 
+                    set({ user: createUserObject(data, email, data.access_token) });
                     
                 } catch (err: any) {
                     set({ error: err.message || "An error occurred during sign in." });
@@ -116,7 +143,7 @@ export const useAuth = create<AuthStore>()(
                     
                     localStorage.setItem("access_token", result.access_token);
                     
-                    set({ user: createUserObject(result, data.email) });
+                    set({ user: createUserObject(result, data.email, result.access_token) });
                     
                     return result;
                 } catch (err: any) {
