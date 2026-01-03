@@ -1,58 +1,63 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { Search, Clock, MapPin, ChevronLeft, ChevronRight } from "lucide-react"
-import Header from "@/components/header"
-import Link from "next/link"
-import { useAuth } from "@/hooks/use-auth"
-import { useSearchHistory, type SearchHistory } from "@/lib/search-history-contsxt"
-import { getRentals } from "@/lib/getRentals-api"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Search, Clock, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import Header from "@/components/header";
+import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  useSearchHistory,
+  type SearchHistory,
+} from "@/lib/search-history-contsxt";
+import { getRentals } from "@/lib/getRentals-api";
 
 interface Property {
-  id: string
-  image: string
-  price: number
-  beds: number
-  baths: number
-  sqft: number
-  status: string
-  address: string
-  badge?: string
-  location: string
-  type: string
+  id: string;
+  image: string;
+  price: number;
+  beds: number;
+  baths: number;
+  sqft: number;
+  status: string;
+  address: string;
+  badge?: string;
+  location: string;
+  type: string;
 }
 function unwrapRentals(res: any): any[] {
-  return Array.isArray(res) ? res : (res?.data ?? [])
+  return Array.isArray(res) ? res : res?.data ?? []
 }
 
 export default function LandingPage() {
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [searchInput, setSearchInput] = useState("")
-  const [noMatchFound, setNoMatchFound] = useState(false)
-  const [showSearchDropdown, setShowSearchDropdown] = useState(false)
-  const [continueSearchProperties, setContinueSearchProperties] = useState<Property[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const [isGettingLocation, setIsGettingLocation] = useState(false)
-  const [isLoadingRentals, setIsLoadingRentals] = useState(true)
-  const { user } = useAuth()
-  const { searchHistory, addSearch } = useSearchHistory()
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [noMatchFound, setNoMatchFound] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [continueSearchProperties, setContinueSearchProperties] = useState<
+    Property[]
+  >([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [isLoadingRentals, setIsLoadingRentals] = useState(true);
+  const { user } = useAuth();
+  const { searchHistory, addSearch } = useSearchHistory();
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 100)
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+    const handleScroll = () => setIsScrolled(window.scrollY > 100);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const fetchRentals = async () => {
-      setIsLoadingRentals(true)
+      setIsLoadingRentals(true);
       try {
         const res = await getRentals()
         const rentalsData = unwrapRentals(res)
 
         if (searchHistory.length > 0) {
-          fetchPropertiesForLocation(searchHistory[0], rentalsData)
+          fetchPropertiesForLocation(searchHistory[0], rentalsData);
         } else {
           // Map API data to Property format
           const allProperties = rentalsData.slice(0, 6).map((rental: any) => ({
@@ -67,161 +72,178 @@ export default function LandingPage() {
             badge: rental.offer || rental.badge || undefined,
             location: rental.location || rental.city,
             type: rental.type || rental.propertyType,
-          }))
-          setContinueSearchProperties(allProperties)
+          }));
+          setContinueSearchProperties(allProperties);
         }
       } catch (error) {
-        console.error("Error fetching rentals:", error)
-        setContinueSearchProperties([])
+        console.error("Error fetching rentals:", error);
+        setContinueSearchProperties([]);
       } finally {
-        setIsLoadingRentals(false)
+        setIsLoadingRentals(false);
       }
-    }
+    };
 
-    fetchRentals()
-  }, [searchHistory])
+    fetchRentals();
+  }, [searchHistory]);
 
-  const fetchPropertiesForLocation = async (search: SearchHistory, rentalsData?: any[]) => {
-    const searchTerm = search.location.toLowerCase().trim()
-    const searchWords = searchTerm.split(/\s+/).filter((word) => word.length > 0)
+  const fetchPropertiesForLocation = async (
+    search: SearchHistory,
+    rentalsData?: any[]
+  ) => {
+    const searchTerm = search.location.toLowerCase().trim();
+    const searchCity = searchTerm.split(",")[0].trim();
 
     // Use passed data or fetch fresh data
-    const res = rentalsData ?? (await getRentals())
-    const listings = unwrapRentals(res)
 
-    let filteredListings = listings.filter((listing: any) => {
-      const location = listing.location?.toLowerCase() || ""
-      const address = listing.address?.toLowerCase() || ""
-      const city = listing.city?.toLowerCase() || ""
+const res = rentalsData ?? (await getRentals())
+const listings = unwrapRentals(res)
 
-      // Check if all search words are present in any of the fields (word-for-word search)
-      return searchWords.every((word) => location.includes(word) || address.includes(word) || city.includes(word))
-    })
+    let filteredListings = listings.filter(
+      (listing: any) =>
+        listing.location?.toLowerCase().includes(searchCity) ||
+        listing.location?.toLowerCase().includes(searchTerm) ||
+        listing.address?.toLowerCase().includes(searchCity) ||
+        listing.address?.toLowerCase().includes(searchTerm) ||
+        listing.city?.toLowerCase().includes(searchCity) ||
+        listing.city?.toLowerCase().includes(searchTerm)
+    );
 
-    let noMatches = false
+    let noMatches = false;
     if (filteredListings.length === 0) {
-      noMatches = true
-      filteredListings = listings
+      noMatches = true;
+      filteredListings = listings;
     }
 
-    const properties: Property[] = filteredListings.slice(0, 6).map((listing: any) => ({
-      id: listing._id || listing.id,
-      image: listing.images?.[0] || listing.image || "/placeholder.svg",
-      price: listing.price || listing.rent,
-      beds: listing.bedrooms || listing.beds,
-      baths: listing.bathrooms || listing.baths,
-      sqft: listing.sqft || listing.squareFeet || 675,
-      status: listing.status || "Active",
-      address: listing.address,
-      badge: listing.offer || listing.badge || undefined,
-      location: listing.location || listing.city,
-      type: listing.type || listing.propertyType,
-    }))
+    const properties: Property[] = filteredListings
+      .slice(0, 6)
+      .map((listing: any) => ({
+        id: listing._id || listing.id,
+        image: listing.images?.[0] || listing.image || "/placeholder.svg",
+        price: listing.price || listing.rent,
+        beds: listing.bedrooms || listing.beds,
+        baths: listing.bathrooms || listing.baths,
+        sqft: listing.sqft || listing.squareFeet || 675,
+        status: listing.status || "Active",
+        address: listing.address,
+        badge: listing.offer || listing.badge || undefined,
+        location: listing.location || listing.city,
+        type: listing.type || listing.propertyType,
+      }));
 
-    setContinueSearchProperties(properties)
-    setNoMatchFound(noMatches)
-  }
+    setContinueSearchProperties(properties);
+    setNoMatchFound(noMatches);
+  };
 
   const geocodeLocation = async (location: string) => {
-    if (!location.trim()) return null
-    setIsSearching(true)
+    if (!location.trim()) return null;
+    setIsSearching(true);
     try {
-      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(location)}.json?access_token=${token}`,
-      )
-      const data = await response.json()
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+          location
+        )}.json?access_token=${token}`
+      );
+      const data = await response.json();
       if (data.features && data.features.length > 0) {
-        const [lng, lat] = data.features[0].geometry.coordinates
-        const placeName = data.features[0].place_name
-        return { location: placeName, coords: { lng, lat } }
+        const [lng, lat] = data.features[0].geometry.coordinates;
+        const placeName = data.features[0].place_name;
+        return { location: placeName, coords: { lng, lat } };
       }
-      return { location, coords: undefined }
+      return { location, coords: undefined };
     } catch (error) {
-      return { location, coords: undefined }
+      return { location, coords: undefined };
     } finally {
-      setIsSearching(false)
+      setIsSearching(false);
     }
-  }
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!searchInput.trim()) return
-
-    // Instead of geocoding first, we redirect directly with keywords if no direct match is found
-    // This allows the word-for-word logic in the rentals page to handle the search
-    const params = new URLSearchParams()
-    params.set("keywords", searchInput.trim())
-
-    // Optional: Keep geocoding if you want to prioritize location-based results
-    // but the user wants word-for-word text search logic to work
-    window.location.href = `/rentals?${params.toString()}`
-  }
+    e.preventDefault();
+    if (!searchInput.trim()) return;
+    const result = await geocodeLocation(searchInput);
+    if (result) {
+      const newEntry: SearchHistory = {
+        id: Date.now().toString(),
+        location: result.location,
+        coords: result.coords,
+        timestamp: Date.now(),
+      };
+      addSearch(newEntry);
+      const params = new URLSearchParams();
+      params.set("location", result.location);
+      if (result.coords) {
+        params.set("lat", result.coords.lat.toString());
+        params.set("lng", result.coords.lng.toString());
+      }
+      window.location.href = `/rentals?${params.toString()}`;
+    }
+  };
 
   const handleContinueSearch = (search: SearchHistory) => {
-    const params = new URLSearchParams()
-    params.set("location", search.location)
+    const params = new URLSearchParams();
+    params.set("location", search.location);
     if (search.coords) {
-      params.set("lat", search.coords.lat.toString())
-      params.set("lng", search.coords.lng.toString())
+      params.set("lat", search.coords.lat.toString());
+      params.set("lng", search.coords.lng.toString());
     }
-    window.location.href = `/rentals?${params.toString()}`
-  }
+    window.location.href = `/rentals?${params.toString()}`;
+  };
 
   const handleCurrentLocation = async () => {
-    if (!navigator.geolocation) return alert("Geolocation not supported")
-    setIsGettingLocation(true)
-    setShowSearchDropdown(false)
+    if (!navigator.geolocation) return alert("Geolocation not supported");
+    setIsGettingLocation(true);
+    setShowSearchDropdown(false);
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const { latitude, longitude } = position.coords
+        const { latitude, longitude } = position.coords;
         try {
-          const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+          const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
           const response = await fetch(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${token}`,
-          )
-          const data = await response.json()
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${token}`
+          );
+          const data = await response.json();
           if (data.features && data.features.length > 0) {
-            const placeName = data.features[0].place_name
+            const placeName = data.features[0].place_name;
             const newEntry: SearchHistory = {
               id: Date.now().toString(),
               location: placeName,
               coords: { lng: longitude, lat: latitude },
               timestamp: Date.now(),
-            }
-            addSearch(newEntry)
-            const params = new URLSearchParams()
-            params.set("location", placeName)
-            params.set("lat", latitude.toString())
-            params.set("lng", longitude.toString())
-            window.location.href = `/rentals?${params.toString()}`
+            };
+            addSearch(newEntry);
+            const params = new URLSearchParams();
+            params.set("location", placeName);
+            params.set("lat", latitude.toString());
+            params.set("lng", longitude.toString());
+            window.location.href = `/rentals?${params.toString()}`;
           }
         } catch (error) {
-          console.error(error)
-          alert("Unable to get location address")
+          console.error(error);
+          alert("Unable to get location address");
         } finally {
-          setIsGettingLocation(false)
+          setIsGettingLocation(false);
         }
       },
       (error) => {
-        console.error(error)
-        setIsGettingLocation(false)
-        alert("Unable to get your location. Please enable permissions.")
+        console.error(error);
+        setIsGettingLocation(false);
+        alert("Unable to get your location. Please enable permissions.");
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-    )
-  }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
 
   const scrollCarousel = (direction: "left" | "right") => {
-    const carousel = document.getElementById("property-carousel")
+    const carousel = document.getElementById("property-carousel");
     if (carousel) {
-      const scrollAmount = 320
+      const scrollAmount = 320;
       carousel.scrollBy({
         left: direction === "left" ? -scrollAmount : scrollAmount,
         behavior: "smooth",
-      })
+      });
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -262,7 +284,9 @@ export default function LandingPage() {
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
                         onFocus={() => setShowSearchDropdown(true)}
-                        onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
+                        onBlur={() =>
+                          setTimeout(() => setShowSearchDropdown(false), 200)
+                        }
                         className="flex-1 bg-transparent outline-none text-sm sm:text-base text-foreground placeholder:text-muted-foreground"
                         suppressHydrationWarning
                       />
@@ -283,9 +307,14 @@ export default function LandingPage() {
                         onClick={handleCurrentLocation}
                         className="flex items-center gap-3 p-3 sm:p-4 border-b hover:bg-gray-50 cursor-pointer transition-colors"
                       >
-                        <MapPin size={18} className="text-gray-600 flex-shrink-0" />
+                        <MapPin
+                          size={18}
+                          className="text-gray-600 flex-shrink-0"
+                        />
                         <span className="text-sm sm:text-base text-foreground truncate">
-                          {isGettingLocation ? "Getting location..." : "Current Location"}
+                          {isGettingLocation
+                            ? "Getting location..."
+                            : "Current Location"}
                         </span>
                       </div>
                       {searchHistory.length > 0 && (
@@ -301,8 +330,13 @@ export default function LandingPage() {
                               onClick={() => handleContinueSearch(search)}
                               className="flex items-center gap-3 p-3 sm:p-4 border-b hover:bg-gray-50 cursor-pointer transition-colors"
                             >
-                              <Clock size={16} className="text-gray-600 flex-shrink-0" />
-                              <span className="text-sm sm:text-base text-foreground truncate">{search.location}</span>
+                              <Clock
+                                size={16}
+                                className="text-gray-600 flex-shrink-0"
+                              />
+                              <span className="text-sm sm:text-base text-foreground truncate">
+                                {search.location}
+                              </span>
                             </div>
                           ))}
                         </>
@@ -370,12 +404,18 @@ export default function LandingPage() {
                     {searchHistory.length > 0 && noMatchFound
                       ? `No homes available in ${searchHistory[0].location}. But these are the homes available in other locations...`
                       : searchHistory.length > 0
-                        ? `Continue searching in ${searchHistory[0].location} — ${continueSearchProperties.length} ${
-                            continueSearchProperties.length === 1 ? "house" : "houses"
-                          } found`
-                        : "Available Rentals: Houses, Townhomes, Apartments, Condos"}
+                      ? `Continue searching in ${searchHistory[0].location} — ${
+                          continueSearchProperties.length
+                        } ${
+                          continueSearchProperties.length === 1
+                            ? "house"
+                            : "houses"
+                        } found`
+                      : "Available Rentals: Houses, Townhomes, Apartments, Condos"}
                   </h2>
-                  <p className="text-xs sm:text-sm text-gray-600">{continueSearchProperties.length}+ new listings</p>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    {continueSearchProperties.length}+ new listings
+                  </p>
                 </div>
                 <div className="hidden sm:flex gap-2 flex-shrink-0">
                   <button
@@ -407,11 +447,11 @@ export default function LandingPage() {
                     className="flex-shrink-0 w-full sm:w-72 md:w-80 cursor-pointer group"
                     onClick={() => {
                       if (searchHistory.length > 0) {
-                        handleContinueSearch(searchHistory[0])
+                        handleContinueSearch(searchHistory[0]);
                       } else {
-                        const params = new URLSearchParams()
-                        params.set("location", property.location)
-                        window.location.href = `/rentals?${params.toString()}`
+                        const params = new URLSearchParams();
+                        params.set("location", property.location);
+                        window.location.href = `/rentals?${params.toString()}`;
                       }
                     }}
                   >
@@ -444,14 +484,22 @@ export default function LandingPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600 mb-2 flex-wrap">
-                        <span className="font-semibold">{property.beds} bd</span>
+                        <span className="font-semibold">
+                          {property.beds} bd
+                        </span>
                         <span className="hidden sm:inline">|</span>
-                        <span className="font-semibold">{property.baths} ba</span>
+                        <span className="font-semibold">
+                          {property.baths} ba
+                        </span>
                         <span className="hidden sm:inline">|</span>
-                        <span className="font-semibold">{property.sqft.toLocaleString()} sqft</span>
+                        <span className="font-semibold">
+                          {property.sqft.toLocaleString()} sqft
+                        </span>
                       </div>
                       {property.address && (
-                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-1 mb-1">{property.address}</p>
+                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-1 mb-1">
+                          {property.address}
+                        </p>
                       )}
                       <p className="text-xs text-gray-500">
                         {property.type} • {property.location}
@@ -496,7 +544,7 @@ export default function LandingPage() {
                 <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 hover:shadow-xl transition-all hover:scale-105 duration-300 text-center h-full flex flex-col group">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-2xl mx-auto mb-6 overflow-hidden flex-shrink-0 border-2 border-gray-200">
                     <img
-                      src={action.image || "/placeholder.svg"}
+                      src={action.image}
                       alt={action.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
@@ -524,13 +572,14 @@ export default function LandingPage() {
             </h2>
 
             <p className="text-sm sm:text-base text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Recommendations are based on your location and search activity, such as the homes you've viewed and saved
-              and the filters you've used. We use this information to bring similar homes to your attention, so you
-              don't miss out.
+              Recommendations are based on your location and search activity,
+              such as the homes you've viewed and saved and the filters you've
+              used. We use this information to bring similar homes to your
+              attention, so you don't miss out.
             </p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
