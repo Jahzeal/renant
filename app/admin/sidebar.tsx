@@ -82,21 +82,24 @@ export default function Sidebar({
 
         <div className="p-4 flex flex-col h-full">
           {/* Logo */}
-          <div
-            className={cn(
-              "flex items-center gap-3 mb-10 mt-2 px-2",
-              isCollapsed ? "md:justify-center" : ""
-            )}
-          >
-            <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0">
-              <Zap size={22} className="text-white fill-white" />
+          <Link href="/rentals" className="block">
+            <div
+              className={cn(
+                "flex items-center gap-3 mb-10 mt-2 px-2 cursor-pointer",
+                isCollapsed ? "md:justify-center" : ""
+              )}
+            >
+              <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <Zap size={22} className="text-white fill-white" />
+              </div>
+
+              {(!isCollapsed || open) && (
+                <span className="text-xl font-bold text-slate-800 tracking-tight">
+                  Rentant
+                </span>
+              )}
             </div>
-            {(!isCollapsed || open) && (
-              <span className="text-xl font-bold text-slate-800 tracking-tight">
-                Rentant
-              </span>
-            )}
-          </div>
+          </Link>
 
           {/* Navigation */}
           <nav className="flex-1 space-y-2">
