@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth"
 export interface SearchHistory {
   id: string
   location: string
+  query?: string // Added query field to store original search term
   coords?: { lng: number; lat: number }
   timestamp: number
 }

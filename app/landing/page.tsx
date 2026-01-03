@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, Clock, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "@/components/header";
 import Link from "next/link";
@@ -25,8 +25,9 @@ interface Property {
   location: string;
   type: string;
 }
+
 function unwrapRentals(res: any): any[] {
-  return Array.isArray(res) ? res : res?.data ?? []
+  return Array.isArray(res) ? res : res?.data ?? [];
 }
 
 export default function LandingPage() {
@@ -40,6 +41,9 @@ export default function LandingPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isLoadingRentals, setIsLoadingRentals] = useState(true);
+  const [isLoadingProperties, setIsLoadingProperties] = useState(false);
+  const [selectedLocation, setSelectedLocation] =
+    useState<SearchHistory | null>(null);
   const { user } = useAuth();
   const { searchHistory, addSearch } = useSearchHistory();
 
@@ -53,8 +57,8 @@ export default function LandingPage() {
     const fetchRentals = async () => {
       setIsLoadingRentals(true);
       try {
-        const res = await getRentals()
-        const rentalsData = unwrapRentals(res)
+        const res = await getRentals();
+        const rentalsData = unwrapRentals(res);
 
         if (searchHistory.length > 0) {
           fetchPropertiesForLocation(searchHistory[0], rentalsData);
@@ -85,54 +89,139 @@ export default function LandingPage() {
 
     fetchRentals();
   }, [searchHistory]);
+  function normalize(text?: string) {
+    return (text || "").toLowerCase().trim().replace(/\s+/g, " ");
+  }
 
-  const fetchPropertiesForLocation = async (
-    search: SearchHistory,
-    rentalsData?: any[]
-  ) => {
-    const searchTerm = search.location.toLowerCase().trim();
-    const searchCity = searchTerm.split(",")[0].trim();
+  const fetchPropertiesForLocation = useCallback(
+    async (search: SearchHistory, allRentals: any[]) => {
+      console.log(" fetchPropertiesForLocation called with:", search);
+      setIsLoadingProperties(true);
+      setSelectedLocation(search);
+      try {
+        let matchingProperties: Property[] = [];
+        const query = normalize(search.query);
 
-    // Use passed data or fetch fresh data
+        console.log(" Search query:", query);
+        console.log(" All rentals count:", allRentals.length);
 
-const res = rentalsData ?? (await getRentals())
-const listings = unwrapRentals(res)
+        // 1. Try local filtering first for "word for word" matching on existing data
+        if (query) {
+          const localMatches = allRentals
+            .filter((rental: any) => {
+              const location = normalize(rental.location || rental.city);
+              const address = normalize(rental.address);
 
-    let filteredListings = listings.filter(
-      (listing: any) =>
-        listing.location?.toLowerCase().includes(searchCity) ||
-        listing.location?.toLowerCase().includes(searchTerm) ||
-        listing.address?.toLowerCase().includes(searchCity) ||
-        listing.address?.toLowerCase().includes(searchTerm) ||
-        listing.city?.toLowerCase().includes(searchCity) ||
-        listing.city?.toLowerCase().includes(searchTerm)
-    );
+              return location.includes(query) || address.includes(query);
+            })
+            .map((rental: any) => ({
+              id: rental._id || rental.id,
+              image: rental.images?.[0] || rental.image || "/placeholder.svg",
+              price: rental.price || rental.rent,
+              beds: rental.bedrooms || rental.beds,
+              baths: rental.bathrooms || rental.baths,
+              sqft: rental.sqft || rental.squareFeet || 800,
+              status: rental.status || "Active",
+              address: rental.address,
+              badge: rental.offer || rental.badge || undefined,
+              location: rental.location || rental.city,
+              type: rental.type || rental.propertyType,
+            }));
 
-    let noMatches = false;
-    if (filteredListings.length === 0) {
-      noMatches = true;
-      filteredListings = listings;
-    }
+          if (localMatches.length > 0) {
+            setContinueSearchProperties(localMatches);
+            setNoMatchFound(false);
+            setIsLoadingProperties(false);
+            return; // ⛔ STOP HERE — do NOT call API
+          }
+        }
 
-    const properties: Property[] = filteredListings
-      .slice(0, 6)
-      .map((listing: any) => ({
-        id: listing._id || listing.id,
-        image: listing.images?.[0] || listing.image || "/placeholder.svg",
-        price: listing.price || listing.rent,
-        beds: listing.bedrooms || listing.beds,
-        baths: listing.bathrooms || listing.baths,
-        sqft: listing.sqft || listing.squareFeet || 675,
-        status: listing.status || "Active",
-        address: listing.address,
-        badge: listing.offer || listing.badge || undefined,
-        location: listing.location || listing.city,
-        type: listing.type || listing.propertyType,
-      }));
+        // 2. If no local matches, try API with keywords/location
+        if (matchingProperties.length === 0) {
+          let locationRentals = null;
+          if (search.query) {
+            const keywordFilters = { keywords: search.query };
+            locationRentals = await getRentals(keywordFilters);
+          }
 
-    setContinueSearchProperties(properties);
-    setNoMatchFound(noMatches);
-  };
+          if (!locationRentals || locationRentals.length === 0) {
+            const locationFilters = {
+              location: search.location,
+              ...(search.coords && {
+                lat: search.coords.lat,
+                lng: search.coords.lng,
+              }),
+            };
+            locationRentals = await getRentals(locationFilters);
+          }
+
+          if (locationRentals && locationRentals.length > 0) {
+            matchingProperties = locationRentals
+              .slice(0, 6)
+              .map((rental: any) => ({
+                id: rental._id || rental.id,
+                image: rental.images?.[0] || rental.image || "/placeholder.svg",
+                price: rental.price || rental.rent,
+                beds: rental.bedrooms || rental.beds,
+                baths: rental.bathrooms || rental.baths,
+                sqft: rental.sqft || rental.squareFeet || 800,
+                status: rental.status || "Active",
+                address: rental.address,
+                badge: rental.offer || rental.badge || undefined,
+                location: rental.location || rental.city,
+                type: rental.type || rental.propertyType,
+              }));
+          }
+        }
+
+        if (matchingProperties.length > 0) {
+          setContinueSearchProperties(matchingProperties);
+          setNoMatchFound(false);
+        } else {
+          // Fallback to all rentals but set noMatchFound to true
+          const fallbackProperties = allRentals
+            .slice(0, 6)
+            .map((rental: any) => ({
+              id: rental._id || rental.id,
+              image: rental.images?.[0] || rental.image || "/placeholder.svg",
+              price: rental.price || rental.rent,
+              beds: rental.bedrooms || rental.beds,
+              baths: rental.bathrooms || rental.baths,
+              sqft: rental.sqft || rental.squareFeet || 800,
+              status: rental.status || "Active",
+              address: rental.address,
+              badge: rental.offer || rental.badge || undefined,
+              location: rental.location || rental.city,
+              type: rental.type || rental.propertyType,
+            }));
+          setContinueSearchProperties(fallbackProperties);
+          setNoMatchFound(true);
+        }
+      } catch (error) {
+        console.error("Error fetching properties for location:", error);
+        const fallbackProperties = allRentals
+          .slice(0, 6)
+          .map((rental: any) => ({
+            id: rental._id || rental.id,
+            image: rental.images?.[0] || rental.image || "/placeholder.svg",
+            price: rental.price || rental.rent,
+            beds: rental.bedrooms || rental.beds,
+            baths: rental.bathrooms || rental.baths,
+            sqft: rental.sqft || rental.squareFeet || 800,
+            status: rental.status || "Active",
+            address: rental.address,
+            badge: rental.offer || rental.badge || undefined,
+            location: rental.location || rental.city,
+            type: rental.type || rental.propertyType,
+          }));
+        setContinueSearchProperties(fallbackProperties);
+        setNoMatchFound(true);
+      } finally {
+        setIsLoadingProperties(false);
+      }
+    },
+    []
+  );
 
   const geocodeLocation = async (location: string) => {
     if (!location.trim()) return null;
@@ -161,20 +250,30 @@ const listings = unwrapRentals(res)
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchInput.trim()) return;
-    const result = await geocodeLocation(searchInput);
-    if (result) {
+
+    const query = searchInput.trim();
+
+    // Try to geocode the location
+    const geocoded = await geocodeLocation(query);
+
+    if (geocoded) {
+      // Add to search history
       const newEntry: SearchHistory = {
         id: Date.now().toString(),
-        location: result.location,
-        coords: result.coords,
+        location: geocoded.location,
+        query: query, // Store the original query
+        coords: geocoded.coords,
         timestamp: Date.now(),
       };
       addSearch(newEntry);
+
+      // Redirect with both location and keywords
       const params = new URLSearchParams();
-      params.set("location", result.location);
-      if (result.coords) {
-        params.set("lat", result.coords.lat.toString());
-        params.set("lng", result.coords.lng.toString());
+      params.set("location", geocoded.location);
+      params.set("keywords", query); // Add keywords for exact matching
+      if (geocoded.coords) {
+        params.set("lat", geocoded.coords.lat.toString());
+        params.set("lng", geocoded.coords.lng.toString());
       }
       window.location.href = `/rentals?${params.toString()}`;
     }
@@ -183,6 +282,9 @@ const listings = unwrapRentals(res)
   const handleContinueSearch = (search: SearchHistory) => {
     const params = new URLSearchParams();
     params.set("location", search.location);
+    if (search.query) {
+      params.set("keywords", search.query);
+    }
     if (search.coords) {
       params.set("lat", search.coords.lat.toString());
       params.set("lng", search.coords.lng.toString());
@@ -400,16 +502,18 @@ const listings = unwrapRentals(res)
               {/* Header */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground mb-2 text-balance leading-snug">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 leading-tight mb-1">
                     {searchHistory.length > 0 && noMatchFound
-                      ? `No homes available in ${searchHistory[0].location}. But these are the homes available in other locations...`
+                      ? `No homes available in ${
+                          searchHistory[0].query || searchHistory[0].location
+                        }. But these are the homes available in other locations...`
                       : searchHistory.length > 0
-                      ? `Continue searching in ${searchHistory[0].location} — ${
-                          continueSearchProperties.length
-                        } ${
+                      ? `Continue searching for ${
+                          searchHistory[0].query || searchHistory[0].location
+                        } — ${continueSearchProperties.length} ${
                           continueSearchProperties.length === 1
-                            ? "house"
-                            : "houses"
+                            ? "listing"
+                            : "listings"
                         } found`
                       : "Available Rentals: Houses, Townhomes, Apartments, Condos"}
                   </h2>
@@ -544,7 +648,7 @@ const listings = unwrapRentals(res)
                 <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 hover:shadow-xl transition-all hover:scale-105 duration-300 text-center h-full flex flex-col group">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-2xl mx-auto mb-6 overflow-hidden flex-shrink-0 border-2 border-gray-200">
                     <img
-                      src={action.image}
+                      src={action.image || "/placeholder.svg"}
                       alt={action.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />

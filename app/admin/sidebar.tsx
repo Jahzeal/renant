@@ -150,11 +150,18 @@ export default function Sidebar({
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-4 px-3 py-3 text-slate-500 hover:bg-slate-50 rounded-2xl transition-colors"
+              className={cn(
+                "w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-200",
+                "text-red-600 hover:bg-red-50 active:bg-red-100",
+                "focus:outline-none focus:ring-2 focus:ring-red-200"
+              )}
             >
-              <LogOut size={22} />
+              <LogOut size={22} className="flex-shrink-0" />
+
               {(!isCollapsed || open) && (
-                <span className="text-sm font-semibold">Log out</span>
+                <span className="text-sm font-semibold leading-none">
+                  Log out
+                </span>
               )}
             </button>
           </div>
